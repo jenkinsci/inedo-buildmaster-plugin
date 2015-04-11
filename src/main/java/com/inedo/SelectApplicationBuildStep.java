@@ -79,12 +79,12 @@ public class SelectApplicationBuildStep extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
     	if( !getSharedDescriptor().validatePluginConfiguration()) {
-			listener.getLogger().println("Please configure BuildMaster Plugin global settings");
+			listener.getLogger().println(LOG_PREFIX + "Please configure BuildMaster Plugin global settings");
 			return false;
 		}
     	
     	// Pouplate BUILDMASTER_APPLICATION variable
-    	listener.getLogger().println("[BuildMaster Plugin] Inject environment variable BUILDMASTER_APPLICATION=" + applicationId);
+    	listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_APPLICATION=" + applicationId);
  		build.addAction(new VariableInjectionAction("BUILDMASTER_APPLICATION", applicationId));
         
  		// Populate BUILDMASTER_RELEASE_NUMBER variable
@@ -95,6 +95,11 @@ public class SelectApplicationBuildStep extends Builder {
 			BuildMasterApi buildmaster = new BuildMasterApi(config);
 			
 			actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(applicationId);
+			
+			if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
+				listener.getLogger().println(LOG_PREFIX + "Could not get release number from BuildMaster");
+				return false;
+			}
  		}
  		
         listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + actualReleaseNumber);

@@ -144,12 +144,10 @@ public class BuildMasterApi {
 	 */
 	def String createBuild(applicationId, releaseNumber, buildNumber, Map<String, String> variablesList) {
 		def http = obtainServerConnection()
-		//def variables = '<Variables><Variable Name="PAXHOLDRELEASE_VERSION" Value="' + config.releaseNumber + '.' + config.buildNumber + '" /></Variables>'
-		//, BuildVariables_Xml: variables
 		
 		http.request( GET, TEXT ) {
 			uri.path = '/api/json/Builds_CreateBuild'
-			uri.query = [API_Key: config.apiKey, Application_Id: applicationId, PromoteBuild_Indicator: (config.promoteBuild ? 'Y' : 'N'), Release_Number: releaseNumber, Requested_Build_Number: buildNumber]
+			uri.query = [API_Key: config.apiKey, Application_Id: applicationId, Release_Number: releaseNumber, Requested_Build_Number: buildNumber, BuildVariables_Xml: getVariables(variablesList)]
 					
 			config.printStream.println "Call $uri.base"
 
@@ -171,7 +169,7 @@ public class BuildMasterApi {
 		
 		http.request( GET, TEXT ) {
 			uri.path = '/api/json/Builds_CreateBuild'
-			uri.query = [API_Key: config.apiKey, Application_Id: applicationId, PromoteBuild_Indicator: (config.promoteBuild ? 'Y' : 'N'), Release_Number: releaseNumber]
+			uri.query = [API_Key: config.apiKey, Application_Id: applicationId, Release_Number: releaseNumber, BuildVariables_Xml: getVariables(variablesList)]
 					
 			config.printStream.println "Call $uri.base"
 
@@ -183,6 +181,22 @@ public class BuildMasterApi {
 				return buildMasterBuildNumber;
 			}
 		}
+	}
+	
+	private def getVariables(Map<String, String> variablesList) {
+		def variables = ''
+		
+		if (variablesList.size() > 0) {
+			variables += '<Variables>'
+			
+			variables.each{ key, value ->
+				variables += "<Variable Name=""${key}"" Value=""${value}"" />"
+			}
+			
+			variables += '</Variables>'
+		}
+		
+		return variables
 	}
 	
 	/**
