@@ -1,0 +1,71 @@
+/**
+ * Gradle Jenkins JPI Plugin
+ * 
+ * https://wiki.jenkins-ci.org/display/JENKINS/Gradle+JPI+Plugin
+ * https://github.com/jenkinsci/gradle-jpi-plugin
+ *  
+ * Gradle Tasks
+ * ---------------
+ * jpi:		Generates the JPI package
+ * server: 	Run Jenkins in place with the plugin being developed
+ *
+ */
+
+buildscript {
+    repositories {
+		/*
+        maven {
+			url "http://artifactory:8081/artifactory/repo1/"
+			url "http://artifactory:8081/artifactory/libs-release/"
+		}
+		*/
+		jcenter()		
+    }
+    dependencies {
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.10.2'
+    }
+}
+
+apply plugin: 'org.jenkins-ci.jpi'
+apply plugin: 'groovy'
+
+group = 'com.inedo.buildmaster'
+version = '1.0'
+description = 'BuildMaster'
+
+jenkinsPlugin {
+    coreVersion = '1.596.1'
+    displayName = 'BuildMaster plugin for Jenkins.'
+    url = 'http://inedo.com/buildmaster/'
+    developers {
+        developer {
+            id 'andrew-sumner'
+            name 'Andrew Sumner'
+            email 'andrew.sumner@xtra.co.nz'
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
+
+// Download dependancies via Artifactory
+repositories {
+	jcenter()
+	mavenLocal()
+	maven {
+		url "http://artifactory:8081/artifactory/repo1/"
+		url "http://artifactory:8081/artifactory/libs-release/"
+	}		
+}
+
+dependencies {
+	compile "org.codehaus.groovy:groovy-all:2.3.0"
+	compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+	
+	testCompile 'junit:junit:4.8.2'
+	//testCompile "org.mockito:mockito-core:1.+"	
+	//testCompile 'org.jenkins-ci.main:jenkins-test-harness:1.480.3'
+	//testCompile 'org.jvnet.hudson.main:hudson-core:1.159'
+}

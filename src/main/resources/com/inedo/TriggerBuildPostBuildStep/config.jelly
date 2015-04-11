@@ -1,0 +1,24 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!--
+    This jelly script is used for per-project configuration.
+    See global.jelly for a general discussion about jelly script.
+  -->
+
+  <!--
+    Creates a text field that shows the value of the "key" and "value" property.
+    When submitted, it will be passed to the corresponding constructor parameter.
+  -->
+  <f:entry title="Use Jenkins BuildNumber" field="useJenkinsBuildNumber">
+    <f:checkbox default="true" />
+  </f:entry>
+  <f:entry title="Promote Build into First Environment" field="promoteBuild" >
+    <f:checkbox default="true" />
+  </f:entry>
+  <f:entry title="Wait Till Build Completed" field="waitTillBuildCompleted" >
+    <f:checkbox />
+  </f:entry>
+  <f:entry title="Show BuildMaster Log on Failure" field="printLogOnFailure" >
+    <f:checkbox />
+  </f:entry>
+</j:jelly>
