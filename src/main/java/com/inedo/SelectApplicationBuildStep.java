@@ -108,30 +108,32 @@ public class SelectApplicationBuildStep extends Builder {
 		//Populate BUILDMASTER_BUILD_NUMBER variable
 		String actualBuildNumber;
 		
-		if ("BUILDMASTER".equals(buildNumberSource)) {
-			//TODO Test Me!
-			BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
-			BuildMasterApi buildmaster = new BuildMasterApi(config);
-			
-			config.logCalls = true;
-			JSONObject release = buildmaster.getRelease(applicationId, actualReleaseNumber);
-			
-			throw new NotImplementedException();
-			
-		} else {
-			EnvVars envVars;
-			try {
-				envVars = build.getEnvironment(listener);
-			} catch (Exception e) {
-				listener.getLogger().println(e.getMessage());
-				return false;
+		if (!"NOT_REQUIRED".equals(buildNumberSource)) {
+			if ("BUILDMASTER".equals(buildNumberSource)) {
+				//TODO Test Me!
+				BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
+				BuildMasterApi buildmaster = new BuildMasterApi(config);
+				
+				config.logCalls = true;
+				JSONObject release = buildmaster.getRelease(applicationId, actualReleaseNumber);
+				
+				throw new NotImplementedException();
+				
+			} else {
+				EnvVars envVars;
+				try {
+					envVars = build.getEnvironment(listener);
+				} catch (Exception e) {
+					listener.getLogger().println(e.getMessage());
+					return false;
+				}
+	
+				actualBuildNumber = envVars.get("BUILD_NUMBER");
 			}
-
-			actualBuildNumber = envVars.get("BUILD_NUMBER");
+			
+			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER=" + actualBuildNumber);
+			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
 		}
-		
-		listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER=" + actualBuildNumber);
-		build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
 		
         return true;
     }
@@ -215,9 +217,6 @@ public class SelectApplicationBuildStep extends Builder {
         	if (!getIsBuildMasterAvailable()) {
         		items.add("", "");
         		
-//                items.add("Pax Hold Release", "30");
-//                items.add("Something else", "40");
-
         		return items;
         	}
         	JSONArray applications = buildmaster.getApplications();
@@ -273,7 +272,6 @@ public class SelectApplicationBuildStep extends Builder {
         	
         	items.add("", "");
         	items.add("Latest Active Release", LATEST_RELEASE);
-//        	items.add("0.1." + applicationId, "0.1." + applicationId);
         	
         	if (!getIsBuildMasterAvailable()) {
         		return items;
@@ -304,6 +302,7 @@ public class SelectApplicationBuildStep extends Builder {
         	
         	items.add("Jenkins", "JENKINS");
         	items.add("BuildMaster", "BUILDMASTER");
+        	items.add("Not Required", "NOT_REQUIRED");
         	
             return items;
         }

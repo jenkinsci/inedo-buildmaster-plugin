@@ -34,11 +34,7 @@ public class BuildMasterApiTest {
 		config.domain = "customstw";
 		config.apiKey = "customs";
 		config.logCalls = true;
-		
-		// Trigger Build Config
-		config.promoteBuild = true;
-		config.printLogOnFailure = true;
-		
+			
 		buildmaster = new BuildMasterApi(config);
 	}
 
@@ -102,7 +98,7 @@ public class BuildMasterApiTest {
 	public void createBuild() {
 		String buildNumber = "23";
 		
-		String buildMasterBuildNumber = buildmaster.createBuild(appApplicationId, appReleaseNumber, buildNumber);
+		String buildMasterBuildNumber = buildmaster.createBuild(appApplicationId, appReleaseNumber, buildNumber, null);
 		//String buildMasterBuildNumber = buildmaster.createBuild(appApplicationId, appReleaseNumber);
 		
 		assertEquals("Expect returned buildNumber to be the same as requested", buildNumber, buildMasterBuildNumber);
@@ -123,7 +119,7 @@ public class BuildMasterApiTest {
 	public void getWaitForBuildCompletion() {
 		String buildNumber = "23";
 		
-		boolean result = buildmaster.waitForBuildCompletion(appApplicationId, appReleaseNumber, buildNumber);
+		boolean result = buildmaster.waitForBuildCompletion(appApplicationId, appReleaseNumber, buildNumber, true);
 		
 		assertTrue("Expect PaxHoldRelease build " + buildNumber + " to have built and deployed successfully", result);
 		

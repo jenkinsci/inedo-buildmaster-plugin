@@ -116,15 +116,16 @@ public class TriggerBuildBuildStep extends Builder {
 		BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
 		BuildMasterApi buildmaster = new BuildMasterApi(config);
 
-		String applicationId = expandVariable(build, listener, envVars.get("BUILDMASTER_APPLICATION"));
-		String releaseNumber = expandVariable(build, listener, envVars.get("BUILDMASTER_RELEASE_NUMBER"));
-		String buildNumber = expandVariable(build, listener, envVars.get("BUILDMASTER_BUILD_NUMBER"));
+		String applicationId = expandVariable(build, listener, this.applicationId);
+		String releaseNumber = expandVariable(build, listener, this.releaseNumber);
+		String buildNumber = expandVariable(build, listener, this.buildNumber);
+		
 		Map<String, String> variablesList = getVariablesList(variables);
 		
 		String buildMasterBuildNumber;
 		
-		if (buildNumber != null && !buildNumber.isEmpty()) {
-			listener.getLogger().println(LOG_PREFIX + "Create BuildMaster build " + buildNumber);
+		if (buildNumber != null && !buildNumber.isEmpty() && !buildNumber.equals("${BUILDMASTER_BUILD_NUMBER}")) {
+			listener.getLogger().println(LOG_PREFIX + "Create BuildMaster build with BuildNumber=" + buildNumber);
 			buildMasterBuildNumber = buildmaster.createBuild(applicationId, releaseNumber, buildNumber, variablesList);
 			
 			if (!buildMasterBuildNumber.equals(buildNumber)) {
