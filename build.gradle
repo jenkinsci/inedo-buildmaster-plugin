@@ -13,12 +13,6 @@
 
 buildscript {
     repositories {
-		/*
-        maven {
-			url "http://artifactory:8081/artifactory/repo1/"
-			url "http://artifactory:8081/artifactory/libs-release/"
-		}
-		*/
 		jcenter()		
     }
     dependencies {
@@ -46,18 +40,11 @@ jenkinsPlugin {
     }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
-}
-
 // Download dependancies via Artifactory
 repositories {
-	jcenter()
 	mavenLocal()
-	maven {
-		url "http://artifactory:8081/artifactory/repo1/"
-		url "http://artifactory:8081/artifactory/libs-release/"
-	}		
+	jcenter()
+	mavenCentral()
 }
 
 dependencies {
@@ -68,4 +55,8 @@ dependencies {
 	//testCompile "org.mockito:mockito-core:1.+"	
 	//testCompile 'org.jenkins-ci.main:jenkins-test-harness:1.480.3'
 	//testCompile 'org.jvnet.hudson.main:hudson-core:1.159'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
 }
