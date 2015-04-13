@@ -9,15 +9,14 @@
     Creates a text field that shows the value of the "key" and "value" property.
     When submitted, it will be passed to the corresponding constructor parameter.
   -->
-  
-  <f:optionalBlock title="Wait Till Build Completed" field="waitTillBuildCompleted" >
+   <f:optionalBlock title="Wait Till Build Completed" field="waitTillBuildCompleted" >
     <f:entry title="Show BuildMaster Log on Failure" field="printLogOnFailure" >
       <f:checkbox default="false" />
     </f:entry>
   </f:optionalBlock>
   
   <f:entry title="Variables" field="variables" >
-    <f:expandableTextbox />
+    <f:expandableTextbox /> 
   </f:entry>
   
   <f:advanced title="Advanced Settings">
@@ -28,7 +27,7 @@
       <f:textbox default="$${BUILDMASTER_RELEASE_NUMBER}" />
     </f:entry>
     <f:entry title="Build Number" field="buildNumber" >
-      <f:textbox default="$${BUILDMASTER_BUILD_NUMBER}" />
+      <f:textbox default="${descriptor.defaultBuildNumber}" />
     </f:entry>
   </f:advanced>
 </j:jelly>

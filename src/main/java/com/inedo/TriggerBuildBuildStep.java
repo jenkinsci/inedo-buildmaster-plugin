@@ -49,6 +49,7 @@ import jenkins.model.Jenkins;
  */
 public class TriggerBuildBuildStep extends Builder {
 	private static final String LOG_PREFIX = "[BuildMaster] "; 
+	private static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
 
 	private final boolean waitTillBuildCompleted;
 	private final boolean printLogOnFailure;
@@ -97,19 +98,11 @@ public class TriggerBuildBuildStep extends Builder {
 	public String getBuildNumber() {
 		return buildNumber;
 	}
-	
+		
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
 		if (!getSharedDescriptor().validatePluginConfiguration()) {
 			listener.getLogger().println("Please configure BuildMaster Plugin global settings");
-			return false;
-		}
-
-		EnvVars envVars;
-		try {
-			envVars = build.getEnvironment(listener);
-		} catch (Exception e) {
-			listener.getLogger().println(e.getMessage());
 			return false;
 		}
 		
@@ -120,11 +113,11 @@ public class TriggerBuildBuildStep extends Builder {
 		String releaseNumber = expandVariable(build, listener, this.releaseNumber);
 		String buildNumber = expandVariable(build, listener, this.buildNumber);
 		
-		Map<String, String> variablesList = getVariablesList(variables);
+		Map<String, String> variablesList = getVariablesList(this.variables);
 		
 		String buildMasterBuildNumber;
 		
-		if (buildNumber != null && !buildNumber.isEmpty() && !buildNumber.equals("${BUILDMASTER_BUILD_NUMBER}")) {
+		if (buildNumber != null && !buildNumber.isEmpty() && !DEFAULT_BUILD_NUMBER.equals(buildNumber)) {
 			listener.getLogger().println(LOG_PREFIX + "Create BuildMaster build with BuildNumber=" + buildNumber);
 			buildMasterBuildNumber = buildmaster.createBuild(applicationId, releaseNumber, buildNumber, variablesList);
 			
@@ -140,7 +133,7 @@ public class TriggerBuildBuildStep extends Builder {
 		}
 		
 		if (waitTillBuildCompleted) {
-			listener.getLogger().println(LOG_PREFIX + "Wait till build complted");
+			listener.getLogger().println(LOG_PREFIX + "Wait till build completed");
 			return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, buildMasterBuildNumber, printLogOnFailure);
 		}
 
@@ -184,8 +177,7 @@ public class TriggerBuildBuildStep extends Builder {
 	}
 
 	public BuildMasterPluginDescriptor getSharedDescriptor() {
-		return (BuildMasterPluginDescriptor) Jenkins.getInstance()
-				.getDescriptorOrDie(BuildMasterPlugin.class);
+		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
 	}
 
 	/**
@@ -235,14 +227,20 @@ public class TriggerBuildBuildStep extends Builder {
 			return "Trigger BuildMaster Build";
 		}
 		
+		// TODO jelly expandableTextbox does not support form validation currently so this does nothing: 
+		// https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/lib/form/expandableTextbox.jelly
 		public FormValidation doCheckVariables(@QueryParameter String value) {
 			try {
-				getVariablesList(variables);
+				getVariablesList(value);
 			} catch (Exception e) {
                 return FormValidation.error(e.getMessage());
             }
             
             return FormValidation.ok();
+		}
+		
+		public String getDefaultBuildNumber() {
+			return DEFAULT_BUILD_NUMBER;
 		}
 	}
 }
