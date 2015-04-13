@@ -13,7 +13,9 @@ Command line
 From the command line, `cd` to the folder containing a copy of this project, and run 
 
   `./gradlew clean jpi` on Unix-based systems, or 
+  
   `gradlew clean jpi` on Windows.
+  
   `gradlew -Dhttp.proxyHost=yourProxy -Dhttp.proxyPort=yourPort -Dhttp.proxyUser=yourUsername -Dhttp.proxyPassword=yourPassword -Dhttps.proxyHost=yourProxy -Dhttps.proxyPort=yourPort -Dhttps.proxyUser=yourUsername -Dhttps.proxyPassword=yourPassword clean jpi` from behind a proxy.It is vital that any tasks come after the proxy configuration. 
 
 This will download the required dependencies, clean the existing project, recompile all source code and build the jpi file required by jenkins. 
