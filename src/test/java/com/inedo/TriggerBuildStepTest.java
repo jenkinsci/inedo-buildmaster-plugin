@@ -1,17 +1,44 @@
 package com.inedo;
 
-import static org.junit.Assert.*;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.apache.commons.io.FileUtils;
-import hudson.model.*;
-import hudson.tasks.Shell;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+
+import net.sf.json.JSONArray;
+
+import org.jboss.resteasy.client.ClientRequest;
 import org.junit.Test;
-import org.junit.Rule;
 
 public class TriggerBuildStepTest {
   //@Rule 
   //public JenkinsRule j = new JenkinsRule();
   
+	@Test 
+	public void getApplicationsRestEasy() {
+		BuildMasterConfig config = new BuildMasterConfig();
+		
+		// Global Config
+		config.url = "http://buildmaster";
+		config.authentication = "ntlm";
+		config.user = "svc_jenkins";
+		config.password = "J3nk1ns1";
+		config.domain = "customstw";
+		config.apiKey = "customs";
+		config.logCalls = true;
+		
+		Client client = ClientBuilder.newClient();
+		
+		WebTarget target = ClientBuilder.newClient()
+				.target(config.url)
+				.path("/api/json/Applications_GetApplications")			
+				.queryParam("API_Key", config.apiKey);
+	
+		JSONArray applications = target.request(MediaType.APPLICATION_JSON_TYPE).get(JSONArray.class);
+
+		
+	}
+	
   @Test 
   public void first() throws Exception {
 	  	  

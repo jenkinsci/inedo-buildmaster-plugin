@@ -4,12 +4,27 @@ import static org.junit.Assert.*;
 
 import java.net.UnknownHostException;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.httpclient.NTCredentials;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.inedo.ApplicationsGetApplicationResponse.ApplicationsGetApplicationResult;
+import com.inedo.ApplicationsGetApplicationsResponse.ApplicationsGetApplicationsResult;
 import com.inedo.BuildMasterConfig;
 
 public class BuildMasterApiTest {
@@ -37,9 +52,56 @@ public class BuildMasterApiTest {
 			
 		buildmaster = new BuildMasterApi(config);
 	}
+	 
+	
+	@Test 
+	public void getApplicationsJersey() {
+		// this may work for ntlm authentication
+		//http://stackoverflow.com/questions/21330767/do-jersey-client-support-ntlm-proxy
+				
+		
+		//basic HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("user", "superSecretPassword");
+		//basic nonPreemptive  HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder().nonPreemptive().credentials("user", "superSecretPassword").build();
+			
+			
+		WebTarget target = ClientBuilder.newClient()
+								.target(config.url)
+								.path("/api/json/Applications_GetApplications")			
+								.queryParam("API_Key", config.apiKey);
+					
+		JSONArray applications = target.request(MediaType.APPLICATION_JSON_TYPE).get(JSONArray.class);
+	
+		assertTrue("Expect BuildMaster to have applications defined", applications.size() > 0);
+		
+		for (int i = 0; i < applications.size(); i++) {
+			JSONObject json = applications.getJSONObject(i);
+			
+			System.out.println("[" + json.getString("Application_Id") + "]" + (json.containsKey("ApplicationGroup_Name") ? json.getString("ApplicationGroup_Name") + " > " : "") + json.getString("Application_Name"));
+		}
+			
 
+	}
+	
+	@Test 
+	public void getApplicationsSoap() {
+		ApiService service = new ApiService();
+		
+		
+		ApiServiceSoap buildmasterService = service.getApiServiceSoap();
+		
+		ApplicationsGetApplicationsResult applications = buildmasterService.applicationsGetApplications(config.apiKey, null);
+		
+//		assertTrue("Expect BuildMaster to have applications defined", applications.size() > 0);
+//		
+//		for (int i = 0; i < applications.getAnies().size(); i++) {
+//			JSONObject json = new JSONObject(applications.getAnies().get(i));
+//			
+//			System.out.println("[" + json.getString("Application_Id") + "]" + (json.containsKey("ApplicationGroup_Name") ? json.getString("ApplicationGroup_Name") + " > " : "") + json.getString("Application_Name"));
+//		}
+	}
+	
 	@Test
-	public void getApplications() {
+	public void getApplications() {		
 		JSONArray applications = buildmaster.getApplications();
 		
 		assertTrue("Expect BuildMaster to have applications defined", applications.size() > 0);
