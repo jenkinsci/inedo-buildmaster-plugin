@@ -7,7 +7,7 @@ import hudson.model.AbstractBuild;
 /**
  * Allow plugin to update environment variables
  * 
- * @author as979c
+ * @author Andrew Sumner
  *
  */
 public class VariableInjectionAction implements EnvironmentContributingAction {

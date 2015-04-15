@@ -22,7 +22,7 @@ import hudson.util.ListBoxModel;
 
 /**
  * Has fields for global configuration
- * @author as979c
+ * @author Andrew Sumner
  *
  */
 public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {

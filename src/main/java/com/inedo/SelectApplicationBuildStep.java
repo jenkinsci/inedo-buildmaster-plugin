@@ -1,9 +1,5 @@
 package com.inedo;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.Extension;
@@ -17,7 +13,6 @@ import hudson.util.ListBoxModel;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -27,8 +22,6 @@ import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
 import jenkins.model.Jenkins;
 
 /**
- * Sample {@link Builder}.
- *
  * <p>
  * When the user configures the project and enables this builder,
  * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
@@ -83,6 +76,9 @@ public class SelectApplicationBuildStep extends Builder {
 			return false;
 		}
     	
+    	BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
+		BuildMasterApi buildmaster = new BuildMasterApi(config);
+		
     	// Pouplate BUILDMASTER_APPLICATION variable
     	listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_APPLICATION=" + applicationId);
  		build.addAction(new VariableInjectionAction("BUILDMASTER_APPLICATION", applicationId));
@@ -91,13 +87,10 @@ public class SelectApplicationBuildStep extends Builder {
  		String actualReleaseNumber = releaseNumber;
  		
  		if ("LATEST".equals(releaseNumber)) {
-			BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
-			BuildMasterApi buildmaster = new BuildMasterApi(config);
-			
 			actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(applicationId);
 			
 			if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
-				listener.getLogger().println(LOG_PREFIX + "Could not get release number from BuildMaster");
+				listener.getLogger().println(LOG_PREFIX + "No active releases found in BuildMaster for applicationId " + applicationId);
 				return false;
 			}
  		}
@@ -108,31 +101,38 @@ public class SelectApplicationBuildStep extends Builder {
 		//Populate BUILDMASTER_BUILD_NUMBER variable
 		String actualBuildNumber;
 		
-		if (!"NOT_REQUIRED".equals(buildNumberSource)) {
-			if ("BUILDMASTER".equals(buildNumberSource)) {
-				//TODO Test Me!
-				BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
-				BuildMasterApi buildmaster = new BuildMasterApi(config);
-				
-				config.logCalls = true;
-				JSONObject release = buildmaster.getRelease(applicationId, actualReleaseNumber);
-				
-				throw new NotImplementedException();
-				
-			} else {
-				EnvVars envVars;
-				try {
-					envVars = build.getEnvironment(listener);
-				} catch (Exception e) {
-					listener.getLogger().println(e.getMessage());
-					return false;
-				}
-	
-				actualBuildNumber = envVars.get("BUILD_NUMBER");
-			}
+		switch (buildNumberSource) {
+		case "BUILDMASTER":
+			actualBuildNumber = buildmaster.getNextBuildNumber(applicationId, actualReleaseNumber);
 			
-			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER=" + actualBuildNumber);
+			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number = " + actualBuildNumber);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
+			
+			break;
+		
+		case "JENKINS":
+			EnvVars envVars;
+			try {
+				envVars = build.getEnvironment(listener);
+			} catch (Exception e) {
+				listener.getLogger().println(e.getMessage());
+				return false;
+			}
+
+			actualBuildNumber = envVars.get("BUILD_NUMBER");
+			
+			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number = " + actualBuildNumber);
+			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
+			
+			break;
+			
+		case "NOT_REQUIRED":
+			// Do nothing
+			break;
+			
+		default:
+			listener.getLogger().println(LOG_PREFIX + "Unknown buildNumberSource " + buildNumberSource);
+			return false;
 		}
 		
         return true;

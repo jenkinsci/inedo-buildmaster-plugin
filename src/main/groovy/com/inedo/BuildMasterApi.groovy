@@ -139,6 +139,31 @@ public class BuildMasterApi {
 		}
 	}
 	
+	
+	/**
+	 * Gets release number of newest active release, if no active releases will return an empty string
+	 */
+	def String getNextBuildNumber(applicationId, releaseNumber) {
+		def http = obtainServerConnection()
+		
+		http.request( GET ) {
+			uri.path = '/api/json/Builds_GetBuilds'
+			uri.query = [API_Key: config.apiKey, Application_Id: applicationId, Release_Number: releaseNumber, Build_Count: 1]
+		
+			config.printStream.println "Call $uri.base"
+			
+			response.success = { resp, json ->
+				if (config.logCalls) { printResult(json, null) }
+				
+				if (json.size() > 0) {
+					return Integer.parseInt(json[0].Build_Number) + 1
+				} else {
+					return "1"
+				}
+			}
+		}
+	}
+	
 	/**
 	 *  Creates a new build of an application and optionally promotes it to the first environment.  Error thrown on failure.
 	 */
@@ -147,7 +172,11 @@ public class BuildMasterApi {
 		
 		http.request( GET, TEXT ) {
 			uri.path = '/api/json/Builds_CreateBuild'
-			uri.query = [API_Key: config.apiKey, Application_Id: applicationId, Release_Number: releaseNumber, Requested_Build_Number: buildNumber, BuildVariables_Xml: getVariables(variablesList)]
+			uri.query = [API_Key: config.apiKey, 
+							Application_Id: applicationId, 
+							Release_Number: releaseNumber, 
+							Requested_Build_Number: buildNumber, 
+							BuildVariables_Xml: getVariables(variablesList)]
 					
 			config.printStream.println "Call $uri.base"
 
@@ -169,7 +198,10 @@ public class BuildMasterApi {
 		
 		http.request( GET, TEXT ) {
 			uri.path = '/api/json/Builds_CreateBuild'
-			uri.query = [API_Key: config.apiKey, Application_Id: applicationId, Release_Number: releaseNumber, BuildVariables_Xml: getVariables(variablesList)]
+			uri.query = [API_Key: config.apiKey, 
+							Application_Id: applicationId, 
+							Release_Number: releaseNumber, 
+							BuildVariables_Xml: getVariables(variablesList)]
 					
 			config.printStream.println "Call $uri.base"
 
@@ -184,13 +216,15 @@ public class BuildMasterApi {
 	}
 	
 	private def getVariables(Map<String, String> variablesList) {
+		if (variablesList == null) return null;
+		
 		def variables = ''
 		
 		if (variablesList.size() > 0) {
 			variables += '<Variables>'
 			
-			variables.each{ key, value ->
-				variables += "<Variable Name=""${key}"" Value=""${value}"" />"
+			variablesList.each{ key, value ->
+				variables += '<Variable Name="' + key + '" Value="' + value + '" />'
 			}
 			
 			variables += '</Variables>'
@@ -211,7 +245,7 @@ public class BuildMasterApi {
 		
 		def startTime = new Date().getTime()
 		
-		while (['Pending', 'Executing'].contains(status)) {
+		while ([null, 'Pending', 'Executing'].contains(status)) {
 			Thread.sleep(7000)
 			
 			data = getBuild(applicationId, releaseNumber, buildNumber)

@@ -1,10 +1,8 @@
 package com.inedo;
 
-import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.util.FormValidation;
-import hudson.util.Secret;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
@@ -18,18 +16,13 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
 
-import javax.servlet.ServletException;
-
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import jenkins.model.Jenkins;
 
 /**
- * Sample {@link Builder}.
+ * Triggers Jenkins Build
  *
  * <p>
  * When the user configures the project and enables this builder,
@@ -44,8 +37,6 @@ import jenkins.model.Jenkins;
  * invoked.
  *
  * @author Andrew Sumner
- * 
- *         TODO Variables: Could look at passing variables to BuildMaster
  */
 public class TriggerBuildBuildStep extends Builder {
 	private static final String LOG_PREFIX = "[BuildMaster] "; 
@@ -112,7 +103,6 @@ public class TriggerBuildBuildStep extends Builder {
 		String applicationId = expandVariable(build, listener, this.applicationId);
 		String releaseNumber = expandVariable(build, listener, this.releaseNumber);
 		String buildNumber = expandVariable(build, listener, this.buildNumber);
-		
 		Map<String, String> variablesList = getVariablesList(this.variables);
 		
 		String buildMasterBuildNumber;
@@ -152,9 +142,9 @@ public class TriggerBuildBuildStep extends Builder {
 			
 			int pos = value.indexOf("=");
 			
-			if (pos < 0) throw new RuntimeException(value + " is not in the format 'variable=value'");
+			if (pos < 0) throw new RuntimeException(LOG_PREFIX + value + " is not in the format 'variable=value'");
 			
-			variablesList.put(value.substring(0, pos - 1), value.substring(pos + 1));
+			variablesList.put(value.substring(0, pos).trim(), value.substring(pos + 1).trim());
 		}
 		
 		return variablesList;
