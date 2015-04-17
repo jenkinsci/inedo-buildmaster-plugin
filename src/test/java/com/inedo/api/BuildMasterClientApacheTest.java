@@ -81,6 +81,8 @@ public class BuildMasterClientApacheTest {
 		when(buildMaster.getApplications()).thenReturn(new ObjectMapper().readValue(Application.EXAMPLE, Application[].class));
     }
 	
+	// TODO: Add BuildMasterApi groovy tests, see if can mock httpclient.execute so unit tests actually testing some code rather than
+	// zilch that current mock tests.
 	@Test
 	public void checkConnection() throws IOException {
 		// An exception will be thrown if fails

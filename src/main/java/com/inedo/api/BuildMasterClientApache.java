@@ -1,14 +1,10 @@
 package com.inedo.api;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -21,13 +17,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inedo.api.ExecutionLog.BuildExecution_ActionGroupActionLogEntries;
-
-import org.apache.http.NameValuePair;
 
 public class BuildMasterClientApache
 {
@@ -235,15 +228,12 @@ public class BuildMasterClientApache
         
         System.out.println("Executing request " + httpget.getRequestLine());
         HttpResponse response = httpclient.execute(httpget, context);
-        System.out.println("----------------------------------------");
-        System.out.println(response.getStatusLine());
-            
-        T myObject = new ObjectMapper().readValue(response.getEntity().getContent(), type);
+                    
+        T data = new ObjectMapper().readValue(response.getEntity().getContent(), type);
         
-        //System.out.println(EntityUtils.toString(response.getEntity()));
         EntityUtils.consume(response.getEntity());
         
-        return myObject;
+        return data;
 	}
 
 }
