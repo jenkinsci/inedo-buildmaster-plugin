@@ -13,7 +13,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
-public abstract interface SimpleClient
+public abstract interface BuildMasterClientRestEasy
 {
 
 //   @GET
@@ -27,9 +27,9 @@ public abstract interface SimpleClient
 //   void putBasic(String body);
 
    @GET
-   @Path("comments")
+   @Path("api/json")
    @Produces("text/json")
-   SimpleClientComments[] getComments(@QueryParam("postId") String postId);
+   Application[] Applications_GetApplications(@QueryParam("API_Key") String apiKey);
 
 //   @GET
 //   @Path("comments")

@@ -15,6 +15,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
+import com.inedo.api.BuildMasterConfig;
 
 import java.util.HashMap;
 import java.util.Map;

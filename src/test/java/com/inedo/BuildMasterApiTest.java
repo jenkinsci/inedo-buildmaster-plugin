@@ -12,7 +12,7 @@ import net.sf.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.inedo.BuildMasterConfig;
+import com.inedo.api.BuildMasterConfig;
 
 public class BuildMasterApiTest {
 	// TODO These tests are poorly constructed in that they are querying an active BuildMaster instance and therefore these values will 

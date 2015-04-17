@@ -12,6 +12,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.inedo.api.BuildMasterConfig;
+
 import hudson.Extension;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;

@@ -18,6 +18,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
+import com.inedo.api.BuildMasterConfig;
 
 import jenkins.model.Jenkins;
 

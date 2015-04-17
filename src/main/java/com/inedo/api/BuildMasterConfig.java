@@ -1,4 +1,4 @@
-package com.inedo;
+package com.inedo.api;
 
 import java.io.PrintStream;
 import java.net.InetAddress;
@@ -6,14 +6,14 @@ import java.net.UnknownHostException;
 
 public class BuildMasterConfig {
 	// Global Configuration Items
-	protected String url;
-	protected String authentication;
-	protected String domain;
-	protected String user;
-	protected String password;
-	protected String apiKey;
-	protected boolean logCalls = false;
-	protected PrintStream printStream = System.out;
+	public String url;
+	public String authentication;
+	public String domain;
+	public String user;
+	public String password;
+	public String apiKey;
+	public boolean logCalls = false;
+	public PrintStream printStream = System.out;
     
 	/**
 	 * Get the name of the host the service is running on.

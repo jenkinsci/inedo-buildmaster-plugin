@@ -12,6 +12,8 @@ import org.apache.http.auth.*
 import org.apache.http.client.params.*
 import org.apache.http.auth.params.*
 
+import com.inedo.api.BuildMasterConfig;
+
 public class BuildMasterApi {	
 	private final BuildMasterConfig config
 	
