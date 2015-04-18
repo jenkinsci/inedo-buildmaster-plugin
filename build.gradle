@@ -59,6 +59,15 @@ dependencies {
 	
 	testCompile 'junit:junit:4.8.2'
 	testCompile 'org.mockito:mockito-core:2.0.5-beta'
+
+	// Classifier not working!
+	//testCompile 'org.apache.httpcomponents:httpclient-tests:4.2.3'
+	
+	// TODO: Why is LocalTestServer.class no longer jar file for later versions?
+	testCompile files('libs/httpclient-4.2.3-tests.jar')
+	
+	
+	
 	//testCompile "org.mockito:mockito-core:1.+"	
 	//testCompile 'org.jenkins-ci.main:jenkins-test-harness:1.480.3'
 }

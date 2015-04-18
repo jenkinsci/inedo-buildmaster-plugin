@@ -65,9 +65,4 @@ public class BuildMasterClientBuilder {
         
         return target.proxy(BuildMasterClientRestEasy.class);
 	}
-
-	public static BuildMasterClientApache buildApache(BuildMasterConfig config) {
-		return new BuildMasterClientApache(config);
-	}
-
 }

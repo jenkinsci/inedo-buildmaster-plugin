@@ -1,105 +1,79 @@
 package com.inedo.api;
 
-import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Sets;
-import com.inedo.api.BuildMasterClientRestEasy;
-import com.inedo.api.BuildMasterClientBuilder;
 import com.inedo.api.Application;
 import com.inedo.api.BuildMasterConfig;
 import com.inedo.api.Release.ReleasesExtended;
 
-import org.apache.http.HttpHost;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.NTCredentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.CredentialsProvider;
+import org.apache.http.ProtocolVersion;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.AuthSchemes;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.util.EntityUtils;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import org.apache.http.entity.StringEntity;
+import org.apache.http.localserver.LocalTestServer;
+import org.apache.http.message.BasicHttpResponse;
+import org.apache.http.message.BasicStatusLine;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpRequestHandler;
 import java.io.IOException;
-import java.net.URLConnection;
+import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class BuildMasterClientApacheTest {
-	private final String testApplicationId = "36";
-	private String testReleaseNumber;
+	private String testApplicationId = "36";	// BuildMaster application id to get/create builds for
+	private String testReleaseNumber;			// Latest active release number for the application under test
 	
 	private BuildMasterConfig config;
 	private BuildMasterClientApache buildmaster;
+	
+	// Required for mocking via test server
 	private final boolean MOCK_REQUESTS = true;
+	private LocalTestServer server = null;
+	private HttpRequestHandler handler;
 	
 	@Before
-    public void before() throws JsonParseException, JsonMappingException, IOException {
-		
+    public void before() throws Exception {
 		config = new BuildMasterConfig();
 		
 		config.url = "http://buildmaster";
 		config.authentication = "ntlm";
-		config.user = "as979c";
-		config.password = "Tracey33";
+		config.user = "username";
+		config.password = "password";
 		config.domain = "customstw";
 		config.apiKey = "customs";
 		config.logCalls = false;
 		
-		if (!MOCK_REQUESTS) {
-			buildmaster = BuildMasterClientBuilder.buildApache(config);
-			testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
-			return;
+		if (MOCK_REQUESTS) {
+			handler = new HttpHandler();
+			
+			server = new LocalTestServer(null, null);
+		    server.register("/*", handler);
+		    server.start();
+		    
+		    config.url = "http://" + server.getServiceAddress().getHostName() + ":" + server.getServiceAddress().getPort();
 		}
 		
-		buildmaster = mock(BuildMasterClientApache.class);
-		testReleaseNumber = "1.3";
-		
-		when(buildmaster.getApplications()).thenReturn(new ObjectMapper().readValue(Application.EXAMPLE, Application[].class));
-		
-		
-    }
+		buildmaster = new BuildMasterClientApache(config);
+
+		if (MOCK_REQUESTS) {
+			testReleaseNumber = "1.3";
+		} else {
+			testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
+		}
+	}
 	
-	// TODO: Add BuildMasterApi groovy tests, see if can mock httpclient.execute so unit tests actually testing some code rather than
-	// zilch that current mock tests.
+	@After
+	public void tearDown() throws Exception {
+    	if (server!= null) server.stop();
+	}
+
 	@Test
 	public void checkConnection() throws IOException {
 		// An exception will be thrown if fails
@@ -201,4 +175,13 @@ public class BuildMasterClientApacheTest {
 		//System.out.println("Current_ExecutionStatus_Name for build " + buildNumber + " is " + build.getJSONObject(0).getString("Current_ExecutionStatus_Name"));
 	}
 	
+	// Handler for the test server that returns responses based on the requests.
+	public class HttpHandler implements HttpRequestHandler {
+
+		@Override
+		public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+			response.setEntity(new StringEntity(Application.EXAMPLE));
+		}
+		
+	}
 }

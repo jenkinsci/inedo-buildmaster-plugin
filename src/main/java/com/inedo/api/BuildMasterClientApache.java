@@ -29,6 +29,11 @@ public class BuildMasterClientApache
 	private BuildMasterConfig config;
 	private HttpClient httpclient;
 	
+	public BuildMasterClientApache(HttpClient httpclient, BuildMasterConfig config) {
+		this.httpclient = httpclient;
+		this.config = config;
+	}
+	
 	public BuildMasterClientApache(BuildMasterConfig config) {
 		this.config = config;
 		
