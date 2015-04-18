@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
@@ -16,6 +17,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
@@ -30,19 +32,28 @@ public class BuildMasterClientApache
 	public BuildMasterClientApache(BuildMasterConfig config) {
 		this.config = config;
 		
-		RequestConfig requestConfig = RequestConfig.custom()
-    	        .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM))
-    	        .build();
+		HttpClientBuilder httpbuilder = HttpClients.custom();
+		RequestConfig.Builder configbuilder = RequestConfig.custom();
+		
+		if ("basic".equalsIgnoreCase(config.authentication)) {
+			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+	        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(config.user, config.password));
+	        
+	        httpbuilder.setDefaultCredentialsProvider(credentialsProvider);
+	        configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC));
+		}
 
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new NTCredentials(config.user, config.password, config.getHost(), config.domain));
-
-        // Finally we instantiate the client. Client is a thread safe object and can be used by several threads at the same time. 
+		if ("ntlm".equalsIgnoreCase(config.authentication)) {
+			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+	        credentialsProvider.setCredentials(AuthScope.ANY, new NTCredentials(config.user, config.password, config.getHost(), config.domain));
+	        
+	        httpbuilder.setDefaultCredentialsProvider(credentialsProvider);
+	        configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM));
+		}
+				
+		// Finally we instantiate the client. Client is a thread safe object and can be used by several threads at the same time. 
         // Client can be used for several request. The life span of the client must be equal to the life span of this EJB.
-        httpclient = HttpClients.custom()
-	        .setDefaultCredentialsProvider(credentialsProvider)
-	        .setDefaultRequestConfig(requestConfig)
-	        .build();
+		httpclient = httpbuilder.setDefaultRequestConfig(configbuilder.build()).build();
 	}
 	
 	/**
@@ -140,7 +151,8 @@ public class BuildMasterClientApache
 	 * @throws InterruptedException 
 	 */
 	public boolean waitForBuildCompletion(String applicationId, String releaseNumber, String buildNumber, boolean printLogOnFailure) throws IOException, InterruptedException {
-		final List<String> waiting = Arrays.asList(new String[] {null, "Pending", "Executing"});
+		final List<String> inProgess = Arrays.asList(new String[] {null, "Pending", "Executing"});
+		final List<String> pending = Arrays.asList(new String[] {null, "Pending"});
 		
 		Build build = getBuild(applicationId, releaseNumber, buildNumber);
 		
@@ -149,7 +161,7 @@ public class BuildMasterClientApache
 		
 		long startTime = new Date().getTime();
 		
-		while (waiting.contains(status)) {
+		while (inProgess.contains(status)) {
 			Thread.sleep(7000);
 			
 			build = getBuild(applicationId, releaseNumber, buildNumber);
@@ -157,7 +169,7 @@ public class BuildMasterClientApache
 			status = build.Current_ExecutionStatus_Name;
 			config.printStream.println("\tExecution Status: " + status);
 			
-			if ("Pending".equals(status)) {
+			if (pending.contains(status)) {
 				long endTime = new Date().getTime();
 				long diffMinutes = (endTime - startTime) / (60 * 1000);
 				
@@ -168,7 +180,7 @@ public class BuildMasterClientApache
 			}
 		}
 		
-		if ("Succeeded".equals(status) && printLogOnFailure) {
+		if (!"Succeeded".equals(status) && printLogOnFailure) {
 			printExecutionLog(build.Current_Execution_Id);
 		}
 		
