@@ -22,7 +22,12 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.inedo.api.ExecutionLog.BuildExecution_ActionGroupActionLogEntries;
+import com.inedo.domain.Application;
+import com.inedo.domain.Build;
+import com.inedo.domain.BuildExecutionActionGroupActionLogEntries;
+import com.inedo.domain.BuildExecutionDetails;
+import com.inedo.domain.Release;
+import com.inedo.domain.ReleaseDetails;
 
 public class BuildMasterClientApache
 {
@@ -81,8 +86,8 @@ public class BuildMasterClientApache
 	 * Gets release number of newest active release
 	 * @throws IOException 
 	 */
-	public Release getRelease(String applicationId, String releaseNumber) throws IOException {
-		return doGet(Release.class, "Releases_GetRelease", "Application_Id", applicationId, "Release_Number", releaseNumber);
+	public ReleaseDetails getRelease(String applicationId, String releaseNumber) throws IOException {
+		return doGet(ReleaseDetails.class, "Releases_GetRelease", "Application_Id", applicationId, "Release_Number", releaseNumber);
 	}
 	
 	/**
@@ -98,10 +103,10 @@ public class BuildMasterClientApache
 	 * @throws IOException 
 	 */
 	public String getLatestActiveReleaseNumber(String applicationId) throws IOException {
-		Release release = doGet(Release.class, "Releases_GetReleases", "Application_Id", applicationId, "ReleaseStatus_Name", "Active", "Release_Count", "1");
+		Release[] release = doGet(Release[].class, "Releases_GetReleases", "Application_Id", applicationId, "ReleaseStatus_Name", "Active", "Release_Count", "1");
 		
-		if (release.Releases_Extended.length > 0) {
-			return release.Releases_Extended[0].Release_Number;
+		if (release.length > 0) {
+			return release[0].Release_Number;
 		}
 		
 		return "";
@@ -146,7 +151,13 @@ public class BuildMasterClientApache
 	 * @throws IOException 
 	 */
 	public Build getBuild(String applicationId, String releaseNumber, String buildNumber) throws IOException {
-		return doGet(Build.class, "Builds_GetBuild", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber);
+		Build[] builds = doGet(Build[].class, "Builds_GetBuild", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber);
+		
+		if (builds.length > 0) {
+			return builds[0];
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -189,7 +200,7 @@ public class BuildMasterClientApache
 			printExecutionLog(build.Current_Execution_Id);
 		}
 		
-		return status == "Succeeded";
+		return "Succeeded".equals(status);
 	}
 		
 	/**
@@ -197,13 +208,13 @@ public class BuildMasterClientApache
 	 * @throws IOException 
 	 */
 	public void printExecutionLog(String executionId) throws IOException {
-		ExecutionLog log = doGet(ExecutionLog.class, "Builds_GetExecutionLog", "Execution_Id", executionId);
+		BuildExecutionDetails log = doGet(BuildExecutionDetails.class, "Builds_GetExecutionLog", "Execution_Id", executionId);
 
 		config.printStream.println("");
 		config.printStream.println("BuildMaster Execution Log:");
 		config.printStream.println("-------------------------");
 		
-		for (BuildExecution_ActionGroupActionLogEntries entry : log.BuildExecution_ActionGroupActionLogEntries) {
+		for (BuildExecutionActionGroupActionLogEntries entry : log.BuildExecution_ActionGroupActionLogEntries) {
 			config.printStream.println(entry.LogEntry_Text);
 		}
 						

@@ -1,23 +1,24 @@
 package com.inedo.api;
 
 import static org.junit.Assert.*;
-import com.inedo.api.Application;
+
 import com.inedo.api.BuildMasterConfig;
-import com.inedo.api.Release.ReleasesExtended;
+import com.inedo.domain.Application;
+import com.inedo.domain.Build;
+import com.inedo.domain.Release;
+import com.inedo.domain.ReleaseDetails;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.client.HttpClient;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.localserver.LocalTestServer;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.PrintStream;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,13 +29,12 @@ import org.junit.Test;
 
 public class BuildMasterClientApacheTest {
 	private String testApplicationId = "36";	// BuildMaster application id to get/create builds for
-	private String testReleaseNumber;			// Latest active release number for the application under test
 	
 	private BuildMasterConfig config;
 	private BuildMasterClientApache buildmaster;
 	
 	// Required for mocking via test server
-	private final boolean MOCK_REQUESTS = true;
+	private final boolean MOCK_REQUESTS = false;
 	private LocalTestServer server = null;
 	private HttpRequestHandler handler;
 	
@@ -44,8 +44,8 @@ public class BuildMasterClientApacheTest {
 		
 		config.url = "http://buildmaster";
 		config.authentication = "ntlm";
-		config.user = "username";
-		config.password = "password";
+		config.user = "as979c";
+		config.password = "Tracey33";
 		config.domain = "customstw";
 		config.apiKey = "customs";
 		config.logCalls = false;
@@ -61,12 +61,6 @@ public class BuildMasterClientApacheTest {
 		}
 		
 		buildmaster = new BuildMasterClientApache(config);
-
-		if (MOCK_REQUESTS) {
-			testReleaseNumber = "1.3";
-		} else {
-			testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
-		}
 	}
 	
 	@After
@@ -89,36 +83,36 @@ public class BuildMasterClientApacheTest {
 	
 	@Test(expected=UnknownHostException.class)
 	public void getApplicationsWithError() throws IOException {
+		String origUrl = config.url; 
 		config.url = "http://buildmaster1";
 				
 		try {
 			buildmaster.getApplications();
 		} finally {
-			config.url = "http://buildmaster";
+			config.url = origUrl;
 		}
 	}
 	
 	@Test
 	public void getRelease() throws IOException {
-		Release release = buildmaster.getRelease(testApplicationId, testReleaseNumber);
+		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
+		ReleaseDetails release = buildmaster.getRelease(testApplicationId, testReleaseNumber);
 				
-		assertTrue("Expect PaxHoldRelease Application to have active release", release.Releases_Extended.length > 0);
+		assertTrue("Expect Test Application to have active release", release.Releases_Extended.length > 0);
 
 		String status = release.Releases_Extended[0].ReleaseStatus_Name;
 		
-		assertEquals("Expect PaxHoldRelease Application to have active release " + testReleaseNumber, "Active", status);
+		assertEquals("Expect Test Application to have active release " + testReleaseNumber, "Active", status);
 	}
 	
 	@Test
 	public void getActiveReleases() throws IOException {
 		Release[] releases = buildmaster.getActiveReleases(testApplicationId);
 		
-		assertTrue("Expect PaxHoldRelease Application to have active release(s)", releases.length > 0);
+		assertTrue("Expect Test Application to have active release(s)", releases.length > 0);
 		
 		for (Release release : releases) {
-			for (ReleasesExtended extend : release.Releases_Extended) {
-				System.out.println(extend.Release_Number);
-			}
+			System.out.println(release.Release_Number);
 		}
 	}
 
@@ -126,11 +120,12 @@ public class BuildMasterClientApacheTest {
 	public void getLatestActiveReleaseNumber() throws IOException {
 		String release = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
 		
-		assertTrue("Expect PaxHoldRelease Application to have an active release", release.length() > 0);
+		assertTrue("Expect Test Application to have an active release", release.length() > 0);
 	}
 	
 	@Test
 	public void getNextBuildNumber() throws NumberFormatException, IOException {
+		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
 		Integer nextBuildNumber = Integer.parseInt(buildmaster.getNextBuildNumber(testApplicationId, testReleaseNumber));
 		System.out.println("nextBuildNumber: " + nextBuildNumber);
 		assertTrue("Expect nextBuildNumber to be greate than zero", nextBuildNumber > 0);
@@ -138,6 +133,7 @@ public class BuildMasterClientApacheTest {
 	
 	@Test
 	public void createBuild() throws IOException, InterruptedException {
+		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
 		String buildNumber = buildmaster.getNextBuildNumber(testApplicationId, testReleaseNumber);
 		Map<String, String> variablesList = new HashMap<>();
 		variablesList.put("hello", "world");
@@ -150,30 +146,56 @@ public class BuildMasterClientApacheTest {
 		
 		boolean result = buildmaster.waitForBuildCompletion(testApplicationId, testReleaseNumber, buildMasterBuildNumber, true);
 		
-		assertTrue("Expect PaxHoldRelease build " + buildNumber + " to have built and deployed successfully", result);
+		assertTrue("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
 	}
 	
 	@Test
 	public void getBuild() throws IOException {
+		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
 		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(testApplicationId, testReleaseNumber)) - 1);
 		
 		Build build = buildmaster.getBuild(testApplicationId, testReleaseNumber, buildNumber);
 		
-		assertTrue("Expect PaxHoldRelease Application to have build number " + buildNumber, build.Build_Number.length() > 0);
+		assertTrue("Expect Test Application to have build number " + buildNumber, build.Build_Number.length() > 0);
 		
 		System.out.println("Current_ExecutionStatus_Name for build " + buildNumber + " is " + build.Current_ExecutionStatus_Name);
 	}
 	
 	@Test
 	public void getWaitForBuildCompletion() throws IOException, InterruptedException {
+		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
 		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(testApplicationId, testReleaseNumber)) - 1);
 		
-		boolean result = buildmaster.waitForBuildCompletion(testApplicationId, testReleaseNumber, buildNumber, true);
+		boolean result = buildmaster.waitForBuildCompletion(testApplicationId, testReleaseNumber, buildNumber, false);
 		
-		assertTrue("Expect PaxHoldRelease build " + buildNumber + " to have built and deployed successfully", result);
+		assertTrue("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
 		
 		//System.out.println("Current_ExecutionStatus_Name for build " + buildNumber + " is " + build.getJSONObject(0).getString("Current_ExecutionStatus_Name"));
 	}
+	
+	@Test
+	public void printExecutionLog() throws IOException, InterruptedException {
+		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
+		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(testApplicationId, testReleaseNumber)) - 1);
+		Build build = buildmaster.getBuild(testApplicationId, testReleaseNumber, buildNumber);
+		
+		PrintStream printSteamOrig = config.printStream;
+		ByteArrayOutputStream outContent  = new ByteArrayOutputStream();
+		
+		try {
+			PrintStream printSteam = new PrintStream(outContent );
+			config.printStream = printSteam;
+			
+			buildmaster.printExecutionLog(build.Current_Execution_Id);
+		} finally {
+			config.printStream = printSteamOrig;
+		}
+		
+		assertTrue("Expect Test build " + buildNumber + " to have an execution log", outContent.size() > 0);
+		
+		System.out.println(outContent.toString());
+	}
+	
 	
 	// Handler for the test server that returns responses based on the requests.
 	public class HttpHandler implements HttpRequestHandler {

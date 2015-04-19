@@ -1,4 +1,4 @@
-package com.inedo.api;
+package com.inedo.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

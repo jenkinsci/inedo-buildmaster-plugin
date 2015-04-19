@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.inedo.api.BuildMasterClientRestEasy;
 import com.inedo.api.BuildMasterClientBuilder;
-import com.inedo.api.Application;
 import com.inedo.api.BuildMasterConfig;
+import com.inedo.domain.Application;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -35,6 +35,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
+
 
 
 
