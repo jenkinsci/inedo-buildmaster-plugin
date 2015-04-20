@@ -12,7 +12,6 @@ public class BuildMasterConfig {
 	public String user;
 	public String password;
 	public String apiKey;
-	public boolean logCalls = false;
 	public PrintStream printStream = System.out;
     
 	/**

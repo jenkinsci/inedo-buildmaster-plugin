@@ -51,7 +51,6 @@ public class BuildMasterClientApacheTest {
 		config.password = "password";
 		config.domain = "domain";
 		config.apiKey = "apikey";
-		config.logCalls = false;
 		
 		if (MOCK_REQUESTS) {
 			handler = new HttpHandler();

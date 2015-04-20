@@ -54,8 +54,7 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
     	private String domain;
     	private String user;
         private Secret password;
-        private String apiKey; 
-        private boolean logCalls;
+        private String apiKey;
         
         public BuildMasterPluginDescriptor() {
             super(BuildMasterPlugin.class);
@@ -73,14 +72,13 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
         }
 
         @DataBoundConstructor
-        public BuildMasterPluginDescriptor(String url, String authentication, String domain, String user, String password, String apiKey, boolean logCalls) {
+        public BuildMasterPluginDescriptor(String url, String authentication, String domain, String user, String password, String apiKey) {
             this.url = url;
             this.authentication = authentication;
             this.domain = "whyyyy!"; //domain;
             this.user = user;
             this.password = Secret.fromString(password);
             this.apiKey = apiKey;
-            this.logCalls = logCalls;
         }
 
         @Override
@@ -115,10 +113,6 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
             apiKey = value;
         }
         
-        public void setLogCalls(boolean value) {
-        	logCalls = value;
-        }
-        
         /**
          * Field getters
          */
@@ -144,10 +138,6 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
         
         public String getApiKey() {
             return apiKey;
-        }
-        
-        public boolean getLogCalls() {
-        	return logCalls;
         }
         
         public boolean validatePluginConfiguration() {
@@ -231,8 +221,7 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
 			@QueryParameter("domain") final String domain,
 			@QueryParameter("user") final String user,
 			@QueryParameter("password") final String password,
-			@QueryParameter("apiKey") final String apiKey,
-			@QueryParameter("logCalls") final boolean logCalls) throws IOException, ServletException {
+			@QueryParameter("apiKey") final String apiKey) throws IOException, ServletException {
 	
 			BuildMasterConfig config = new BuildMasterConfig();
 			
@@ -242,7 +231,6 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
 			config.user = user;
 			config.password = password;
 			config.apiKey = apiKey;
-			config.logCalls = logCalls;
 			
 			BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 			
@@ -265,7 +253,6 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
 			config.user = user;
 			config.password = Secret.toString(password);
 			config.apiKey = apiKey;
-			config.logCalls = logCalls;
 			
     		return config;
 		}

@@ -39,9 +39,6 @@
     <f:entry field="password" title="Password" >
       <f:password />
     </f:entry>
-    <f:entry field="logCalls" title="Log API Requests" >
-      <f:checkbox />
-    </f:entry>
     
     <f:validateButton
        title="${%Test Connection}" progress="${%Testing...}"
