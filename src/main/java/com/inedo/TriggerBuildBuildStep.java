@@ -15,8 +15,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
+import com.inedo.api.BuildMasterClientApache;
 import com.inedo.api.BuildMasterConfig;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -92,14 +94,14 @@ public class TriggerBuildBuildStep extends Builder {
 	}
 		
 	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 		if (!getSharedDescriptor().validatePluginConfiguration()) {
 			listener.getLogger().println("Please configure BuildMaster Plugin global settings");
 			return false;
 		}
 		
 		BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
-		BuildMasterApi buildmaster = new BuildMasterApi(config);
+		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 
 		String applicationId = expandVariable(build, listener, this.applicationId);
 		String releaseNumber = expandVariable(build, listener, this.releaseNumber);
@@ -201,6 +203,7 @@ public class TriggerBuildBuildStep extends Builder {
 			load();
 		}
 
+		@SuppressWarnings("rawtypes")
 		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
 			// Indicates that this builder can be used with all kinds of project types
 			return true;

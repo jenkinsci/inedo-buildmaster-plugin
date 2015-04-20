@@ -2,19 +2,14 @@ package com.inedo.api;
 
 import static org.junit.Assert.*;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inedo.api.BuildMasterConfig;
 import com.inedo.domain.Application;
 import com.inedo.domain.Build;
-import com.inedo.domain.BuildExecutionActionGroupActionLogEntries;
 import com.inedo.domain.BuildExecutionDetails;
 import com.inedo.domain.Release;
 import com.inedo.domain.ReleaseDetails;
 
 import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;

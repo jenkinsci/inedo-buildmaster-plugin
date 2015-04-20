@@ -1,11 +1,11 @@
 package com.inedo;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
+//import javax.ws.rs.client.Client;
+//import javax.ws.rs.client.ClientBuilder;
+//import javax.ws.rs.client.WebTarget;
+//import javax.ws.rs.core.MediaType;
 
-import net.sf.json.JSONArray;
+//import net.sf.json.JSONArray;
 
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ public class TriggerBuildStepTest {
 }
 
 //import static org.junit.Assert.*;
-//
+// TODO - can I get this working?
 //import java.io.PrintStream;
 //import java.nio.charset.Charset;
 //

@@ -22,7 +22,7 @@ buildscript {
 }
 
 apply plugin: 'org.jenkins-ci.jpi'
-apply plugin: 'groovy'
+apply plugin: 'java'
 
 group = 'com.inedo.buildmaster'
 version = '1.0'
@@ -49,26 +49,17 @@ repositories {
 }
 
 dependencies {
-	compile "org.codehaus.groovy:groovy-all:2.3.6"
-	compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
-	
-	compile 'org.jboss.resteasy:resteasy-client:3.0.11.Final'
-	compile 'org.jboss.resteasy:resteasy-jackson2-provider:3.0.11.Final'
-	
 	compile 'org.apache.httpcomponents:httpclient:4.4.1'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.5.2'
 	
 	testCompile 'junit:junit:4.8.2'
 	testCompile 'org.mockito:mockito-core:2.0.5-beta'
 
-	// Classifier not working!
-	//testCompile 'org.apache.httpcomponents:httpclient-tests:4.2.3'
-	
 	// TODO: Why is LocalTestServer.class no longer jar file for later versions?
+	// also, Classifier not working, so cannot do this:
+	//testCompile 'org.apache.httpcomponents:httpclient-tests:4.2.3'
 	testCompile files('libs/httpclient-4.2.3-tests.jar')
-	
-	
-	
-	//testCompile "org.mockito:mockito-core:1.+"	
+
 	//testCompile 'org.jenkins-ci.main:jenkins-test-harness:1.480.3'
 }
 

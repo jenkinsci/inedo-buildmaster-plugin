@@ -11,7 +11,7 @@
 	
  */
 
-package com.inedo;
+package com.inedo.api;
 
 //import java.util.ArrayList;
 //import java.util.List;

@@ -12,6 +12,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.inedo.api.BuildMasterClientApache;
 import com.inedo.api.BuildMasterConfig;
 
 import hudson.Extension;
@@ -243,7 +244,7 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
 			config.apiKey = apiKey;
 			config.logCalls = logCalls;
 			
-			BuildMasterApi buildmaster = new BuildMasterApi(config);
+			BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 			
 			try {
 				buildmaster.checkConnection();

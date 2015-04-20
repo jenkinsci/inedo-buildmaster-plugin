@@ -17,8 +17,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
+import com.inedo.api.BuildMasterClientApache;
 import com.inedo.api.BuildMasterConfig;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,9 +43,9 @@ import jenkins.model.Jenkins;
  *
  * @author Andrew Sumner
  * 
- * TODO:
- * This and the TriggerBuildBuildStep are identical except for the classes they extend, is there any way to share the code? 
+ * TODO: This and the TriggerBuildBuildStep are identical except for the classes they extend, is there any way to share the code? 
  */
+@SuppressWarnings("unchecked")
 public class TriggerBuildPostBuildStep extends Recorder {
 	private static final String LOG_PREFIX = "[BuildMaster] "; 
 	private static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
@@ -97,14 +99,14 @@ public class TriggerBuildPostBuildStep extends Recorder {
 	}
 		
 	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 		if (!getSharedDescriptor().validatePluginConfiguration()) {
 			listener.getLogger().println("Please configure BuildMaster Plugin global settings");
 			return false;
 		}
 		
 		BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
-		BuildMasterApi buildmaster = new BuildMasterApi(config);
+		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 
 		String applicationId = expandVariable(build, listener, this.applicationId);
 		String releaseNumber = expandVariable(build, listener, this.releaseNumber);
@@ -208,6 +210,7 @@ public class TriggerBuildPostBuildStep extends Recorder {
 			load();
 		}
 
+		@SuppressWarnings("rawtypes")
 		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
 			// Indicates that this builder can be used with all kinds of project types
 			return true;

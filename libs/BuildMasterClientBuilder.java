@@ -5,6 +5,9 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
+//gradle
+//compile 'org.jboss.resteasy:resteasy-client:3.0.11.Final'
+//compile 'org.jboss.resteasy:resteasy-jackson2-provider:3.0.11.Final'
 
 public class BuildMasterClientBuilder {
 	BuildMasterConfig config;

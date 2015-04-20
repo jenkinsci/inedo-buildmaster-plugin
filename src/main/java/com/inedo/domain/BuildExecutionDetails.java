@@ -1,10 +1,5 @@
 package com.inedo.domain;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-
-import javax.management.RuntimeErrorException;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown=true)

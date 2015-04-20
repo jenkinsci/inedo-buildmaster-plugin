@@ -1,5 +1,7 @@
 package com.inedo;
 
+import java.io.IOException;
+
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.Extension;
@@ -10,7 +12,6 @@ import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -18,7 +19,11 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
+import com.inedo.api.BuildMasterClientApache;
 import com.inedo.api.BuildMasterConfig;
+import com.inedo.domain.Application;
+import com.inedo.domain.Release;
+import com.inedo.domain.ReleaseDetails;
 
 import jenkins.model.Jenkins;
 
@@ -37,7 +42,7 @@ import jenkins.model.Jenkins;
  *
  * @author Andrew Sumner
  * 
- * TODO: 
+ * TODO: following: 
  * Release Number selection: If a specific release number is selected (for example an emergency patch might want to go on an earlier release than the latest one) this will 
  * become invalid once the release is finalised in BuildMaster.  There may be scope for an enhancement here to provide alternative forms of matching on release number - eg by
  * branch name.
@@ -71,14 +76,14 @@ public class SelectApplicationBuildStep extends Builder {
     }
     
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
     	if( !getSharedDescriptor().validatePluginConfiguration()) {
 			listener.getLogger().println(LOG_PREFIX + "Please configure BuildMaster Plugin global settings");
 			return false;
 		}
     	
     	BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
-		BuildMasterApi buildmaster = new BuildMasterApi(config);
+    	BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 		
     	// Pouplate BUILDMASTER_APPLICATION variable
     	listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_APPLICATION=" + applicationId);
@@ -158,7 +163,7 @@ public class SelectApplicationBuildStep extends Builder {
     	@SuppressWarnings("unused") private String releaseNumber;
     	@SuppressWarnings("unused") private String buildNumberSource;
     	
-    	private BuildMasterApi buildmaster = null;
+    	private BuildMasterClientApache buildmaster = null;
     	private Boolean isBuildMasterAvailable = null;
     	private String connectionError = "";
         
@@ -170,7 +175,7 @@ public class SelectApplicationBuildStep extends Builder {
             	isBuildMasterAvailable = true;
                 
                 try {
-                	buildmaster = new BuildMasterApi(getSharedDescriptor().getBuildMasterConfig());            
+                	buildmaster = new BuildMasterClientApache(getSharedDescriptor().getBuildMasterConfig());            
                 	buildmaster.checkConnection();
                 } catch (Exception ex) {
                 	isBuildMasterAvailable = false;
@@ -195,7 +200,8 @@ public class SelectApplicationBuildStep extends Builder {
             load();
         }
 
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+        @SuppressWarnings("rawtypes")
+		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types 
             return true;
         }
@@ -212,7 +218,7 @@ public class SelectApplicationBuildStep extends Builder {
             return "Select BuildMaster Application";
         }
                 
-        public ListBoxModel doFillApplicationIdItems() {
+        public ListBoxModel doFillApplicationIdItems() throws IOException {
         	ListBoxModel items = new ListBoxModel();
         	
         	if (!getIsBuildMasterAvailable()) {
@@ -220,13 +226,12 @@ public class SelectApplicationBuildStep extends Builder {
         		
         		return items;
         	}
-        	JSONArray applications = buildmaster.getApplications();
+        	
+        	Application[] applications = buildmaster.getApplications();
             
-    		for (int i = 0; i < applications.size(); i++) {
-    			JSONObject json = applications.getJSONObject(i);
-
-    			items.add((json.containsKey("ApplicationGroup_Name") ? json.getString("ApplicationGroup_Name") + " > " : "") + json.getString("Application_Name"), json.getString("Application_Id"));
-    		}
+        	for (Application application : applications) {
+        		items.add((application.ApplicationGroup_Name != null ? application.ApplicationGroup_Name + " > " : "") + application.Application_Name, String.valueOf(application.Application_Id));
+			}
         	
             return items;
         }
@@ -242,15 +247,13 @@ public class SelectApplicationBuildStep extends Builder {
             // Validate release is still active
             if (!LATEST_RELEASE.equals(value)) {
 	        	try {
-	        		JSONObject json = buildmaster.getRelease(applicationId, value);
+	        		ReleaseDetails releaseDetails = buildmaster.getRelease(applicationId, value);
 	                                    
-	            	JSONArray releases = ((JSONArray)json.get("Releases_Extended"));
-	            	
-	            	if (releases.size() == 0) {
+	        		if (releaseDetails.Releases_Extended.length == 0) {
 	            		return FormValidation.error("The release " + value + " does not exist for this application");
 	            	}
 	            	
-	        		String status = releases.getJSONObject(0).getString("ReleaseStatus_Name");
+	        		String status = releaseDetails.Releases_Extended[0].ReleaseStatus_Name;
 	            
 		            if (!"Active".equalsIgnoreCase(status)) {
 		            	return FormValidation.error("The release status must be Active, the actual status is " + status);
@@ -263,13 +266,8 @@ public class SelectApplicationBuildStep extends Builder {
             return FormValidation.ok();
         }
         
-        public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) {
+        public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
         	ListBoxModel items = new ListBoxModel();
-        	
-//        	String releaseNumber="";
-//        	if(releaseNumber == null || LATEST_RELEASE.equals(releaseNumber)) {
-//        		releaseNumber = "";
-//        	}
         	
         	items.add("", "");
         	items.add("Latest Active Release", LATEST_RELEASE);
@@ -278,22 +276,11 @@ public class SelectApplicationBuildStep extends Builder {
         		return items;
         	}
         	
-        	JSONArray releases = buildmaster.getActiveReleases(applicationId);
-        	boolean found = false;
+        	Release[] releases = buildmaster.getActiveReleases(applicationId);
         	
-        	for (int i = 0; i < releases.size(); i++) {
-    			JSONObject json = releases.getJSONObject(i);
-
-    			items.add(json.getString("Release_Number"), json.getString("Release_Number"));
-    			
-//    			if (releaseNumber.equals(json.getString("Release_Number"))) {
-//    				found = true;
-//    			}
-    		}
-        	
-//        	if (!found && !releaseNumber.isEmpty()) {
-//        		items.add(releaseNumber, releaseNumber);
-//        	}
+        	for (Release release : releases) {
+        		items.add(release.Release_Number, release.Release_Number);
+			}
         	
             return items;
         }
