@@ -244,7 +244,7 @@ public class BuildMasterClientApache
 	}
 	
 	// Do the work
-	private <T> T doGet(Class<T> type, String path, String... query) throws IOException {
+	protected <T> T doGet(Class<T> type, String path, String... query) throws IOException {
 		StringBuilder url = new StringBuilder();
 		url.append(config.url).append("/api/json/").append(path).append("?API_Key=").append(config.apiKey);
 		

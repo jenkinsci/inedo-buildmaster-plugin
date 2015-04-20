@@ -13,7 +13,6 @@
 
 buildscript {
     repositories {
-		mavenLocal()
 		jcenter()		
     }
     dependencies {
@@ -43,9 +42,9 @@ jenkinsPlugin {
 
 // Download dependancies via Artifactory
 repositories {
-	mavenLocal()
+	//mavenLocal()
 	jcenter()
-	mavenCentral()
+	//mavenCentral()
 }
 
 dependencies {
@@ -54,11 +53,6 @@ dependencies {
 	
 	testCompile 'junit:junit:4.8.2'
 	testCompile 'org.mockito:mockito-core:2.0.5-beta'
-
-	// TODO: Why is LocalTestServer.class no longer jar file for later versions?
-	// also, Classifier not working, so cannot do this:
-	//testCompile 'org.apache.httpcomponents:httpclient-tests:4.2.3'
-	testCompile files('libs/httpclient-4.2.3-tests.jar')
 
 	//testCompile 'org.jenkins-ci.main:jenkins-test-harness:1.480.3'
 }

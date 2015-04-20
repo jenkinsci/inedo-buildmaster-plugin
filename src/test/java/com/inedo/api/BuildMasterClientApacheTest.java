@@ -14,13 +14,15 @@ import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.localserver.LocalTestServer;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -38,7 +40,7 @@ public class BuildMasterClientApacheTest {
 	
 	// Required for mocking via test server
 	private final boolean MOCK_REQUESTS = true;
-	private LocalTestServer server = null;
+	private HttpServer server = null;
 	private HttpRequestHandler handler;
 	
 	@Before
@@ -55,11 +57,15 @@ public class BuildMasterClientApacheTest {
 		if (MOCK_REQUESTS) {
 			handler = new HttpHandler();
 			
-			server = new LocalTestServer(null, null);
-		    server.register("/*", handler);
+			server = ServerBootstrap.bootstrap()
+						.setLocalAddress(InetAddress.getLocalHost())
+						.setListenerPort(0)	// Any free port
+						.registerHandler("*", handler)
+						.create();
+		    
 		    server.start();
 		    
-		    config.url = "http://" + server.getServiceAddress().getHostName() + ":" + server.getServiceAddress().getPort();
+		    config.url = "http://" + server.getInetAddress().getHostName() + ":" + server.getLocalPort();
 		}
 		
 		buildmaster = new BuildMasterClientApache(config);
@@ -85,7 +91,7 @@ public class BuildMasterClientApacheTest {
 	}
 	
 	@Test(expected=UnknownHostException.class)
-	public void getApplicationsWithError() throws IOException {
+	public void getWithIncorrectHost() throws IOException {
 		String origUrl = config.url; 
 		config.url = "http://buildmaster1";
 				
@@ -94,6 +100,11 @@ public class BuildMasterClientApacheTest {
 		} finally {
 			config.url = origUrl;
 		}
+	}
+	
+	@Test(expected=IOException.class)
+	public void getWithIncorrectMethod() throws IOException {
+		buildmaster.doGet(String.class, "RubbishMethod");
 	}
 	
 	@Test
