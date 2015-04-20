@@ -1,5 +1,10 @@
 package com.inedo.domain;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
+import javax.management.RuntimeErrorException;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -20,8 +25,8 @@ public class BuildExecutionDetails
 			"\"BuildExecution_ActionGroupActions\": " +
 			"[" +
 			"  { \"ExecutionStarted_Date\": \"2015-04-15T04:06:57.6870000\", \"ExecutionEnded_Date\": \"2015-04-15T04:07:05.7600000\", \"ExecutionStatus_Name\": \"Succeeded\", \"ExecutionAction_Description\": \"\", \"Original_Action_Sequence\": 0, \"BuildExecution_ActionGroupAction_Id\": 1706457, \"Attempt_Sequence\": 1, \"WarningLogEntry_Indicator\": \"N\", \"BuildExecution_DeploymentPlan_Id\": 142076, \"Original_DeploymentPlanActionGroup_Sequence\": 0}," +
-			"  { \"ExecutionStarted_Date\": \"2015-04-15T04:06:57.7130000\", \"ExecutionEnded_Date\": \"2015-04-15T04:07:03.9500000\", \"ExecutionStatus_Name\": \"Succeeded\", \"ExecutionAction_Description\": \"Deploy JenkinsBuild Artifact\r\nto $CurrentDirectory\", \"Original_Action_Sequence\": 1, \"BuildExecution_ActionGroupAction_Id\": 1706458, \"Original_Server_Name\": \"UAT dwdcl-mwas11 tomcat\", \"Attempt_Sequence\": 1, \"WarningLogEntry_Indicator\": \"N\", \"BuildExecution_DeploymentPlan_Id\": 142077, \"Original_DeploymentPlanActionGroup_Sequence\": 1}," +
-			"  { \"ExecutionStarted_Date\": \"2015-04-15T04:07:04.1300000\", \"ExecutionEnded_Date\": \"2015-04-15T04:07:05.7500000\", \"ExecutionStatus_Name\": \"Succeeded\", \"ExecutionAction_Description\": \"Execute Shell Script\r\nExecute \\\"#!/bin/bash\r\n\r\n# Ensure all variables declared\r\nse...\\\"\", \"Original_Action_Sequence\": 2, \"BuildExecution_ActionGroupAction_Id\": 1706461, \"Original_Server_Name\": \"UAT dwdcl-mwas11 tomcat\", \"Attempt_Sequence\": 1, \"WarningLogEntry_Indicator\": \"N\", \"BuildExecution_DeploymentPlan_Id\": 142077, \"Original_DeploymentPlanActionGroup_Sequence\": 1}" +
+			"  { \"ExecutionStarted_Date\": \"2015-04-15T04:06:57.7130000\", \"ExecutionEnded_Date\": \"2015-04-15T04:07:03.9500000\", \"ExecutionStatus_Name\": \"Succeeded\", \"ExecutionAction_Description\": \"Deploy JenkinsBuild Artifact\\r\\nto $CurrentDirectory\", \"Original_Action_Sequence\": 1, \"BuildExecution_ActionGroupAction_Id\": 1706458, \"Original_Server_Name\": \"UAT dwdcl-mwas11 tomcat\", \"Attempt_Sequence\": 1, \"WarningLogEntry_Indicator\": \"N\", \"BuildExecution_DeploymentPlan_Id\": 142077, \"Original_DeploymentPlanActionGroup_Sequence\": 1}," +
+			"  { \"ExecutionStarted_Date\": \"2015-04-15T04:07:04.1300000\", \"ExecutionEnded_Date\": \"2015-04-15T04:07:05.7500000\", \"ExecutionStatus_Name\": \"Succeeded\", \"ExecutionAction_Description\": \"Execute Shell Script\\r\\nExecute \\\"#!/bin/bash\\r\\n\\r\\n# Ensure all variables declared\\r\\nse...\\\"\", \"Original_Action_Sequence\": 2, \"BuildExecution_ActionGroupAction_Id\": 1706461, \"Original_Server_Name\": \"UAT dwdcl-mwas11 tomcat\", \"Attempt_Sequence\": 1, \"WarningLogEntry_Indicator\": \"N\", \"BuildExecution_DeploymentPlan_Id\": 142077, \"Original_DeploymentPlanActionGroup_Sequence\": 1}" +
 			"]," +
 			"\"BuildExecution_ActionGroupActionLogEntries\": " +
 			"[" +
@@ -36,8 +41,8 @@ public class BuildExecutionDetails
 			"  { \"LogEntry_Sequence\": 7, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Initializing action...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 8, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Initialization complete. Executing...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 9, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Attempting to get artifact associated with deployable ID: 2070\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
-			"  { \"LogEntry_Sequence\": 10, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Artifact for action group\u0027s deployable found at: C:\\BuildMaster\\Artifacts\\36\\1.3\\26\\2070\\JenkinsBuild.zip\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
-			"  { \"LogEntry_Sequence\": 11, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Loading file from C:\\BuildMaster\\Artifacts\\36\\1.3\\26\\2070\\JenkinsBuild.zip...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
+			"  { \"LogEntry_Sequence\": 10, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Artifact for action group\u0027s deployable found at: C:\\\\BuildMaster\\\\Artifacts\\\\36\\\\1.3\\\\26\\\\2070\\\\JenkinsBuild.zip\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
+			"  { \"LogEntry_Sequence\": 11, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Loading file from C:\\\\BuildMaster\\\\Artifacts\\\\36\\\\1.3\\\\26\\\\2070\\\\JenkinsBuild.zip...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 12, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Getting list of files in target path...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 13, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Getting list of files in artifact...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 14, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Determining which files need to be deployed...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +

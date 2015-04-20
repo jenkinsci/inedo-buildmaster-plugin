@@ -1,11 +1,17 @@
 package com.inedo.api;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -221,7 +227,7 @@ public class BuildMasterClientApache
 		config.printStream.println("");
 	}
 	
-	private String getVariables(Map<String, String> variablesList) {
+	private String getVariables(Map<String, String> variablesList) throws UnsupportedEncodingException {
 		if (variablesList == null) return null;
 		
 		StringBuilder variables = new StringBuilder();
@@ -237,7 +243,7 @@ public class BuildMasterClientApache
 			variables.append("</Variables>");
 		}
 		
-		return variables.toString();
+		return  URLEncoder.encode(variables.toString(), "UTF-8");
 	}
 	
 	// Do the work
@@ -250,13 +256,20 @@ public class BuildMasterClientApache
 				url.append("&").append(query[i]).append("=").append(query[i+1]);
 			}
 	    }
-				
-		HttpGet httpget = new HttpGet(url.toString());            
+	
+		HttpGet httpget = new HttpGet(url.toString());
         HttpClientContext context = HttpClientContext.create();    
         
         System.out.println("Executing request " + httpget.getRequestLine());
         HttpResponse response = httpclient.execute(httpget, context);
-                    
+        
+        if (response.getStatusLine().getStatusCode() > 399) {
+        	String encoding = response.getEntity().getContentEncoding() == null ? "UTF-8" : response.getEntity().getContentEncoding().getName();
+        	String reason = IOUtils.toString(response.getEntity().getContent(), encoding);
+        	        	
+        	throw new IOException(response.getStatusLine().toString() + ": " + reason);
+        }
+        
         T data = new ObjectMapper().readValue(response.getEntity().getContent(), type);
         
         EntityUtils.consume(response.getEntity());

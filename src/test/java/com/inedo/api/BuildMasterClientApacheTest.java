@@ -2,12 +2,19 @@ package com.inedo.api;
 
 import static org.junit.Assert.*;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inedo.api.BuildMasterConfig;
 import com.inedo.domain.Application;
 import com.inedo.domain.Build;
+import com.inedo.domain.BuildExecutionActionGroupActionLogEntries;
+import com.inedo.domain.BuildExecutionDetails;
 import com.inedo.domain.Release;
 import com.inedo.domain.ReleaseDetails;
 
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -19,6 +26,7 @@ import org.apache.http.protocol.HttpRequestHandler;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +42,7 @@ public class BuildMasterClientApacheTest {
 	private BuildMasterClientApache buildmaster;
 	
 	// Required for mocking via test server
-	private final boolean MOCK_REQUESTS = false;
+	private final boolean MOCK_REQUESTS = true;
 	private LocalTestServer server = null;
 	private HttpRequestHandler handler;
 	
@@ -44,10 +52,10 @@ public class BuildMasterClientApacheTest {
 		
 		config.url = "http://buildmaster";
 		config.authentication = "ntlm";
-		config.user = "as979c";
-		config.password = "Tracey33";
-		config.domain = "customstw";
-		config.apiKey = "customs";
+		config.user = "user";
+		config.password = "password";
+		config.domain = "domain";
+		config.apiKey = "apikey";
 		config.logCalls = false;
 		
 		if (MOCK_REQUESTS) {
@@ -76,9 +84,10 @@ public class BuildMasterClientApacheTest {
 	
 	@Test
 	public void getApplications() throws IOException  {
-    	Application[] result = buildmaster.getApplications();
+    	Application[] applications = buildmaster.getApplications();
     	
-        System.out.println(result[0].Application_Name);
+        assertTrue("Expect BuildMaster to have applications created", applications.length > 0);
+//        System.out.println(applications[0].Application_Name);
 	}
 	
 	@Test(expected=UnknownHostException.class)
@@ -111,9 +120,9 @@ public class BuildMasterClientApacheTest {
 		
 		assertTrue("Expect Test Application to have active release(s)", releases.length > 0);
 		
-		for (Release release : releases) {
-			System.out.println(release.Release_Number);
-		}
+//		for (Release release : releases) {
+//			System.out.println(release.Release_Number);
+//		}
 	}
 
 	@Test
@@ -127,8 +136,10 @@ public class BuildMasterClientApacheTest {
 	public void getNextBuildNumber() throws NumberFormatException, IOException {
 		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(testApplicationId);
 		Integer nextBuildNumber = Integer.parseInt(buildmaster.getNextBuildNumber(testApplicationId, testReleaseNumber));
-		System.out.println("nextBuildNumber: " + nextBuildNumber);
+		
 		assertTrue("Expect nextBuildNumber to be greate than zero", nextBuildNumber > 0);
+		
+//		System.out.println("nextBuildNumber: " + nextBuildNumber);
 	}
 	
 	@Test
@@ -140,7 +151,6 @@ public class BuildMasterClientApacheTest {
 		variablesList.put("cause", "unit test");
 		
 		String buildMasterBuildNumber = buildmaster.createBuild(testApplicationId, testReleaseNumber, buildNumber, variablesList);
-		//String buildMasterBuildNumber = buildmaster.createBuild(testApplicationId, testReleaseNumber);
 		
 		assertEquals("Expect returned buildNumber to be the same as requested", buildNumber, buildMasterBuildNumber);
 		
@@ -158,7 +168,7 @@ public class BuildMasterClientApacheTest {
 		
 		assertTrue("Expect Test Application to have build number " + buildNumber, build.Build_Number.length() > 0);
 		
-		System.out.println("Current_ExecutionStatus_Name for build " + buildNumber + " is " + build.Current_ExecutionStatus_Name);
+//		System.out.println("Current_ExecutionStatus_Name for build " + buildNumber + " is " + build.Current_ExecutionStatus_Name);
 	}
 	
 	@Test
@@ -169,8 +179,6 @@ public class BuildMasterClientApacheTest {
 		boolean result = buildmaster.waitForBuildCompletion(testApplicationId, testReleaseNumber, buildNumber, false);
 		
 		assertTrue("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
-		
-		//System.out.println("Current_ExecutionStatus_Name for build " + buildNumber + " is " + build.getJSONObject(0).getString("Current_ExecutionStatus_Name"));
 	}
 	
 	@Test
@@ -193,16 +201,63 @@ public class BuildMasterClientApacheTest {
 		
 		assertTrue("Expect Test build " + buildNumber + " to have an execution log", outContent.size() > 0);
 		
-		System.out.println(outContent.toString());
+//		System.out.println(outContent.toString());
 	}
-	
 	
 	// Handler for the test server that returns responses based on the requests.
 	public class HttpHandler implements HttpRequestHandler {
 
 		@Override
 		public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-			response.setEntity(new StringEntity(Application.EXAMPLE));
+			URI uri = URI.create(request.getRequestLine().getUri());
+			
+			String method = uri.getPath().replace("/api/json/", "");
+			
+			switch (method) {
+			case "Applications_GetApplications":
+				response.setEntity(new StringEntity(Application.EXAMPLE));
+				break;
+				
+			case "Releases_GetReleases":
+				response.setEntity(new StringEntity(Release.EXAMPLE));
+				break;
+			
+			case "Releases_GetRelease": 
+				response.setEntity(new StringEntity(ReleaseDetails.EXAMPLE));
+				break;
+			
+			case "Builds_GetBuilds": 
+				response.setEntity(new StringEntity(Build.EXAMPLE));
+				break;
+				
+			case "Builds_GetBuild":
+				response.setEntity(new StringEntity(Build.EXAMPLE));
+				break;				
+				
+			case "Builds_CreateBuild":
+				String buildNumber = "99";
+				String query = uri.getQuery();
+								
+				int pos = query.indexOf("Requested_Build_Number");
+				
+				if (pos > 0) {
+					query = query.substring(pos + "Requested_Build_Number".length() + 1);
+					
+					buildNumber = query.substring(0, query.indexOf("&"));
+				}
+				
+				// Return the quested build number if passed, else new build number
+				response.setEntity(new StringEntity(buildNumber));
+				break;
+			
+			case "Builds_GetExecutionLog":
+				response.setEntity(new StringEntity(BuildExecutionDetails.EXAMPLE));
+				break;
+				
+			default:
+				response.setStatusCode(HttpStatus.SC_NOT_FOUND);
+				response.setEntity(new StringEntity("API method " + method + " not found."));
+			}
 		}
 		
 	}
