@@ -28,22 +28,13 @@ import com.inedo.domain.ReleaseDetails;
 import jenkins.model.Jenkins;
 
 /**
- * <p>
- * When the user configures the project and enables this builder,
- * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
- * and a new {@link SelectApplicationBuildStep} is created. The created
- * instance is persisted to the project configuration XML by using
- * XStream, so this allows you to use instance fields (like {@link #name})
- * to remember the configuration.
- *
- * <p>
- * When a build is performed, the {@link #perform(AbstractBuild, Launcher, BuildListener)}
- * method will be invoked. 
+ * The SelectApplicationBuildStep will populate environment variables for the BuildMaster application, release and build numbers 
+ * as a build step.
  *
  * @author Andrew Sumner
  * 
- * TODO: following: 
- * Release Number selection: If a specific release number is selected (for example an emergency patch might want to go on an earlier release than the latest one) this will 
+ * TODO: Release Number selection: 
+ * If a specific release number is selected (for example an emergency patch might want to go on an earlier release than the latest one) this will 
  * become invalid once the release is finalised in BuildMaster.  There may be scope for an enhancement here to provide alternative forms of matching on release number - eg by
  * branch name.
  */
@@ -77,12 +68,12 @@ public class SelectApplicationBuildStep extends Builder {
     
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-    	if( !getSharedDescriptor().validatePluginConfiguration()) {
+    	if( !BuildHelper.getSharedDescriptor().validatePluginConfiguration()) {
 			listener.getLogger().println(LOG_PREFIX + "Please configure BuildMaster Plugin global settings");
 			return false;
 		}
     	
-    	BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
+    	BuildMasterConfig config = BuildHelper.getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
     	BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 		
     	// Pouplate BUILDMASTER_APPLICATION variable
@@ -111,7 +102,7 @@ public class SelectApplicationBuildStep extends Builder {
 		case "BUILDMASTER":
 			actualBuildNumber = buildmaster.getNextBuildNumber(applicationId, actualReleaseNumber);
 			
-			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number = " + actualBuildNumber);
+			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
 			
 			break;
@@ -127,7 +118,7 @@ public class SelectApplicationBuildStep extends Builder {
 
 			actualBuildNumber = envVars.get("BUILD_NUMBER");
 			
-			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number = " + actualBuildNumber);
+			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number=" + actualBuildNumber);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
 			
 			break;
@@ -143,30 +134,28 @@ public class SelectApplicationBuildStep extends Builder {
 		
         return true;
     }
-    
-    public static BuildMasterPluginDescriptor getSharedDescriptor() {
-        return (BuildMasterPluginDescriptor)Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
-    }
-
-    /**
-     * Descriptor for {@link SelectApplicationBuildStep}. Used as a singleton.
-     * The class is marked as public so that it can be accessed from views.
-     *
-     * <p>
-     * See <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt>
-     * for the actual HTML fragment for the configuration screen.
-     */
+  
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-    	//These fields are required otherwise form data is not loaded correctly
-    	@SuppressWarnings("unused") private String applicationId;
-    	@SuppressWarnings("unused") private String releaseNumber;
-    	@SuppressWarnings("unused") private String buildNumberSource;
-    	
     	private BuildMasterClientApache buildmaster = null;
     	private Boolean isBuildMasterAvailable = null;
     	private String connectionError = "";
+
+        public DescriptorImpl() {
+        	super(SelectApplicationBuildStep.class);
+        }
+
+        @SuppressWarnings("rawtypes")
+		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+            // Indicates that this builder can be used with all kinds of project types 
+            return true;
+        }
         
+        @Override
+        public String getDisplayName() {
+            return "Select BuildMaster Application";
+        }
+
     	/**
     	 * Check if can connect to BuildMaster - if not prevent any more calls
     	 */
@@ -175,7 +164,7 @@ public class SelectApplicationBuildStep extends Builder {
             	isBuildMasterAvailable = true;
                 
                 try {
-                	buildmaster = new BuildMasterClientApache(getSharedDescriptor().getBuildMasterConfig());            
+                	buildmaster = new BuildMasterClientApache(BuildHelper.getSharedDescriptor().getBuildMasterConfig());            
                 	buildmaster.checkConnection();
                 } catch (Exception ex) {
                 	isBuildMasterAvailable = false;
@@ -192,32 +181,6 @@ public class SelectApplicationBuildStep extends Builder {
     		return connectionError;
     	}
     	
-        /**
-         * In order to load the persisted global configuration, you have to 
-         * call load() in the constructor.
-         */
-        public DescriptorImpl() {
-            load();
-        }
-
-        @SuppressWarnings("rawtypes")
-		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types 
-            return true;
-        }
-        
-        @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-            req.bindJSON(this, formData);
-            save();
-            return true;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "Select BuildMaster Application";
-        }
-                
         public ListBoxModel doFillApplicationIdItems() throws IOException {
         	ListBoxModel items = new ListBoxModel();
         	

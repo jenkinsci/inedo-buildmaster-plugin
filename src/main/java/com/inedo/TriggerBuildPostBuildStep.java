@@ -27,29 +27,14 @@ import java.util.Map;
 import jenkins.model.Jenkins;
 
 /**
- * Triggers Jenkins Build
  * 
- * <p>
- * When the user configures the project and enables this builder,
- * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
- * and a new {@link TriggerBuildPostBuildStep} is created. The created
- * instance is persisted to the project configuration XML by using
- * XStream, so this allows you to use instance fields (like {@link #name})
- * to remember the configuration.
- *
- * <p>
- * When a build is performed, the {@link #perform(AbstractBuild, Launcher, BuildListener)}
- * method will be invoked. 
- *
- * @author Andrew Sumner
+ * The TriggerBuildPostBuildStep will trigger a build in BuildMaster for a selected application and release
+ * as a post-build action, after the build has completed.
  * 
- * TODO: This and the TriggerBuildBuildStep are identical except for the classes they extend, is there any way to share the code? 
+ * @author Andrew Sumner 
  */
 @SuppressWarnings("unchecked")
-public class TriggerBuildPostBuildStep extends Recorder {
-	private static final String LOG_PREFIX = "[BuildMaster] "; 
-	private static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
-
+public class TriggerBuildPostBuildStep extends Recorder implements TriggerBuild {
 	private final boolean waitTillBuildCompleted;
 	private final boolean printLogOnFailure;
 	private final String variables;
@@ -100,114 +85,18 @@ public class TriggerBuildPostBuildStep extends Recorder {
 		
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-		if (!getSharedDescriptor().validatePluginConfiguration()) {
-			listener.getLogger().println("Please configure BuildMaster Plugin global settings");
-			return false;
-		}
-		
-		BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
-		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
-
-		String applicationId = expandVariable(build, listener, this.applicationId);
-		String releaseNumber = expandVariable(build, listener, this.releaseNumber);
-		String buildNumber = expandVariable(build, listener, this.buildNumber);
-		Map<String, String> variablesList = getVariablesList(this.variables);
-		
-		String buildMasterBuildNumber;
-		
-		if (buildNumber != null && !buildNumber.isEmpty() && !DEFAULT_BUILD_NUMBER.equals(buildNumber)) {
-			listener.getLogger().println(LOG_PREFIX + "Create BuildMaster build with BuildNumber=" + buildNumber);
-			buildMasterBuildNumber = buildmaster.createBuild(applicationId, releaseNumber, buildNumber, variablesList);
-			
-			if (!buildMasterBuildNumber.equals(buildNumber)) {
-				listener.getLogger().println(LOG_PREFIX + "Warning, requested build number does not match that returned from BuildMaster.");
-			}
-		} else {
-			listener.getLogger().println(LOG_PREFIX + "Create BuildMaster build");
-			buildMasterBuildNumber = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
-			
-			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER=" + buildMasterBuildNumber);
-			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", buildMasterBuildNumber));
-		}
-		
-		if (waitTillBuildCompleted) {
-			listener.getLogger().println(LOG_PREFIX + "Wait till build completed");
-			return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, buildMasterBuildNumber, printLogOnFailure);
-		}
-
-		return true;
+		return BuildHelper.triggerBuild(build, listener, this);
 	}
 
-	private static Map<String, String> getVariablesList(String variables) {
-		Map<String, String> variablesList = new HashMap<>();
-		
-		String[] variablesArray = variables.split("\n");
-		
-		for (String value : variablesArray) {
-			value = value.trim();
-			if (value.isEmpty()) continue;
-			if (value.startsWith("#")) continue;
-			
-			int pos = value.indexOf("=");
-			
-			if (pos < 0) throw new RuntimeException(LOG_PREFIX + value + " is not in the format 'variable=value'");
-			
-			variablesList.put(value.substring(0, pos).trim(), value.substring(pos + 1).trim());
-		}
-		
-		return variablesList;
-	}
-
-	protected String expandVariable(AbstractBuild<?, ?> build, BuildListener listener, String variable) {
-		if (variable == null || variable.isEmpty()) {
-			return variable;
-		}
-		
-		String expanded = variable;
-		
-		try {
-			expanded = build.getEnvironment(listener).expand(variable);
-		} catch (Exception e) {
-			listener.getLogger().println(LOG_PREFIX + "Exception thrown expanding '" + variable + "' : " + e.getClass().getName() + " " + e.getMessage());
-		}
-		
-		return expanded;
-	}
-
-	public BuildMasterPluginDescriptor getSharedDescriptor() {
-		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
-	}
-	
-	 @Override
+	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE;
 	}
-
-	 /**
-     * Descriptor for {@link TriggerBuildPostBuildStep}. Used as a singleton.
-     * The class is marked as public so that it can be accessed from views.
-     *
-     * <p>
-     * See <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt>
-     * for the actual HTML fragment for the configuration screen.
-     */
-	 @Extension // This indicates to Jenkins that this is an implementation of an extension point.
-	 public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-		// These fields are required otherwise form data is not loaded correctly
-		@SuppressWarnings("unused") private boolean waitTillBuildCompleted;
-		@SuppressWarnings("unused") private boolean printLogOnFailure;
-		@SuppressWarnings("unused") private String variables;
-		@SuppressWarnings("unused") private String app;
-		@SuppressWarnings("unused") private String applicationId;
-		@SuppressWarnings("unused") private String releaseNumber;
-		@SuppressWarnings("unused") private String buildNumber;
-		
-		/**
-		 * In order to load the persisted global configuration, you have to call
-		 * load() in the constructor.
-		 */
+	
+	@Extension // This indicates to Jenkins that this is an implementation of an extension point.
+	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		public DescriptorImpl() {
-			load();
+			super(TriggerBuildPostBuildStep.class);
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -216,12 +105,10 @@ public class TriggerBuildPostBuildStep extends Recorder {
 			return true;
 		}
 
-		@Override
-		public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-			req.bindJSON(this, formData);
-			save();
-			return true;
-		}
+//		@Override
+//		public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+//			return req.bindJSON(TriggerBuildPostBuildStep.class, formData);
+//		}
 
 		@Override
 		public String getDisplayName() {
@@ -232,7 +119,7 @@ public class TriggerBuildPostBuildStep extends Recorder {
 		// https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/lib/form/expandableTextbox.jelly
 		public FormValidation doCheckVariables(@QueryParameter String value) {
 			try {
-				getVariablesList(value);
+				BuildHelper.getVariablesList(value);
 			} catch (Exception e) {
                 return FormValidation.error(e.getMessage());
             }
@@ -241,7 +128,7 @@ public class TriggerBuildPostBuildStep extends Recorder {
 		}
 		
 		public String getDefaultBuildNumber() {
-			return DEFAULT_BUILD_NUMBER;
+			return BuildHelper.DEFAULT_BUILD_NUMBER;
 		}
 	}
 }
