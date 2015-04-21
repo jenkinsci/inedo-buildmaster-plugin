@@ -21,15 +21,15 @@
     </j:choose>
   </f:entry>
   
-  <f:entry title="Release" field="releaseNumber">
+  <f:entry title="Release Number" field="releaseNumber">
  	<j:choose>
    	  <j:when test="${descriptor.isBuildMasterAvailable}"><f:select default="LATEST"/></j:when>
       <j:otherwise><f:textbox default="LATEST" /></j:otherwise>
     </j:choose>
   </f:entry>
   
-  <f:entry title="Build" field="buildNumberSource">
-    <f:select default="JENKINS"/>
+  <f:entry title="Build Number" field="buildNumberSource">
+    <f:select default="BUILDMASTER"/>
   </f:entry>
     
 </j:jelly>

@@ -1,13 +1,14 @@
-package com.inedo.api;
+package com.inedo.buildmaster.api;
 
 import static org.junit.Assert.*;
 
-import com.inedo.api.BuildMasterConfig;
-import com.inedo.domain.Application;
-import com.inedo.domain.Build;
-import com.inedo.domain.BuildExecutionDetails;
-import com.inedo.domain.Release;
-import com.inedo.domain.ReleaseDetails;
+import com.inedo.buildmaster.api.BuildMasterClientApache;
+import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.buildmaster.domain.Application;
+import com.inedo.buildmaster.domain.Build;
+import com.inedo.buildmaster.domain.BuildExecutionDetails;
+import com.inedo.buildmaster.domain.Release;
+import com.inedo.buildmaster.domain.ReleaseDetails;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpException;

@@ -1,4 +1,4 @@
-package com.inedo;
+package com.inedo.buildmaster;
 
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -9,21 +9,21 @@ import java.util.Map;
 
 import jenkins.model.Jenkins;
 
-import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
-import com.inedo.api.BuildMasterClientApache;
-import com.inedo.api.BuildMasterConfig;
+import com.inedo.buildmaster.BuildMasterPlugin.BuildMasterPluginDescriptor;
+import com.inedo.buildmaster.api.BuildMasterClientApache;
+import com.inedo.buildmaster.api.BuildMasterConfig;
 
-public class BuildHelper {
+public class TriggerBuildHelper {
 	public static final String LOG_PREFIX = "[BuildMaster] "; 
 	public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
 	
-	public static boolean triggerBuild(AbstractBuild<?, ?> build, BuildListener listener, TriggerBuild trigger) throws IOException, InterruptedException {
-		if (!getSharedDescriptor().validatePluginConfiguration()) {
+	public static boolean triggerBuild(AbstractBuild<?, ?> build, BuildListener listener, Triggerable trigger) throws IOException, InterruptedException {
+		if (!trigger.getSharedDescriptor().validatePluginConfiguration()) {
 			listener.getLogger().println("Please configure BuildMaster Plugin global settings");
 			return false;
 		}
 		
-		BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
+		BuildMasterConfig config = trigger.getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
 		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 
 		String applicationId = expandVariable(build, listener, trigger.getApplicationId());
@@ -56,9 +56,9 @@ public class BuildHelper {
 		return true;
 	}
 	
-	public static BuildMasterPluginDescriptor getSharedDescriptor() {
-		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
-	}
+//	public static BuildMasterPluginDescriptor getSharedDescriptor() {
+//		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
+//	}
 	
 	public static String expandVariable(AbstractBuild<?, ?> build, BuildListener listener, String variable) {
 		if (variable == null || variable.isEmpty()) {

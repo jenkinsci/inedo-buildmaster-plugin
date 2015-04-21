@@ -1,4 +1,4 @@
-package com.inedo;
+package com.inedo.buildmaster;
 
 import hudson.Launcher;
 import hudson.Extension;
@@ -13,16 +13,11 @@ import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
-import com.inedo.api.BuildMasterClientApache;
-import com.inedo.api.BuildMasterConfig;
+import com.inedo.buildmaster.BuildMasterPlugin.BuildMasterPluginDescriptor;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import jenkins.model.Jenkins;
 
@@ -34,7 +29,7 @@ import jenkins.model.Jenkins;
  * @author Andrew Sumner 
  */
 @SuppressWarnings("unchecked")
-public class TriggerBuildPostBuildStep extends Recorder implements TriggerBuild {
+public class TriggerBuildPublisher extends Recorder implements Triggerable {
 	private final boolean waitTillBuildCompleted;
 	private final boolean printLogOnFailure;
 	private final String variables;
@@ -44,7 +39,7 @@ public class TriggerBuildPostBuildStep extends Recorder implements TriggerBuild 
 
 	// Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
 	@DataBoundConstructor
-	public TriggerBuildPostBuildStep(JSONObject waitTillBuildCompleted, String variables, String applicationId, String releaseNumber, String buildNumber) {
+	public TriggerBuildPublisher(JSONObject waitTillBuildCompleted, String variables, String applicationId, String releaseNumber, String buildNumber) {
 		if (waitTillBuildCompleted != null) { 
 			this.waitTillBuildCompleted = true; 
 			this.printLogOnFailure = "true".equalsIgnoreCase(waitTillBuildCompleted.getString("printLogOnFailure"));
@@ -82,10 +77,14 @@ public class TriggerBuildPostBuildStep extends Recorder implements TriggerBuild 
 	public String getBuildNumber() {
 		return buildNumber;
 	}
-		
+	
+	public BuildMasterPluginDescriptor getSharedDescriptor() {
+		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
+	}
+
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-		return BuildHelper.triggerBuild(build, listener, this);
+		return TriggerBuildHelper.triggerBuild(build, listener, this);
 	}
 
 	@Override
@@ -96,7 +95,7 @@ public class TriggerBuildPostBuildStep extends Recorder implements TriggerBuild 
 	@Extension // This indicates to Jenkins that this is an implementation of an extension point.
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		public DescriptorImpl() {
-			super(TriggerBuildPostBuildStep.class);
+			super(TriggerBuildPublisher.class);
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -119,7 +118,7 @@ public class TriggerBuildPostBuildStep extends Recorder implements TriggerBuild 
 		// https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/lib/form/expandableTextbox.jelly
 		public FormValidation doCheckVariables(@QueryParameter String value) {
 			try {
-				BuildHelper.getVariablesList(value);
+				TriggerBuildHelper.getVariablesList(value);
 			} catch (Exception e) {
                 return FormValidation.error(e.getMessage());
             }
@@ -128,7 +127,7 @@ public class TriggerBuildPostBuildStep extends Recorder implements TriggerBuild 
 		}
 		
 		public String getDefaultBuildNumber() {
-			return BuildHelper.DEFAULT_BUILD_NUMBER;
+			return TriggerBuildHelper.DEFAULT_BUILD_NUMBER;
 		}
 	}
 }

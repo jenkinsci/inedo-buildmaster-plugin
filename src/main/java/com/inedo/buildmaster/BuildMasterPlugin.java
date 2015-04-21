@@ -1,4 +1,4 @@
-package com.inedo;
+package com.inedo.buildmaster;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -12,8 +12,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.inedo.api.BuildMasterClientApache;
-import com.inedo.api.BuildMasterConfig;
+import com.inedo.buildmaster.api.BuildMasterClientApache;
+import com.inedo.buildmaster.api.BuildMasterConfig;
 
 import hudson.Extension;
 import hudson.model.JobProperty;

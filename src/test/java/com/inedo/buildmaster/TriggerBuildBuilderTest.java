@@ -1,4 +1,4 @@
-package com.inedo;
+package com.inedo.buildmaster;
 
 //import javax.ws.rs.client.Client;
 //import javax.ws.rs.client.ClientBuilder;
@@ -9,7 +9,7 @@ package com.inedo;
 
 import org.junit.Test;
 
-public class TriggerBuildStepTest {
+public class TriggerBuildBuilderTest {
   //@Rule 
   //public JenkinsRule j = new JenkinsRule();
 

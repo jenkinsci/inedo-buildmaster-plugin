@@ -1,4 +1,4 @@
-package com.inedo.api;
+package com.inedo.buildmaster.api;
 
 import java.io.PrintStream;
 import java.net.InetAddress;

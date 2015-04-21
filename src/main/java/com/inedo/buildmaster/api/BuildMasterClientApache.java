@@ -1,4 +1,4 @@
-package com.inedo.api;
+package com.inedo.buildmaster.api;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -25,12 +25,12 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.inedo.domain.Application;
-import com.inedo.domain.Build;
-import com.inedo.domain.BuildExecutionActionGroupActionLogEntries;
-import com.inedo.domain.BuildExecutionDetails;
-import com.inedo.domain.Release;
-import com.inedo.domain.ReleaseDetails;
+import com.inedo.buildmaster.domain.Application;
+import com.inedo.buildmaster.domain.Build;
+import com.inedo.buildmaster.domain.BuildExecutionActionGroupActionLogEntries;
+import com.inedo.buildmaster.domain.BuildExecutionDetails;
+import com.inedo.buildmaster.domain.Release;
+import com.inedo.buildmaster.domain.ReleaseDetails;
 
 public class BuildMasterClientApache
 {

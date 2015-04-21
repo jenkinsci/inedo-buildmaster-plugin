@@ -1,7 +1,8 @@
-package com.inedo;
+package com.inedo.buildmaster;
 
 import java.io.IOException;
 
+import jenkins.model.Jenkins;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.Extension;
@@ -12,20 +13,16 @@ import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 
-import com.inedo.BuildMasterPlugin.BuildMasterPluginDescriptor;
-import com.inedo.api.BuildMasterClientApache;
-import com.inedo.api.BuildMasterConfig;
-import com.inedo.domain.Application;
-import com.inedo.domain.Release;
-import com.inedo.domain.ReleaseDetails;
-
-import jenkins.model.Jenkins;
+import com.inedo.buildmaster.BuildMasterPlugin.BuildMasterPluginDescriptor;
+import com.inedo.buildmaster.api.BuildMasterClientApache;
+import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.buildmaster.domain.Application;
+import com.inedo.buildmaster.domain.Release;
+import com.inedo.buildmaster.domain.ReleaseDetails;
 
 /**
  * The SelectApplicationBuildStep will populate environment variables for the BuildMaster application, release and build numbers 
@@ -38,7 +35,7 @@ import jenkins.model.Jenkins;
  * become invalid once the release is finalised in BuildMaster.  There may be scope for an enhancement here to provide alternative forms of matching on release number - eg by
  * branch name.
  */
-public class SelectApplicationBuildStep extends Builder {
+public class SelectApplicationBuilder extends Builder {
 	private static final String LATEST_RELEASE = "LATEST"; 
 	private static final String LOG_PREFIX = "[BuildMaster] "; 
 	
@@ -48,7 +45,7 @@ public class SelectApplicationBuildStep extends Builder {
     
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public SelectApplicationBuildStep(String applicationId, String releaseNumber, String buildNumberSource) {
+    public SelectApplicationBuilder(String applicationId, String releaseNumber, String buildNumberSource) {
         this.applicationId = applicationId;
         this.releaseNumber = releaseNumber;
         this.buildNumberSource = buildNumberSource;
@@ -66,14 +63,18 @@ public class SelectApplicationBuildStep extends Builder {
     	return buildNumberSource;
     }
     
+    public static BuildMasterPluginDescriptor getSharedDescriptor() {
+		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
+	}
+    
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-    	if( !BuildHelper.getSharedDescriptor().validatePluginConfiguration()) {
+    	if( !getSharedDescriptor().validatePluginConfiguration()) {
 			listener.getLogger().println(LOG_PREFIX + "Please configure BuildMaster Plugin global settings");
 			return false;
 		}
     	
-    	BuildMasterConfig config = BuildHelper.getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
+    	BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
     	BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 		
     	// Pouplate BUILDMASTER_APPLICATION variable
@@ -142,7 +143,7 @@ public class SelectApplicationBuildStep extends Builder {
     	private String connectionError = "";
 
         public DescriptorImpl() {
-        	super(SelectApplicationBuildStep.class);
+        	super(SelectApplicationBuilder.class);
         }
 
         @SuppressWarnings("rawtypes")
@@ -164,7 +165,7 @@ public class SelectApplicationBuildStep extends Builder {
             	isBuildMasterAvailable = true;
                 
                 try {
-                	buildmaster = new BuildMasterClientApache(BuildHelper.getSharedDescriptor().getBuildMasterConfig());            
+                	buildmaster = new BuildMasterClientApache(getSharedDescriptor().getBuildMasterConfig());            
                 	buildmaster.checkConnection();
                 } catch (Exception ex) {
                 	isBuildMasterAvailable = false;
@@ -208,7 +209,7 @@ public class SelectApplicationBuildStep extends Builder {
             }
                         
             // Validate release is still active
-            if (!LATEST_RELEASE.equals(value)) {
+            if (!LATEST_RELEASE.equals(value) && applicationId != null && !applicationId.isEmpty()) {
 	        	try {
 	        		ReleaseDetails releaseDetails = buildmaster.getRelease(applicationId, value);
 	                                    
@@ -239,11 +240,13 @@ public class SelectApplicationBuildStep extends Builder {
         		return items;
         	}
         	
-        	Release[] releases = buildmaster.getActiveReleases(applicationId);
-        	
-        	for (Release release : releases) {
-        		items.add(release.Release_Number, release.Release_Number);
-			}
+        	if(applicationId != null && !applicationId.isEmpty()) {
+	        	Release[] releases = buildmaster.getActiveReleases(applicationId);
+	        	
+	        	for (Release release : releases) {
+	        		items.add(release.Release_Number, release.Release_Number);
+				}
+        	}
         	
             return items;
         }
@@ -251,8 +254,8 @@ public class SelectApplicationBuildStep extends Builder {
         public ListBoxModel doFillBuildNumberSourceItems() {
         	ListBoxModel items = new ListBoxModel();
         	
-        	items.add("Jenkins", "JENKINS");
         	items.add("BuildMaster", "BUILDMASTER");
+        	items.add("Jenkins", "JENKINS");
         	items.add("Not Required", "NOT_REQUIRED");
         	
             return items;
