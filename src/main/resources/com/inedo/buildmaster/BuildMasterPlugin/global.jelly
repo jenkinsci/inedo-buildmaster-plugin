@@ -42,6 +42,6 @@
     
     <f:validateButton
        title="${%Test Connection}" progress="${%Testing...}"
-       method="testConnection" with="url,authentication,domain,user,password,apiKey,logCalls" />
+       method="testConnection" with="url,authentication,domain,user,password,apiKey" />
   </f:section>
 </j:jelly>
