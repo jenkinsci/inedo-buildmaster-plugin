@@ -27,8 +27,12 @@ group = 'com.inedo.buildmaster'
 version = '1.0'
 description = 'BuildMaster'
 
+ext {
+	jenkinsVersion='1.596.1'
+}
+
 jenkinsPlugin {
-    coreVersion = '1.596.1'
+    coreVersion = "$jenkinsVersion"
     displayName = 'BuildMaster plugin for Jenkins.'
     url = 'http://inedo.com/buildmaster/'
     developers {
@@ -40,11 +44,8 @@ jenkinsPlugin {
     }
 }
 
-// Download dependancies via Artifactory
 repositories {
-	//mavenLocal()
 	jcenter()
-	//mavenCentral()
 }
 
 dependencies {
@@ -53,8 +54,10 @@ dependencies {
 	
 	testCompile 'junit:junit:4.8.2'
 	testCompile 'org.mockito:mockito-core:2.0.5-beta'
-
-	//testCompile 'org.jenkins-ci.main:jenkins-test-harness:1.480.3'
+	testCompile "org.jenkins-ci.main:jenkins-test-harness:$jenkinsVersion"
+	
+	// https://issues.jenkins-ci.org/browse/JENKINS-27826
+	jenkinsTest 'org.jenkins-ci.plugins:matrix-project:1.4@jar'
 }
 
 task wrapper(type: Wrapper) {
