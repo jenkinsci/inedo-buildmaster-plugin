@@ -13,10 +13,8 @@ import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
 import com.inedo.buildmaster.BuildMasterPlugin.BuildMasterPluginDescriptor;
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.api.BuildMasterConfig;
@@ -136,6 +134,11 @@ public class SelectApplicationBuilder extends Builder {
         return true;
     }
   
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl)super.getDescriptor();
+    }
+    
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
     	private BuildMasterClientApache buildmaster = null;
@@ -145,9 +148,14 @@ public class SelectApplicationBuilder extends Builder {
         public DescriptorImpl() {
         	super(SelectApplicationBuilder.class);
         }
+        
+//		@Override
+//		public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+//			return req.bindJSON(SelectApplicationBuilder.class, formData);
+//		}
 
         @SuppressWarnings("rawtypes")
-		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             // Indicates that this builder can be used with all kinds of project types 
             return true;
         }
@@ -157,7 +165,7 @@ public class SelectApplicationBuilder extends Builder {
             return "Select BuildMaster Application";
         }
 
-    	/**
+		/**
     	 * Check if can connect to BuildMaster - if not prevent any more calls
     	 */
     	public boolean getIsBuildMasterAvailable() {
