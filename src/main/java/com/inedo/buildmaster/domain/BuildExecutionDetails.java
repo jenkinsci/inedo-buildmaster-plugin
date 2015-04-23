@@ -9,13 +9,13 @@ public class BuildExecutionDetails
 			"{" +
 			"\"BuildExecutions_Extended\": " +
 			"[" +
-			"  { \"Execution_Id\": 92236, \"Application_Id\": 36, \"Release_Number\": \"1.3\", \"Build_Number\": \"26\", \"BuildStatus_Name\": \"Active\", \"Workflow_Id\": 62, \"Workflow_Name\": \"Standard\", \"Environment_Id\": 4, \"Environment_Name\": \"DEV\", \"ExecutionStart_Date\": \"2015-04-15T04:06:57.5870000\", \"ExecutionEnded_Date\": \"2015-04-15T04:07:05.7600000\", \"ExecutionStatus_Name\": \"Succeeded\", \"CreatedBy_User_Name\": \"SYSTEM\", \"CreatedOn_Date\": \"2015-04-15T04:06:57.4330000\", \"Application_Name\": \"Pax Hold Release #2\", \"PromotionStatus_Name\": \"Completed\", \"Promoted_Date\": \"2015-04-15T04:06:57.4330000\", \"PromotedBy_Name\": \"SYSTEM\", \"WarningLogEntry_Indicator\": \"N\", \"Release_Name\": \"1.3\", \"ReleaseStatus_Name\": \"Active\", \"Initial_BuildExecution_DeploymentPlan_Id\": 142077, \"VariableSupport_Code\": \"N\", \"ApplicationGroup_Id\": 4, \"Release_Sequence\": 3, \"Initial_DeploymentPlan_Id\": 214, \"Build_AutoPromote_Indicator\": \"Y\"}" +
+			"  { \"Execution_Id\": 92236, \"Application_Id\": 36, \"Release_Number\": \"1.3\", \"Build_Number\": \"26\", \"BuildStatus_Name\": \"Active\", \"Workflow_Id\": 62, \"Workflow_Name\": \"Standard\", \"Environment_Id\": 4, \"Environment_Name\": \"DEV\", \"ExecutionStart_Date\": \"2015-04-15T04:06:57.5870000\", \"ExecutionEnded_Date\": \"2015-04-15T04:07:05.7600000\", \"ExecutionStatus_Name\": \"Succeeded\", \"CreatedBy_User_Name\": \"SYSTEM\", \"CreatedOn_Date\": \"2015-04-15T04:06:57.4330000\", \"Application_Name\": \"Test App 3\", \"PromotionStatus_Name\": \"Completed\", \"Promoted_Date\": \"2015-04-15T04:06:57.4330000\", \"PromotedBy_Name\": \"SYSTEM\", \"WarningLogEntry_Indicator\": \"N\", \"Release_Name\": \"1.3\", \"ReleaseStatus_Name\": \"Active\", \"Initial_BuildExecution_DeploymentPlan_Id\": 142077, \"VariableSupport_Code\": \"N\", \"ApplicationGroup_Id\": 4, \"Release_Sequence\": 3, \"Initial_DeploymentPlan_Id\": 214, \"Build_AutoPromote_Indicator\": \"Y\"}" +
 			"]," +
 			"\"BuildExecution_DeploymentPlanActionGroups\": " +
 			"[" +
 			"  { \"BuildExecution_DeploymentPlan_Id\": 142076, \"Original_DeploymentPlanActionGroup_Sequence\": 0, \"Original_DeploymentPlanActionGroup_Id\": 0}," +
-			"  { \"BuildExecution_DeploymentPlan_Id\": 142077, \"Original_DeploymentPlanActionGroup_Sequence\": 1, \"Original_Deployable_Name\": \"PaxHoldRelease\", \"Original_DeploymentPlanActionGroup_Id\": 4694, \"Original_DeploymentPlanActionGroup_Name\": \"Deploy Application\"}," +
-			"  { \"BuildExecution_DeploymentPlan_Id\": 142077, \"Original_DeploymentPlanActionGroup_Sequence\": 2, \"Original_Deployable_Name\": \"PaxHoldRelease\", \"Original_DeploymentPlanActionGroup_Id\": 4698, \"Original_DeploymentPlanActionGroup_Name\": \"Test Deployment\"}" +
+			"  { \"BuildExecution_DeploymentPlan_Id\": 142077, \"Original_DeploymentPlanActionGroup_Sequence\": 1, \"Original_Deployable_Name\": \"TestDeployable\", \"Original_DeploymentPlanActionGroup_Id\": 4694, \"Original_DeploymentPlanActionGroup_Name\": \"Deploy Application\"}," +
+			"  { \"BuildExecution_DeploymentPlan_Id\": 142077, \"Original_DeploymentPlanActionGroup_Sequence\": 2, \"Original_Deployable_Name\": \"TestDeployable\", \"Original_DeploymentPlanActionGroup_Id\": 4698, \"Original_DeploymentPlanActionGroup_Name\": \"Test Deployment\"}" +
 			"]," +
 			"\"BuildExecution_ActionGroupActions\": " +
 			"[" +
@@ -43,7 +43,7 @@ public class BuildExecutionDetails
 			"  { \"LogEntry_Sequence\": 14, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Determining which files need to be deployed...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 15, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"3 files in artifact; 3 files have changed\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 16, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Deploying files...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
-			"  { \"LogEntry_Sequence\": 17, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"PaxHoldRelease-1.2.217.war\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
+			"  { \"LogEntry_Sequence\": 17, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"TestApp-1.2.217.war\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 18, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"prd_persistence.xml\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 19, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"uat_persistence.xml\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
 			"  { \"LogEntry_Sequence\": 20, \"LogEntry_Level\": 0, \"LogEntry_Text\": \"Extracting artifact zip file...\", \"BuildExecution_ActionGroupAction_Id\": 1706458}," +
