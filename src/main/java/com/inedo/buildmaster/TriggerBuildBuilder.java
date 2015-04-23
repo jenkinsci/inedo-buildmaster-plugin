@@ -13,11 +13,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.BuildMasterPlugin.BuildMasterPluginDescriptor;
-
 import java.io.IOException;
-
-import jenkins.model.Jenkins;
 
 /**
  * The TriggerBuildPostBuildStep will trigger a build in BuildMaster for a selected application and release
@@ -72,10 +68,6 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 	
 	public String getBuildNumber() {
 		return buildNumber;
-	}
-	
-	public BuildMasterPluginDescriptor getSharedDescriptor() {
-		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
 	}
 	
 	@Override

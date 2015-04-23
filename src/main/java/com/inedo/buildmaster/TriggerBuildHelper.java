@@ -2,14 +2,13 @@ package com.inedo.buildmaster;
 
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import jenkins.model.Jenkins;
 
-import com.inedo.buildmaster.BuildMasterPlugin.BuildMasterPluginDescriptor;
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 
@@ -17,13 +16,29 @@ public class TriggerBuildHelper {
 	public static final String LOG_PREFIX = "[BuildMaster] "; 
 	public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
 	
+	public static boolean validateBuildMasterConfig() {
+		return getSharedDescriptor().validatePluginConfiguration();
+	}
+
+	public static BuildMasterConfig getBuildMasterConfig() {
+		return getSharedDescriptor().getBuildMasterConfig();
+	}
+
+	public static BuildMasterConfig getBuildMasterConfig(PrintStream logger) {
+		return getSharedDescriptor().getBuildMasterConfig(logger);
+	}
+
+	private static BuildMasterConfiguration.DescriptorImpl getSharedDescriptor() {
+		return (BuildMasterConfiguration.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(BuildMasterConfiguration.class);
+	}
+	
 	public static boolean triggerBuild(AbstractBuild<?, ?> build, BuildListener listener, Triggerable trigger) throws IOException, InterruptedException {
-		if (!trigger.getSharedDescriptor().validatePluginConfiguration()) {
+		if (!validateBuildMasterConfig()) {
 			listener.getLogger().println("Please configure BuildMaster Plugin global settings");
 			return false;
 		}
 		
-		BuildMasterConfig config = trigger.getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
+		BuildMasterConfig config = getBuildMasterConfig(listener.getLogger());
 		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 
 		String applicationId = expandVariable(build, listener, trigger.getApplicationId());

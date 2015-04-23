@@ -5,10 +5,9 @@ import java.io.PrintStream;
 
 import javax.servlet.ServletException;
 
-import jenkins.model.Jenkins;
+import jenkins.model.GlobalConfiguration;
 import net.sf.json.JSONObject;
 
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -16,9 +15,7 @@ import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 
 import hudson.Extension;
-import hudson.model.JobProperty;
-import hudson.model.JobPropertyDescriptor;
-import hudson.model.Job;
+import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import hudson.util.ListBoxModel;
@@ -28,19 +25,10 @@ import hudson.util.ListBoxModel;
  * @author Andrew Sumner
  *
  */
-public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
-
-    @Override
-    public BuildMasterPluginDescriptor getDescriptor() {
-        return (BuildMasterPluginDescriptor)Jenkins.getInstance().getDescriptor(getClass());
-    }
-
-    public static BuildMasterPluginDescriptor getMyPluginClassDescriptor() {
-        return (BuildMasterPluginDescriptor)Jenkins.getInstance().getDescriptor(BuildMasterPlugin.class);
-    }
+public class BuildMasterConfiguration extends GlobalConfiguration {
 
     @Extension
-    public static final class BuildMasterPluginDescriptor extends JobPropertyDescriptor {
+    public static final class DescriptorImpl extends Descriptor<GlobalConfiguration> {
 
     	/**
          * To persist global configuration information,
@@ -56,8 +44,8 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
         private Secret password;
         private String apiKey;
         
-        public BuildMasterPluginDescriptor() {
-            super(BuildMasterPlugin.class);
+        public DescriptorImpl() {
+            super(BuildMasterConfiguration.class);
             load();
         }
 
@@ -71,19 +59,9 @@ public class BuildMasterPlugin extends JobProperty<Job<?, ?>>  {
             return super.configure(req,formData);
         }
 
-        @DataBoundConstructor
-        public BuildMasterPluginDescriptor(String url, String authentication, String domain, String user, String password, String apiKey) {
-            this.url = url;
-            this.authentication = authentication;
-            this.domain = "whyyyy!"; //domain;
-            this.user = user;
-            this.password = Secret.fromString(password);
-            this.apiKey = apiKey;
-        }
-
         @Override
         public String getDisplayName() {
-            return "BuildMaster Plugin Configuration";
+            return "BuildMaster Plugin";
         }
 
         /**

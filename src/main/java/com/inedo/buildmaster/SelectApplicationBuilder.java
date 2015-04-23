@@ -2,7 +2,6 @@ package com.inedo.buildmaster;
 
 import java.io.IOException;
 
-import jenkins.model.Jenkins;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.Extension;
@@ -15,7 +14,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import com.inedo.buildmaster.BuildMasterPlugin.BuildMasterPluginDescriptor;
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.Application;
@@ -61,18 +59,14 @@ public class SelectApplicationBuilder extends Builder {
     	return buildNumberSource;
     }
     
-    public static BuildMasterPluginDescriptor getSharedDescriptor() {
-		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
-	}
-    
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-    	if( !getSharedDescriptor().validatePluginConfiguration()) {
+    	if( !TriggerBuildHelper.validateBuildMasterConfig()) {
 			listener.getLogger().println(LOG_PREFIX + "Please configure BuildMaster Plugin global settings");
 			return false;
 		}
     	
-    	BuildMasterConfig config = getSharedDescriptor().getBuildMasterConfig(listener.getLogger());
+    	BuildMasterConfig config = TriggerBuildHelper.getBuildMasterConfig(listener.getLogger());
     	BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 		
     	// Pouplate BUILDMASTER_APPLICATION variable
@@ -173,7 +167,7 @@ public class SelectApplicationBuilder extends Builder {
             	isBuildMasterAvailable = true;
                 
                 try {
-                	buildmaster = new BuildMasterClientApache(getSharedDescriptor().getBuildMasterConfig());            
+                	buildmaster = new BuildMasterClientApache(TriggerBuildHelper.getBuildMasterConfig());            
                 	buildmaster.checkConnection();
                 } catch (Exception ex) {
                 	isBuildMasterAvailable = false;
