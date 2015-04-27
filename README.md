@@ -1,5 +1,5 @@
 # buildmaster-plugin
-Allows Jenkins to trigger a build on a BuildMaster application.
+Allows Jenkins to request version information and trigger a build on an application in BuildMaster (http://inedo.com/buildmaster).
 
 ## Building The Plugin
 -------------------
