@@ -2,6 +2,7 @@ package com.inedo.buildmaster;
 
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -11,23 +12,36 @@ import jenkins.model.Jenkins;
 
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.buildmaster.domain.Variable;
 
 public class TriggerBuildHelper {
 	public static final String LOG_PREFIX = "[BuildMaster] "; 
 	public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
+	private static BuildMasterConfig config = null;
+	
+	/**
+	 * TODO: As I haven't been able to successfully mock a static class this is my work around for testing purposes
+	 */
+	public static void injectConfiguration(BuildMasterConfig value) {
+		config = value;
+	}
 	
 	public static boolean validateBuildMasterConfig() {
+		if (config != null) {
+			return true;
+		}
+		
 		return getSharedDescriptor().validatePluginConfiguration();
 	}
 
 	public static BuildMasterConfig getBuildMasterConfig() {
+		if (config != null) {
+			return config;
+		}
+		
 		return getSharedDescriptor().getBuildMasterConfig();
 	}
-
-	public static BuildMasterConfig getBuildMasterConfig(PrintStream logger) {
-		return getSharedDescriptor().getBuildMasterConfig(logger);
-	}
-
+	
 	private static BuildMasterConfiguration.DescriptorImpl getSharedDescriptor() {
 		return (BuildMasterConfiguration.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(BuildMasterConfiguration.class);
 	}
@@ -38,13 +52,27 @@ public class TriggerBuildHelper {
 			return false;
 		}
 		
-		BuildMasterConfig config = getBuildMasterConfig(listener.getLogger());
-		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
-
+		BuildMasterConfig config = getBuildMasterConfig();
+		config.printStream = listener.getLogger();
+		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);		
 		String applicationId = expandVariable(build, listener, trigger.getApplicationId());
 		String releaseNumber = expandVariable(build, listener, trigger.getReleaseNumber());
 		String buildNumber = expandVariable(build, listener, trigger.getBuildNumber());
+		
 		Map<String, String> variablesList = getVariablesList(trigger.getVariables());
+		
+		if (trigger.getPreserveVariables()) {
+			listener.getLogger().println(LOG_PREFIX + "Gather previous builds build variables");
+			
+			String prevBuildNumber = buildmaster.getPreviousBuildNumber(applicationId, releaseNumber);			
+			Variable[] variables = buildmaster.getVariableValues(applicationId, releaseNumber, prevBuildNumber);
+			
+			for (Variable variable : variables) {
+				if (!variablesList.containsKey(variable.Variable_Name)) {
+					variablesList.put(variable.Variable_Name, variable.Value_Text);
+				}
+			}
+		}
 		
 		String buildMasterBuildNumber;
 		
@@ -71,11 +99,7 @@ public class TriggerBuildHelper {
 		return true;
 	}
 	
-//	public static BuildMasterPluginDescriptor getSharedDescriptor() {
-//		return (BuildMasterPluginDescriptor) Jenkins.getInstance().getDescriptorOrDie(BuildMasterPlugin.class);
-//	}
-	
-	public static String expandVariable(AbstractBuild<?, ?> build, BuildListener listener, String variable) {
+	private static String expandVariable(AbstractBuild<?, ?> build, BuildListener listener, String variable) {
 		if (variable == null || variable.isEmpty()) {
 			return variable;
 		}
@@ -91,21 +115,23 @@ public class TriggerBuildHelper {
 		return expanded;
 	}
 
-	public static Map<String, String> getVariablesList(String variables) {
+	public static Map<String, String> getVariablesList(String variables) throws IOException {
 		Map<String, String> variablesList = new HashMap<>();
 		
-		String[] variablesArray = variables.split("\n");
-		
-		for (String value : variablesArray) {
-			value = value.trim();
-			if (value.isEmpty()) continue;
-			if (value.startsWith("#")) continue;
+		if (variables != null) {
+			String[] variablesArray = variables.split("\n");
 			
-			int pos = value.indexOf("=");
-			
-			if (pos < 0) throw new RuntimeException(LOG_PREFIX + value + " is not in the format 'variable=value'");
-			
-			variablesList.put(value.substring(0, pos).trim(), value.substring(pos + 1).trim());
+			for (String value : variablesArray) {
+				value = value.trim();
+				if (value.isEmpty()) continue;
+				if (value.startsWith("#")) continue;
+				
+				int pos = value.indexOf("=");
+				
+				if (pos < 0) throw new RuntimeException(LOG_PREFIX + value + " is not in the format 'variable=value'");
+				
+				variablesList.put(value.substring(0, pos).trim(), value.substring(pos + 1).trim());
+			}
 		}
 		
 		return variablesList;

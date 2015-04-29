@@ -31,5 +31,12 @@
   <f:entry title="Build Number" field="buildNumberSource">
     <f:select default="BUILDMASTER"/>
   </f:entry>
+  
+  <f:entry title="Deployable" field="deployableId">
+ 	<j:choose>
+   	  <j:when test="${descriptor.isBuildMasterAvailable}"><f:select default="NOT_REQUIRED"/></j:when>
+      <j:otherwise><f:textbox default="NOT_REQUIRED" /></j:otherwise>
+    </j:choose>
+  </f:entry>
     
 </j:jelly>

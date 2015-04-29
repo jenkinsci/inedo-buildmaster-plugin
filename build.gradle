@@ -54,7 +54,13 @@ dependencies {
 	
 	testCompile 'junit:junit:4.8.2'
 	testCompile 'org.mockito:mockito-core:2.0.5-beta'
-	testCompile "org.jenkins-ci.main:jenkins-test-harness:$jenkinsVersion"
+	
+//	testCompile 'org.powermock:powermock-api-mockito:1.6.2'
+//	testCompile 'org.powermock:powermock-api-easymock:1.6.2'
+//	testCompile 'org.powermock:powermock-module-junit4:1.6.2'
+//	testCompile 'org.easymock:easymock:3.3.1'
+	//testCompile "org.jenkins-ci.main:jenkins-test-harness:$jenkinsVersion"
+	
 	
 	// https://issues.jenkins-ci.org/browse/JENKINS-27826
 	jenkinsTest 'org.jenkins-ci.plugins:matrix-project:1.4@jar'

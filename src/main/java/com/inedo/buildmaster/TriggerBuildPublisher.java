@@ -73,6 +73,30 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
 	public String getBuildNumber() {
 		return buildNumber;
 	}
+	
+	@Override
+	public boolean getSetBuildVariables() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean getPreserveVariables() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean getEnableDeployable() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public String getDeployableId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {

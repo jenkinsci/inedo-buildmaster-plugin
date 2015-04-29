@@ -12,11 +12,14 @@ import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.Application;
+import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 
@@ -33,18 +36,21 @@ import com.inedo.buildmaster.domain.ReleaseDetails;
  */
 public class SelectApplicationBuilder extends Builder {
 	private static final String LATEST_RELEASE = "LATEST"; 
+	private static final String NOT_REQUIRED = "NOT_REQUIRED";
 	private static final String LOG_PREFIX = "[BuildMaster] "; 
 	
 	private final String applicationId;
     private final String releaseNumber;
     private final String buildNumberSource;
+    private final String deployableId;
     
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public SelectApplicationBuilder(String applicationId, String releaseNumber, String buildNumberSource) {
+    public SelectApplicationBuilder(String applicationId, String releaseNumber, String buildNumberSource, String deployableId) {
         this.applicationId = applicationId;
         this.releaseNumber = releaseNumber;
         this.buildNumberSource = buildNumberSource;
+        this.deployableId = deployableId;
     }
     	 
     public String getApplicationId() {
@@ -59,6 +65,10 @@ public class SelectApplicationBuilder extends Builder {
     	return buildNumberSource;
     }
     
+    public String getDeployableId() {
+    	return deployableId;
+    }
+    
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
     	if( !TriggerBuildHelper.validateBuildMasterConfig()) {
@@ -66,12 +76,13 @@ public class SelectApplicationBuilder extends Builder {
 			return false;
 		}
     	
-    	BuildMasterConfig config = TriggerBuildHelper.getBuildMasterConfig(listener.getLogger());
+    	BuildMasterConfig config = TriggerBuildHelper.getBuildMasterConfig();
+    	config.printStream = listener.getLogger();
     	BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 		
-    	// Pouplate BUILDMASTER_APPLICATION variable
-    	listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_APPLICATION=" + applicationId);
- 		build.addAction(new VariableInjectionAction("BUILDMASTER_APPLICATION", applicationId));
+    	// Pouplate BUILDMASTER_APPLICATION_ID variable
+    	listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_APPLICATION_ID=" + applicationId);
+ 		build.addAction(new VariableInjectionAction("BUILDMASTER_APPLICATION_ID", applicationId));
         
  		// Populate BUILDMASTER_RELEASE_NUMBER variable
  		String actualReleaseNumber = releaseNumber;
@@ -123,6 +134,12 @@ public class SelectApplicationBuilder extends Builder {
 		default:
 			listener.getLogger().println(LOG_PREFIX + "Unknown buildNumberSource " + buildNumberSource);
 			return false;
+		}
+		
+		// Populate BUILDMASTER_DEPLOYABLE_ID variable
+		if (!NOT_REQUIRED.equals(deployableId)) {
+			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + deployableId);
+			build.addAction(new VariableInjectionAction("BUILDMASTER_DEPLOYABLE_ID", deployableId));
 		}
 		
         return true;
@@ -246,11 +263,56 @@ public class SelectApplicationBuilder extends Builder {
 	        	Release[] releases = buildmaster.getActiveReleases(applicationId);
 	        	
 	        	for (Release release : releases) {
-	        		items.add(release.Release_Number, release.Release_Number);
+	        		items.add(release.Release_Number);
 				}
         	}
         	
             return items;
+        }
+        
+        public ListBoxModel doFillDeployableIdItems(@QueryParameter String applicationId) throws IOException {
+        	ListBoxModel items = new ListBoxModel();
+        	
+        	items.add("", "");
+        	items.add("Not Required", NOT_REQUIRED);
+        	
+        	if (!getIsBuildMasterAvailable()) {
+        		return items;
+        	}
+        	
+        	if(applicationId != null && !applicationId.isEmpty()) {
+        		Deployable[] deployables = buildmaster.getDeployables(applicationId);
+	        	
+	        	for (Deployable deployable : deployables) {
+	        		items.add(deployable.Deployable_Name, String.valueOf(deployable.Deployable_Id));
+				}
+        	}
+        	
+            return items;
+        }
+        
+        public FormValidation doCheckDeployableId(@QueryParameter String value) {
+            if (value.length() == 0)
+                return FormValidation.error("Please set a deployable");
+            
+            if (!getIsBuildMasterAvailable()) {
+            	return FormValidation.ok();
+            }
+                        
+            // Validate release is still active
+            if (!NOT_REQUIRED.equals(value)) {
+	        	try {
+	        		Deployable deployable = buildmaster.getDeployable(value);
+	                                    
+	        		if (deployable == null) {
+	            		return FormValidation.error("The deployable " + value + " does not exist for this application");
+	            	}
+	            } catch (Exception ex) {
+	            	return FormValidation.error(ex.getClass().getName() + ": " + ex.getMessage());
+	            }    
+            }
+            
+            return FormValidation.ok();
         }
         
         public ListBoxModel doFillBuildNumberSourceItems() {

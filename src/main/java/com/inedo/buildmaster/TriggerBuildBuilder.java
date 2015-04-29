@@ -24,14 +24,18 @@ import java.io.IOException;
 public class TriggerBuildBuilder extends Builder implements Triggerable {
 	private final boolean waitTillBuildCompleted;
 	private final boolean printLogOnFailure;
+	private final boolean setBuildVariables;
+	private final boolean preserveVariables;
 	private final String variables;
+	private final boolean enableDeployable;
+	private final String deployableId;
 	private final String applicationId;
 	private final String releaseNumber;
 	private final String buildNumber;
 
 	// Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
 	@DataBoundConstructor
-	public TriggerBuildBuilder(JSONObject waitTillBuildCompleted, String variables, String applicationId, String releaseNumber, String buildNumber) {
+	public TriggerBuildBuilder(JSONObject waitTillBuildCompleted, JSONObject setBuildVariables, JSONObject enableDeployable, String applicationId, String releaseNumber, String buildNumber) {
 		if (waitTillBuildCompleted != null) { 
 			this.waitTillBuildCompleted = true; 
 			this.printLogOnFailure = "true".equalsIgnoreCase(waitTillBuildCompleted.getString("printLogOnFailure"));
@@ -39,8 +43,25 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 			this.waitTillBuildCompleted = false; 
 			this.printLogOnFailure = false;
 		}
-				
-		this.variables = variables;
+		
+		if (setBuildVariables != null) {
+			this.setBuildVariables = true;
+			this.preserveVariables = "true".equalsIgnoreCase(setBuildVariables.getString("preserveVariables"));
+			this.variables = setBuildVariables.getString("variables");
+		} else {
+			this.setBuildVariables = false;
+			this.preserveVariables = false;
+			this.variables = null;
+		}
+
+		if (enableDeployable != null) { 
+			this.enableDeployable = true; 
+			this.deployableId = enableDeployable.getString("deployableId");
+		} else { 
+			this.enableDeployable = false; 
+			this.deployableId = null;
+		}
+		
 		this.applicationId = applicationId;
 		this.releaseNumber = releaseNumber;
 		this.buildNumber = buildNumber;
@@ -54,10 +75,26 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 		return printLogOnFailure;
 	}
 	
+	public boolean getSetBuildVariables() {
+		return setBuildVariables;
+	}
+	
+	public boolean getPreserveVariables() {
+		return preserveVariables;
+	}
+	
 	public String getVariables() {
 		return variables;
 	}
 
+	public boolean getEnableDeployable() {
+		return enableDeployable;
+	}
+	
+	public String getDeployableId() {
+		return deployableId;
+	}
+	
 	public String getApplicationId() {
 		return applicationId;
 	}
