@@ -37,6 +37,11 @@ import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.domain.Variable;
 
+/**
+ * BuildMaster json api interface
+ * 
+ * @author Andrew Sumner
+ */
 public class BuildMasterClientApache {
 	private BuildMasterConfig config;
 	private HttpClient httpclient;
@@ -159,7 +164,7 @@ public class BuildMasterClientApache {
 	 *  
 	 * @throws IOException
 	 */
-	public boolean enableReleaseDeployable(String applicationId, String releaseNumber, String deployableId) throws IOException {
+	public void enableReleaseDeployable(String applicationId, String releaseNumber, String deployableId) throws IOException {
 		List<Deployable> deployables = new ArrayList<>();
 		int id = Integer.parseInt(deployableId);
 		
@@ -170,7 +175,8 @@ public class BuildMasterClientApache {
 				deployables.add(deployable);
 				
 				if (deployable.Deployable_Id == id) {
-					return true;
+					config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Deployable already enabled");
+					return;
 				}
 			}
 		}
@@ -191,8 +197,6 @@ public class BuildMasterClientApache {
 			    "Release_Name", release.Release_Name,
 			    //Notes_Text
 			    "DeployableIds_Xml", encodeDeployables(deployables));
-		
-		return true;
 	}
 	/**
 	 * Gets the next available build number for the given release, if no builds

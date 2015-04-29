@@ -20,14 +20,14 @@ import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 
-import org.apache.commons.lang.NotImplementedException;
-
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 
-
+/**
+ * Tests for the TriggerBuildHelper class
+ * 
+ * @author Andrew Sumner
+ */
 public class TriggerBuildHelperTest {
-	// Set this value to false to run against a live BuildMaster installation
-	private final static boolean MOCK_REQUESTS = true;	
 	public MockServer mockServer;
 	
 	@SuppressWarnings("rawtypes")
@@ -45,11 +45,11 @@ public class TriggerBuildHelperTest {
 	
 	@Test
 	public void perform() throws IOException, InterruptedException {
-		TriggerableTestData data = new TriggerableTestData(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
+		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
 	
 		restLog();
-		
 		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
+		
 		String log[] = extractLogLinesRemovingApiCall();
 		assertThat("Only one action should be performed", log.length, is(1));
 		assertThat("Create Build step should be the last actioned performed.", log[log.length - 1], containsString("Create BuildMaster build with BuildNumber="));
@@ -57,12 +57,11 @@ public class TriggerBuildHelperTest {
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-		TriggerableTestData data = new TriggerableTestData(MockServer.APPLICATION_ID, releaseNumber, buildNumber)
+		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber)
 			.setWaitTillBuildCompleted(true)
 			.setPrintLogOnFailure(true);
 		
 		restLog();
-		
 		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		String log[] = extractLogLines();
@@ -71,24 +70,22 @@ public class TriggerBuildHelperTest {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-		restLog();
-		
-		TriggerableTestData data = new TriggerableTestData(MockServer.APPLICATION_ID, releaseNumber, buildNumber)
+		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber)
 			.setSetBuildVariables(true)
 			.setVariables("hello=performSetVariables")
 			.setPreserveVariables(false);
 		
+		restLog();
 		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		String log = extractLog();
 		assertThat("Variable passed", log, containsString("performSetVariables"));
 		assertThat("Variable passed", log, not(containsString("trying")));
 		
-		restLog();
-		
 		data.setPreserveVariables(true);
 		data.setVariables("trying=again");
 		
+		restLog();
 		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		log = extractLog();		
@@ -97,9 +94,17 @@ public class TriggerBuildHelperTest {
 	}
 	
 	@Test
-	public void performEnableDeployable() throws IOException, InterruptedException {
-		throw new NotImplementedException();
-		//buildmaster.enableReleaseDeployable(MockServer.APPLICATION_ID, testReleaseNumber, "2077");
+	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
+		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber)
+			.setEnableReleaseDeployable(true)
+			.setDeployableId("2077");
+		
+		restLog();
+		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
+		
+		String log = extractLog();
+		assertThat("Has requested updated", log, containsString("Releases_CreateOrUpdateRelease"));
+		assertThat("Has passed deployable id", log, containsString("Deployable_Id=\"2077\""));
 	}
 	
 	// Mocking of Server
@@ -122,7 +127,7 @@ public class TriggerBuildHelperTest {
 	
 	@Before
 	public void before() throws IOException, InterruptedException {
-		mockServer = new MockServer(MOCK_REQUESTS);
+		mockServer = new MockServer(true);
 		TriggerBuildHelper.injectConfiguration(mockServer.getBuildMasterConfig());
 		
 		build = mock(AbstractBuild.class);;

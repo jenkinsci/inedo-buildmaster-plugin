@@ -28,14 +28,18 @@ import java.io.IOException;
 public class TriggerBuildPublisher extends Recorder implements Triggerable {
 	private final boolean waitTillBuildCompleted;
 	private final boolean printLogOnFailure;
+	private final boolean setBuildVariables;
+	private final boolean preserveVariables;
 	private final String variables;
+	private final boolean enableReleaseDeployable;
+	private final String deployableId;
 	private final String applicationId;
 	private final String releaseNumber;
 	private final String buildNumber;
 
 	// Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
 	@DataBoundConstructor
-	public TriggerBuildPublisher(JSONObject waitTillBuildCompleted, String variables, String applicationId, String releaseNumber, String buildNumber) {
+	public TriggerBuildPublisher(JSONObject waitTillBuildCompleted, JSONObject setBuildVariables, JSONObject enableReleaseDeployable, String applicationId, String releaseNumber, String buildNumber) {
 		if (waitTillBuildCompleted != null) { 
 			this.waitTillBuildCompleted = true; 
 			this.printLogOnFailure = "true".equalsIgnoreCase(waitTillBuildCompleted.getString("printLogOnFailure"));
@@ -43,8 +47,25 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
 			this.waitTillBuildCompleted = false; 
 			this.printLogOnFailure = false;
 		}
-				
-		this.variables = variables;
+		
+		if (setBuildVariables != null) {
+			this.setBuildVariables = true;
+			this.preserveVariables = "true".equalsIgnoreCase(setBuildVariables.getString("preserveVariables"));
+			this.variables = setBuildVariables.getString("variables");
+		} else {
+			this.setBuildVariables = false;
+			this.preserveVariables = false;
+			this.variables = null;
+		}
+
+		if (enableReleaseDeployable != null) { 
+			this.enableReleaseDeployable = true; 
+			this.deployableId = enableReleaseDeployable.getString("deployableId");
+		} else { 
+			this.enableReleaseDeployable = false; 
+			this.deployableId = null;
+		}
+		
 		this.applicationId = applicationId;
 		this.releaseNumber = releaseNumber;
 		this.buildNumber = buildNumber;
@@ -53,15 +74,31 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
 	public boolean getWaitTillBuildCompleted() {
 		return waitTillBuildCompleted;
 	}
-	
+
 	public boolean getPrintLogOnFailure() {
 		return printLogOnFailure;
+	}
+	
+	public boolean getSetBuildVariables() {
+		return setBuildVariables;
+	}
+	
+	public boolean getPreserveVariables() {
+		return preserveVariables;
 	}
 	
 	public String getVariables() {
 		return variables;
 	}
 
+	public boolean getEnableReleaseDeployable() {
+		return enableReleaseDeployable;
+	}
+	
+	public String getDeployableId() {
+		return deployableId;
+	}
+	
 	public String getApplicationId() {
 		return applicationId;
 	}
@@ -72,30 +109,6 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
 	
 	public String getBuildNumber() {
 		return buildNumber;
-	}
-	
-	@Override
-	public boolean getSetBuildVariables() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean getPreserveVariables() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean getEnableDeployable() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public String getDeployableId() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

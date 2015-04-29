@@ -4,6 +4,11 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+/**
+ * Configuration settings required to can the BuildMaster json api
+ * 
+ * @author Andrew Sumner
+ */
 public class BuildMasterConfig {
 	// Global Configuration Items
 	public String url;

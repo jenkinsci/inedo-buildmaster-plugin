@@ -23,8 +23,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Tests for the BuildMasterClientApache class
+ * 
+ * TODO: There is timing issue when running all tests against a live server as tests randomly fail.  Running one at a time works fine.   
+ * 
+ * @author Andrew Sumner
+ */
 public class BuildMasterClientApacheTest {
-	private final boolean MOCK_REQUESTS = false; 
+	private final boolean MOCK_REQUESTS = true;	// Set this value to false to run against a live BuildMaster installation 
 	private MockServer mockServer;
 	private BuildMasterClientApache buildmaster;
 	

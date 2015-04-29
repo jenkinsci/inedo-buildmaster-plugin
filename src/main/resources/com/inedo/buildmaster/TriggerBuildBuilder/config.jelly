@@ -24,7 +24,7 @@
     </f:entry>  
   </f:optionalBlock>
 
-  <f:optionalBlock title="Enable Deployable in BuildMaster" field="enableDeployable" >
+  <f:optionalBlock title="Enable Deployable in BuildMaster" field="enableReleaseDeployable" >
     <f:entry title="Deployable Id" field="deployableId" >
       <f:textbox default="$${BUILDMASTER_DEPLOYABLE_ID}" />
     </f:entry>

@@ -22,8 +22,8 @@ import hudson.util.ListBoxModel;
 
 /**
  * Has fields for global configuration
+ * 
  * @author Andrew Sumner
- *
  */
 public class BuildMasterConfiguration extends GlobalConfiguration {
 

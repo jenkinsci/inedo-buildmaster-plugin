@@ -14,14 +14,25 @@
       <f:checkbox default="false" />
     </f:entry>
   </f:optionalBlock>
-  
-  <f:entry title="Variables" field="variables" >
-    <f:expandableTextbox /> 
-  </f:entry>
+
+  <f:optionalBlock title="Set Build Variables in BuildMaster" field="setBuildVariables" >
+    <f:entry title="Copy Previous Build's Variables" field="preserveVariables" >
+      <f:checkbox default="false" />
+    </f:entry>
+    <f:entry title="Variables" field="variables" >
+      <f:expandableTextbox /> 
+    </f:entry>  
+  </f:optionalBlock>
+
+  <f:optionalBlock title="Enable Deployable in BuildMaster" field="enableReleaseDeployable" >
+    <f:entry title="Deployable Id" field="deployableId" >
+      <f:textbox default="$${BUILDMASTER_DEPLOYABLE_ID}" />
+    </f:entry>
+  </f:optionalBlock>
   
   <f:advanced title="Advanced Settings">
     <f:entry title="Application" field="applicationId" >
-      <f:textbox default="$${BUILDMASTER_APPLICATION}" />
+      <f:textbox default="$${BUILDMASTER_APPLICATION_ID}" />
     </f:entry>
     <f:entry title="Release" field="releaseNumber" >
       <f:textbox default="$${BUILDMASTER_RELEASE_NUMBER}" />

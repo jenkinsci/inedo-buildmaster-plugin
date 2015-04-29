@@ -13,6 +13,12 @@ import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.Variable;
 
+/**
+ * Does the real work of Trigger a BuildMaster build, has been seperated out from the Builder and Publisher actions
+ * so that the code can be shared between them. 
+ * 
+ * @author Andrew Sumner
+ */
 public class TriggerBuildHelper {
 	public static final String LOG_PREFIX = "[BuildMaster] "; 
 	public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
@@ -71,6 +77,13 @@ public class TriggerBuildHelper {
 					variablesList.put(variable.Variable_Name, variable.Value_Text);
 				}
 			}
+		}
+		
+		if (trigger.getEnableReleaseDeployable()) {
+			String deployableId = expandVariable(build, listener, trigger.getDeployableId());
+			listener.getLogger().println(LOG_PREFIX + "Enable release deployable with id=" + deployableId);
+			
+			buildmaster.enableReleaseDeployable(applicationId, releaseNumber, deployableId);			
 		}
 		
 		String buildMasterBuildNumber;

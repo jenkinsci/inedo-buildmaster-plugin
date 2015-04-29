@@ -27,7 +27,7 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 	private final boolean setBuildVariables;
 	private final boolean preserveVariables;
 	private final String variables;
-	private final boolean enableDeployable;
+	private final boolean enableReleaseDeployable;
 	private final String deployableId;
 	private final String applicationId;
 	private final String releaseNumber;
@@ -35,7 +35,7 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 
 	// Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
 	@DataBoundConstructor
-	public TriggerBuildBuilder(JSONObject waitTillBuildCompleted, JSONObject setBuildVariables, JSONObject enableDeployable, String applicationId, String releaseNumber, String buildNumber) {
+	public TriggerBuildBuilder(JSONObject waitTillBuildCompleted, JSONObject setBuildVariables, JSONObject enableReleaseDeployable, String applicationId, String releaseNumber, String buildNumber) {
 		if (waitTillBuildCompleted != null) { 
 			this.waitTillBuildCompleted = true; 
 			this.printLogOnFailure = "true".equalsIgnoreCase(waitTillBuildCompleted.getString("printLogOnFailure"));
@@ -54,11 +54,11 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 			this.variables = null;
 		}
 
-		if (enableDeployable != null) { 
-			this.enableDeployable = true; 
-			this.deployableId = enableDeployable.getString("deployableId");
+		if (enableReleaseDeployable != null) { 
+			this.enableReleaseDeployable = true; 
+			this.deployableId = enableReleaseDeployable.getString("deployableId");
 		} else { 
-			this.enableDeployable = false; 
+			this.enableReleaseDeployable = false; 
 			this.deployableId = null;
 		}
 		
@@ -87,8 +87,8 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 		return variables;
 	}
 
-	public boolean getEnableDeployable() {
-		return enableDeployable;
+	public boolean getEnableReleaseDeployable() {
+		return enableReleaseDeployable;
 	}
 	
 	public String getDeployableId() {

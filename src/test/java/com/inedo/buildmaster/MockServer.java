@@ -22,6 +22,11 @@ import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.domain.Variable;
 
+/**
+ * A Mocked server that replaces a live BuildMaster installation
+ * 
+ * @author Andrew Sumner
+ */
 public class MockServer {
 	public static final String APPLICATION_ID = "36";	// BuildMaster application id to get/create builds for
 	
@@ -31,16 +36,16 @@ public class MockServer {
 	private HttpServer server = null;
 	private HttpRequestHandler handler;
 	
-	
 	public MockServer(boolean mockRequests) throws IOException {
 		config = new BuildMasterConfig();
 		
+		// These must be set to valid values if not mocking
 		config.url = "http://buildmaster";
 		config.authentication = "ntlm";
-		config.user = "as979c";
-		config.password = "Tracey33";
-		config.domain = "customstw";
-		config.apiKey = "customs";
+		config.user = "user";
+		config.password = "password";
+		config.domain = "domain";
+		config.apiKey = "apikey";
 		
 		if (mockRequests) {
 			handler = new HttpHandler();
@@ -96,7 +101,11 @@ public class MockServer {
 			case "Releases_GetRelease": 
 				response.setEntity(new StringEntity(ReleaseDetails.EXAMPLE));
 				break;
-			
+				
+			case "Releases_CreateOrUpdateRelease":
+				//response.setEntity(new StringEntity(""));
+				break;
+				
 			case "Builds_GetBuilds": 
 				response.setEntity(new StringEntity(Build.EXAMPLE));
 				break;

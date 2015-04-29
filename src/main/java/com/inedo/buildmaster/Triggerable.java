@@ -6,7 +6,7 @@ public interface Triggerable {
 	public boolean getSetBuildVariables();
 	public boolean getPreserveVariables();
 	public String getVariables();
-	public boolean getEnableDeployable();
+	public boolean getEnableReleaseDeployable();
 	public String getDeployableId();
 	public String getApplicationId();
 	public String getReleaseNumber();
