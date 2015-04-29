@@ -110,7 +110,9 @@ public class BuildMasterClientApacheTest {
 		assertThat(after.Releases_Extended[0].Release_Name, is(before.Releases_Extended[0].Release_Name));
 		assertThat(after.Releases_Extended[0].Notes_Text, is(before.Releases_Extended[0].Notes_Text));
 		
-		assertThat(after.ReleaseDeployables_Extended.length, is(before.ReleaseDeployables_Extended.length + 1));
+		if (!MOCK_REQUESTS) {
+			assertThat(after.ReleaseDeployables_Extended.length, is(before.ReleaseDeployables_Extended.length + 1));
+		}
 	}
 	
 	@Test

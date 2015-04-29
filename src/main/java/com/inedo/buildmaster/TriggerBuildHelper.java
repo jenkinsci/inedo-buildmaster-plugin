@@ -93,7 +93,7 @@ public class TriggerBuildHelper {
 			buildMasterBuildNumber = buildmaster.createBuild(applicationId, releaseNumber, buildNumber, variablesList);
 			
 			if (!buildMasterBuildNumber.equals(buildNumber)) {
-				listener.getLogger().println(LOG_PREFIX + "Warning, requested build number does not match that returned from BuildMaster.");
+				listener.getLogger().println(LOG_PREFIX + String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.", buildNumber, buildMasterBuildNumber));
 			}
 		} else {
 			listener.getLogger().println(LOG_PREFIX + "Create BuildMaster build");

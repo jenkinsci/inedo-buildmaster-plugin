@@ -404,7 +404,6 @@ public class BuildMasterClientApache {
 	}
 	
 	// Do the work
-	@SuppressWarnings("unchecked")
 	protected <T> T doGet(Class<T> type, String path, String... query) throws IOException {
 		StringBuilder url = new StringBuilder();
 		url.append(config.url).append("/api/json/").append(path).append("?API_Key=").append(config.apiKey);
@@ -425,9 +424,11 @@ public class BuildMasterClientApache {
 			throw new IOException(response.getStatusLine().toString() + ": " + getResponseBody(response));
 		}
 
-		if (String.class.isAssignableFrom(type)) {
-			return (T)getResponseBody(response);
-		}
+		// This is only useful if converting string from entity that is a json object, if breaks other 
+		// code by putting quotes around returned value. 
+//		if (String.class.isAssignableFrom(type)) {
+//			return (T)getResponseBody(response);
+//		}
 		
 		T data = new ObjectMapper().readValue(response.getEntity().getContent(), type);
 
