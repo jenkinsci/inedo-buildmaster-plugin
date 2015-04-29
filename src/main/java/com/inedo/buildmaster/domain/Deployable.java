@@ -17,5 +17,7 @@ public class Deployable
 	public int Dependencies_Count;
 	public int Dependants_Count;
 	public String InclusionType_Code;
+	public String Referenced_Release_Number;
+	public int Referenced_Application_Id;
 }
 

@@ -23,5 +23,9 @@ public class Release
 	public int Final_Environment_Id;
 	public String Final_Environment_Name;
 	public int Builds_Count;
+	
+	public String Target_Date;
+	public String Release_Name;
+	public String Notes_Text;
 }
 

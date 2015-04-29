@@ -4,7 +4,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 

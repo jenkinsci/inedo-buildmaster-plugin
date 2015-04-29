@@ -1,11 +1,8 @@
 package com.inedo.buildmaster;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
-
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;

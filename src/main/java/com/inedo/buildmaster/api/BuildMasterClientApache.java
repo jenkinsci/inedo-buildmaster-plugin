@@ -2,12 +2,11 @@ package com.inedo.buildmaster.api;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.io.PrintStream;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -128,7 +127,7 @@ public class BuildMasterClientApache {
 	public ReleaseDetails getRelease(String applicationId, String releaseNumber) throws IOException {
 		return doGet(ReleaseDetails.class, "Releases_GetRelease", "Application_Id", applicationId, "Release_Number", releaseNumber);
 	}
-
+	
 	/**
 	 * Gets list of number of active releases
 	 * 
@@ -155,6 +154,46 @@ public class BuildMasterClientApache {
 		return "";
 	}
 
+	/**
+	 * Enables deployable on an existing release if it is not currently enabled
+	 *  
+	 * @throws IOException
+	 */
+	public boolean enableReleaseDeployable(String applicationId, String releaseNumber, String deployableId) throws IOException {
+		List<Deployable> deployables = new ArrayList<>();
+		int id = Integer.parseInt(deployableId);
+		
+		ReleaseDetails releaseDetails = getRelease(applicationId, releaseNumber);
+		
+		for (Deployable deployable : releaseDetails.ReleaseDeployables_Extended) {
+			if (deployable.InclusionType_Code.equals("I")) {
+				deployables.add(deployable);
+				
+				if (deployable.Deployable_Id == id) {
+					return true;
+				}
+			}
+		}
+		
+		Deployable deployable = new Deployable();
+		deployable.Deployable_Id = id;
+		deployable.InclusionType_Code = "I";
+		
+		deployables.add(deployable);
+		
+		Release release = releaseDetails.Releases_Extended[0]; 
+		
+		doGet(String.class, "Releases_CreateOrUpdateRelease", 
+				"Application_Id", String.valueOf(release.Application_Id), 
+				"Release_Number", release.Release_Number,
+			    "Workflow_Id", String.valueOf(release.Workflow_Id),
+			    "Target_Date", release.Target_Date,
+			    "Release_Name", release.Release_Name,
+			    //Notes_Text
+			    "DeployableIds_Xml", encodeDeployables(deployables));
+		
+		return true;
+	}
 	/**
 	 * Gets the next available build number for the given release, if no builds
 	 * have been performed will return 1
@@ -190,7 +229,7 @@ public class BuildMasterClientApache {
 	 */
 	public String createBuild(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
 		return doGet(String.class, "Builds_CreateBuild", "Application_Id",
-				applicationId, "Release_Number", releaseNumber, "Requested_Build_Number", buildNumber, "BuildVariables_Xml", getVariables(variablesList));
+				applicationId, "Release_Number", releaseNumber, "Requested_Build_Number", buildNumber, "BuildVariables_Xml", encodeVariables(variablesList));
 	}
 
 	/**
@@ -313,7 +352,7 @@ public class BuildMasterClientApache {
 		config.printStream.println("");
 	}
 
-	private String getVariables(Map<String, String> variablesList) throws UnsupportedEncodingException {
+	private String encodeVariables(Map<String, String> variablesList) throws UnsupportedEncodingException {
 		if (variablesList == null)
 			return null;
 
@@ -323,9 +362,10 @@ public class BuildMasterClientApache {
 			variables.append("<Variables>");
 
 			for (Map.Entry<String, String> variable : variablesList.entrySet()) {
-				variables.append("<Variable Name=\"").append(variable.getKey())
-						.append("\" Value=\"").append(variable.getValue())
-						.append("\" />");
+				variables.append("<Variable ")
+						.append("Name=\"").append(variable.getKey()).append("\" ")
+						.append("Value=\"").append(variable.getValue()).append("\" ")
+						.append("/>");
 			}
 
 			variables.append("</Variables>");
@@ -333,8 +373,34 @@ public class BuildMasterClientApache {
 
 		return URLEncoder.encode(variables.toString(), "UTF-8");
 	}
+			
+	private String encodeDeployables(List<Deployable> deployablesList) throws UnsupportedEncodingException {
+		if (deployablesList == null) return null;
 
+		StringBuilder deployables = new StringBuilder();
+
+		if (deployablesList.size() > 0) {
+			deployables.append("<ReleaseDeployables>");
+
+			for (Deployable deployable : deployablesList) {
+				deployables.append("<ReleaseDeployable ")
+							.append("Deployable_Id=\"").append(deployable.Deployable_Id).append("\" ")
+							.append("InclusionType_Code=\"I\" ")
+							.append("/>");
+				
+					// InclusionType_Code: 'I' = indicate included in the release, 'R' = "referenced" so it’s only used for imported deployables and deployable dependencies
+			        // Referenced_Release_Number: only include this attribute if InclusionType_Code is R
+			        // Referenced_Application_Id: only include this attribute if InclusionType_Code is R
+			}
+
+			deployables.append("</ReleaseDeployables>");
+		}
+
+		return URLEncoder.encode(deployables.toString(), "UTF-8");
+	}
+	
 	// Do the work
+	@SuppressWarnings("unchecked")
 	protected <T> T doGet(Class<T> type, String path, String... query) throws IOException {
 		StringBuilder url = new StringBuilder();
 		url.append(config.url).append("/api/json/").append(path).append("?API_Key=").append(config.apiKey);
@@ -348,7 +414,7 @@ public class BuildMasterClientApache {
 		HttpGet httpget = new HttpGet(url.toString());
 		HttpClientContext context = HttpClientContext.create();
 
-		config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Executing request " + httpget.getRequestLine());
+		config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Executing request " + URLDecoder.decode(httpget.getRequestLine().getUri(), "UTF-8"));
 		HttpResponse response = httpclient.execute(httpget, context);
 
 		if (response.getStatusLine().getStatusCode() > 399) {

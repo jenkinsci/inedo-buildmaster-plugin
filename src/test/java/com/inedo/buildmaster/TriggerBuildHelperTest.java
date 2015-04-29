@@ -7,7 +7,6 @@ import static org.mockito.AdditionalAnswers.*;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -17,13 +16,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 import hudson.EnvVars;
-import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.tools.ant.taskdefs.condition.IsTrue;
 
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 
@@ -33,11 +30,13 @@ public class TriggerBuildHelperTest {
 	private final static boolean MOCK_REQUESTS = true;	
 	public MockServer mockServer;
 	
+	@SuppressWarnings("rawtypes")
 	public AbstractBuild build;
+	@SuppressWarnings("rawtypes")	
+	public AbstractProject project;
 	//public Launcher launcher;
 	public BuildListener listener;
 	public EnvVars env;
-	public AbstractProject project;
 	public PrintStream logger;
 	public ByteArrayOutputStream outContent = new ByteArrayOutputStream();
 
@@ -100,6 +99,7 @@ public class TriggerBuildHelperTest {
 	@Test
 	public void performEnableDeployable() throws IOException, InterruptedException {
 		throw new NotImplementedException();
+		//buildmaster.enableReleaseDeployable(MockServer.APPLICATION_ID, testReleaseNumber, "2077");
 	}
 	
 	// Mocking of Server

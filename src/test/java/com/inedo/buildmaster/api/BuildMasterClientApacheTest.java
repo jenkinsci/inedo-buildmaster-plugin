@@ -1,38 +1,20 @@
 package com.inedo.buildmaster.api;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 import com.inedo.buildmaster.MockServer;
 import com.inedo.buildmaster.api.BuildMasterClientApache;
-import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
-import com.inedo.buildmaster.domain.BuildExecutionDetails;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.domain.Variable;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpStatus;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.bootstrap.HttpServer;
-import org.apache.http.impl.bootstrap.ServerBootstrap;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpRequestHandler;
-
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.InetAddress;
-import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,40 +37,6 @@ public class BuildMasterClientApacheTest {
 	@After
 	public void tearDown() throws Exception {
 		mockServer.stop();
-	}
-	
-	@Test
-	public void mutliProject() throws IOException {
-		// Set if any of these will help with fan in
-		//Applications_GetDeployables Application_Id
-		//Applications_GetDeployable 
-		//Applications_CreateOrUpdateDeployable 
-		//Releases_CreateOrUpdateRelease
-		
-//		Deployable[] deployables = buildmaster.getDeployables(MockServer.APPLICATION_ID);
-		
-		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		String previousBuildNumber = buildmaster.getPreviousBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
-		//Build build = buildmaster.getBuild(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
-		
-		Variable[] variables = buildmaster.getVariableValues(MockServer.APPLICATION_ID, releaseNumber, previousBuildNumber);
-		
-		ReleaseDetails releaseDetails = buildmaster.getRelease(MockServer.APPLICATION_ID, releaseNumber);
-		
-		for (Deployable deployable : releaseDetails.ReleaseDeployables_Extended) {
-			deployable = deployable;
-		}
-		 
-//		File artifact1File = new File("\\\\buildmaster/BuildMaster_FileTransfer/Sample/app." + releaseNumber + "." + buildNumber + ".txt");
-//		FileUtils.writeStringToFile(artifact1File, "hello", false);
-		
-//		buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
-		
-//		File artifact2File = new File("\\\\buildmaster/BuildMaster_FileTransfer/Sample/db." + releaseNumber + "." + buildNumber + ".txt");
-//		FileUtils.writeStringToFile(artifact2File, "world", false);
-		
-		//buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
-		
 	}
 	
 	@Test
@@ -118,7 +66,7 @@ public class BuildMasterClientApacheTest {
 	public void getApplications() throws IOException  {
     	Application[] applications = buildmaster.getApplications();
     	
-        assertTrue("Expect BuildMaster to have applications created", applications.length > 0);
+        assertThat("Expect BuildMaster to have applications created", applications.length, is(greaterThan(0)));
 //        System.out.println(applications[0].Application_Name);
 	}
 	
@@ -126,7 +74,7 @@ public class BuildMasterClientApacheTest {
 	public void getDeployables() throws IOException  {
     	Deployable[] deployables = buildmaster.getDeployables(MockServer.APPLICATION_ID);
     	
-        assertTrue("Expect BuildMaster to have applications created", deployables.length > 0);
+        assertThat("Expect BuildMaster to have applications created", deployables.length, is(greaterThan(0)));
 	}
 	
 	
@@ -134,27 +82,47 @@ public class BuildMasterClientApacheTest {
 	public void getDeployable() throws IOException  {
     	Deployable[] deployables = buildmaster.getDeployables(MockServer.APPLICATION_ID);
     	
-        assertTrue("Expect BuildMaster to have applications created", deployables.length > 0);
+        assertThat("Expect BuildMaster to have applications created", deployables.length, is(greaterThan(0)));
 	}
 	 
+	@Test
+	public void enableReleaseDeployable() throws IOException {
+		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		
+		ReleaseDetails before = buildmaster.getRelease(MockServer.APPLICATION_ID, testReleaseNumber);
+		
+		buildmaster.enableReleaseDeployable(MockServer.APPLICATION_ID, testReleaseNumber, "2077");
+		
+		ReleaseDetails after = buildmaster.getRelease(MockServer.APPLICATION_ID, testReleaseNumber);
+		
+		assertThat(after.Releases_Extended[0].Application_Id, is(before.Releases_Extended[0].Application_Id));
+		assertThat(after.Releases_Extended[0].Release_Number, is(before.Releases_Extended[0].Release_Number));
+		assertThat(after.Releases_Extended[0].Workflow_Id, is(before.Releases_Extended[0].Workflow_Id));
+		
+		assertThat(after.Releases_Extended[0].Target_Date, is(before.Releases_Extended[0].Target_Date));
+		assertThat(after.Releases_Extended[0].Release_Name, is(before.Releases_Extended[0].Release_Name));
+		assertThat(after.Releases_Extended[0].Notes_Text, is(before.Releases_Extended[0].Notes_Text));
+		
+		assertThat(after.ReleaseDeployables_Extended.length, is(before.ReleaseDeployables_Extended.length + 1));
+	}
 	
 	@Test
 	public void getRelease() throws IOException {
 		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
 		ReleaseDetails release = buildmaster.getRelease(MockServer.APPLICATION_ID, testReleaseNumber);
 				
-		assertTrue("Expect Test Application to have active release", release.Releases_Extended.length > 0);
+		assertThat("Expect Test Application to have active release", release.Releases_Extended.length, is(greaterThan(0)));
 
 		String status = release.Releases_Extended[0].ReleaseStatus_Name;
 		
-		assertEquals("Expect Test Application to have active release " + testReleaseNumber, "Active", status);
+		assertThat("Expect Test Application to have active release " + testReleaseNumber, "Active", is(status));
 	}
 	
 	@Test
 	public void getActiveReleases() throws IOException {
 		Release[] releases = buildmaster.getActiveReleases(MockServer.APPLICATION_ID);
 		
-		assertTrue("Expect Test Application to have active release(s)", releases.length > 0);
+		assertThat("Expect Test Application to have active release(s)", releases.length, is(greaterThan(0)));
 		
 //		for (Release release : releases) {
 //			System.out.println(release.Release_Number);
@@ -168,14 +136,14 @@ public class BuildMasterClientApacheTest {
 		
 		Variable[] variables = buildmaster.getVariableValues(MockServer.APPLICATION_ID, testReleaseNumber, testBuildNumber);
 		
-		assertTrue("Expect Test previous build to have variables defined", variables.length > 0);
+		assertThat("Expect Test previous build to have variables defined", variables.length, is(greaterThan(0)));
 	}
 	
 	@Test
 	public void getLatestActiveReleaseNumber() throws IOException {
 		String release = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
 		
-		assertTrue("Expect Test Application to have an active release", release.length() > 0);
+		assertThat("Expect Test Application to have an active release", release.length(), is(greaterThan(0)));
 	}
 	
 	@Test
@@ -183,7 +151,7 @@ public class BuildMasterClientApacheTest {
 		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
 		Integer nextBuildNumber = Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, testReleaseNumber));
 		
-		assertTrue("Expect nextBuildNumber to be greate than zero", nextBuildNumber > 0);
+		assertThat("Expect nextBuildNumber to be greate than zero", nextBuildNumber , is(greaterThan(0)));
 		
 //		System.out.println("nextBuildNumber: " + nextBuildNumber);
 	}
@@ -198,11 +166,11 @@ public class BuildMasterClientApacheTest {
 		
 		String buildMasterBuildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, testReleaseNumber, buildNumber, variablesList);
 		
-		assertEquals("Expect returned buildNumber to be the same as requested", buildNumber, buildMasterBuildNumber);
+		assertThat("Expect returned buildNumber to be the same as requested", buildNumber, is(buildMasterBuildNumber));
 		
 		boolean result = buildmaster.waitForBuildCompletion(MockServer.APPLICATION_ID, testReleaseNumber, buildMasterBuildNumber, true);
 		
-		assertTrue("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
+		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
 	}
 	
 	@Test
@@ -212,7 +180,7 @@ public class BuildMasterClientApacheTest {
 		
 		Build build = buildmaster.getBuild(MockServer.APPLICATION_ID, testReleaseNumber, buildNumber);
 		
-		assertTrue("Expect Test Application to have build number " + buildNumber, build.Build_Number.length() > 0);
+		assertThat("Expect Test Application to have build number " + buildNumber, build.Build_Number.length() , is(greaterThan(0)));
 		
 //		System.out.println("Current_ExecutionStatus_Name for build " + buildNumber + " is " + build.Current_ExecutionStatus_Name);
 	}
@@ -224,7 +192,7 @@ public class BuildMasterClientApacheTest {
 		
 		boolean result = buildmaster.waitForBuildCompletion(MockServer.APPLICATION_ID, testReleaseNumber, buildNumber, false);
 		
-		assertTrue("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
+		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
 	}
 	
 	@Test
@@ -245,7 +213,7 @@ public class BuildMasterClientApacheTest {
 			mockServer.getBuildMasterConfig().printStream = printSteamOrig;
 		}
 		
-		assertTrue("Expect Test build " + buildNumber + " to have an execution log", outContent.size() > 0);
+		assertThat("Expect Test build " + buildNumber + " to have an execution log", outContent.size(), is(greaterThan(0)));
 		
 //		System.out.println(outContent.toString());
 	}
