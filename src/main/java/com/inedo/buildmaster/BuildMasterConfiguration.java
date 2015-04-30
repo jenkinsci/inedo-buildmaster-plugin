@@ -182,10 +182,9 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
         public ListBoxModel doFillAuthenticationItems() {
             ListBoxModel items = new ListBoxModel();
         
-            items.add("None", "none");
-            items.add("Basic", "basic");
-            items.add("Basic (Non Preemptive)", "basic-non-preemptive");
-            items.add("NTLM", "ntlm");
+            items.add(ConnectionType.NONE.getLabel(), ConnectionType.NONE.getId());
+            items.add(ConnectionType.BASIC.getLabel(), ConnectionType.BASIC.getId());
+            items.add(ConnectionType.NTLM.getLabel(), ConnectionType.NTLM.getId());
         	
             return items;
         }

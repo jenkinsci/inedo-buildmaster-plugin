@@ -29,7 +29,7 @@ import com.inedo.buildmaster.api.BuildMasterClientApache;
  */
 public class TriggerBuildHelperTest {
 	public MockServer mockServer;
-	
+		
 	@SuppressWarnings("rawtypes")
 	public AbstractBuild build;
 	@SuppressWarnings("rawtypes")	
@@ -42,7 +42,7 @@ public class TriggerBuildHelperTest {
 
 	public String releaseNumber;
 	public String buildNumber;
-	
+		
 	@Test
 	public void perform() throws IOException, InterruptedException {
 		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber);

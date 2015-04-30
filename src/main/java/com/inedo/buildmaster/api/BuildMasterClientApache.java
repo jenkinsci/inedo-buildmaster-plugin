@@ -27,6 +27,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.inedo.buildmaster.ConnectionType;
 import com.inedo.buildmaster.TriggerBuildHelper;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
@@ -57,7 +58,7 @@ public class BuildMasterClientApache {
 		HttpClientBuilder httpbuilder = HttpClients.custom();
 		RequestConfig.Builder configbuilder = RequestConfig.custom();
 
-		if ("basic".equalsIgnoreCase(config.authentication)) {
+		if (ConnectionType.BASIC.getId().equalsIgnoreCase(config.authentication)) {
 			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 			credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(config.user,config.password));
 
@@ -65,7 +66,7 @@ public class BuildMasterClientApache {
 			configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC));
 		}
 
-		if ("ntlm".equalsIgnoreCase(config.authentication)) {
+		if (ConnectionType.NTLM.getId().equalsIgnoreCase(config.authentication)) {
 			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 			credentialsProvider.setCredentials(
 					AuthScope.ANY,
@@ -171,7 +172,7 @@ public class BuildMasterClientApache {
 		ReleaseDetails releaseDetails = getRelease(applicationId, releaseNumber);
 		
 		for (Deployable deployable : releaseDetails.ReleaseDeployables_Extended) {
-			if (deployable.InclusionType_Code.equals("I")) {
+			if ("I".equals(deployable.InclusionType_Code)) {
 				deployables.add(deployable);
 				
 				if (deployable.Deployable_Id == id) {

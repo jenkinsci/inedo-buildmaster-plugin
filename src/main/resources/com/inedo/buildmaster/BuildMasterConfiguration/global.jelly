@@ -21,14 +21,6 @@
     </f:entry>
     <f:entry field="authentication" title="Authentication Method" >
     	<f:select />
-    	<!--
-		<select name="authentication">
-			<option value="none">None</option>			
-			<option value="basic">Basic</option>
-			<option value="basic-non-preemptive">Basic (Non Preemptive)</option>
-			<option value="ntlm">NTLM</option>
-		</select>
-		-->
     </f:entry>
     <f:entry field="domain" title="Domain" >
       <f:textbox />
