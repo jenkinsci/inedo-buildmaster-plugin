@@ -25,7 +25,7 @@ apply plugin: 'java'
 
 group = 'com.inedo.buildmaster'
 version = '1.0'
-description = 'BuildMaster'
+description = 'Inedo BuildMaster plugin for Jenkins'
 
 ext {
 	jenkinsVersion='1.596.1'
@@ -33,8 +33,9 @@ ext {
 
 jenkinsPlugin {
     coreVersion = "$jenkinsVersion"
-    displayName = 'BuildMaster plugin for Jenkins.'
-    url = 'http://inedo.com/buildmaster/'
+    displayName = 'Inedo BuildMaster plugin for Jenkins.'
+    url = 'http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin'
+    gitHubUrl = 'https://github.com/jenkinsci/inedo-buildmaster-plugin'
     developers {
         developer {
             id 'andrew-sumner'
