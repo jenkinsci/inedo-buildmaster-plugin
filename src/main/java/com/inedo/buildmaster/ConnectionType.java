@@ -3,7 +3,7 @@ package com.inedo.buildmaster;
 public enum ConnectionType {
 	NONE ("None"),
 	BASIC ("Basic"),
-	NTLM ("Ntlm");
+	NTLM ("NTLM");
 	
 	//private final String key;
     private final String label; 
