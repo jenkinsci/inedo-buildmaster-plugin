@@ -1,3 +1,5 @@
+[![Build Status](https://jenkins.ci.cloudbees.com/job/plugins/job/inedo-buildmaster-plugin/badge/icon)](https://jenkins.ci.cloudbees.com/job/plugins/job/inedo-buildmaster-plugin/)
+
 # inedo-buildmaster-plugin
 Allows Jenkins to request version information and trigger a build on an application in BuildMaster (http://inedo.com/buildmaster) as part of a Jenkins build process.
 
