@@ -123,7 +123,12 @@ public class MockServer {
 				if (pos > 0) {
 					query = query.substring(pos + "Requested_Build_Number".length() + 1);
 					
-					buildNumber = query.substring(0, query.indexOf("&"));
+					pos = query.indexOf("&");
+					if (pos > 0) {
+						buildNumber = query.substring(0, pos);
+					} else {
+						buildNumber = query;
+					}
 				}
 				
 				// Return the quested build number if passed, else new build number

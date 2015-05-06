@@ -190,7 +190,7 @@ public class BuildMasterClientApache {
 		
 		Release release = releaseDetails.Releases_Extended[0]; 
 		
-		doGet(String.class, "Releases_CreateOrUpdateRelease", 
+		doGet(Void.class, "Releases_CreateOrUpdateRelease", 
 				"Application_Id", String.valueOf(release.Application_Id), 
 				"Release_Number", release.Release_Number,
 			    "Workflow_Id", String.valueOf(release.Workflow_Id),
@@ -358,53 +358,49 @@ public class BuildMasterClientApache {
 	}
 
 	private String encodeVariables(Map<String, String> variablesList) throws UnsupportedEncodingException {
-		if (variablesList == null)
-			return null;
+		if (variablesList == null || variablesList.size() == 0) return null;
 
 		StringBuilder variables = new StringBuilder();
 
-		if (variablesList.size() > 0) {
-			variables.append("<Variables>");
+		variables.append("<Variables>");
 
-			for (Map.Entry<String, String> variable : variablesList.entrySet()) {
-				variables.append("<Variable ")
-						.append("Name=\"").append(variable.getKey()).append("\" ")
-						.append("Value=\"").append(variable.getValue()).append("\" ")
-						.append("/>");
-			}
-
-			variables.append("</Variables>");
+		for (Map.Entry<String, String> variable : variablesList.entrySet()) {
+			variables.append("<Variable ")
+					.append("Name=\"").append(variable.getKey()).append("\" ")
+					.append("Value=\"").append(variable.getValue()).append("\" ")
+					.append("/>");
 		}
+
+		variables.append("</Variables>");
 
 		return URLEncoder.encode(variables.toString(), "UTF-8");
 	}
 			
 	private String encodeDeployables(List<Deployable> deployablesList) throws UnsupportedEncodingException {
-		if (deployablesList == null) return null;
+		if (deployablesList == null || deployablesList.size() == 0) return null;
 
 		StringBuilder deployables = new StringBuilder();
 
-		if (deployablesList.size() > 0) {
-			deployables.append("<ReleaseDeployables>");
+		deployables.append("<ReleaseDeployables>");
 
-			for (Deployable deployable : deployablesList) {
-				deployables.append("<ReleaseDeployable ")
-							.append("Deployable_Id=\"").append(deployable.Deployable_Id).append("\" ")
-							.append("InclusionType_Code=\"I\" ")
-							.append("/>");
-				
-					// InclusionType_Code: 'I' = indicate included in the release, 'R' = "referenced" so it’s only used for imported deployables and deployable dependencies
-			        // Referenced_Release_Number: only include this attribute if InclusionType_Code is R
-			        // Referenced_Application_Id: only include this attribute if InclusionType_Code is R
-			}
-
-			deployables.append("</ReleaseDeployables>");
+		for (Deployable deployable : deployablesList) {
+			deployables.append("<ReleaseDeployable ")
+						.append("Deployable_Id=\"").append(deployable.Deployable_Id).append("\" ")
+						.append("InclusionType_Code=\"I\" ")
+						.append("/>");
+			
+				// InclusionType_Code: 'I' = indicate included in the release, 'R' = "referenced" so it’s only used for imported deployables and deployable dependencies
+		        // Referenced_Release_Number: only include this attribute if InclusionType_Code is R
+		        // Referenced_Application_Id: only include this attribute if InclusionType_Code is R
 		}
+
+		deployables.append("</ReleaseDeployables>");
 
 		return URLEncoder.encode(deployables.toString(), "UTF-8");
 	}
 	
 	// Do the work
+	@SuppressWarnings("unchecked")
 	protected <T> T doGet(Class<T> type, String path, String... query) throws IOException {
 		StringBuilder url = new StringBuilder();
 		url.append(config.url).append("/api/json/").append(path).append("?API_Key=").append(config.apiKey);
@@ -425,13 +421,17 @@ public class BuildMasterClientApache {
 			throw new IOException(response.getStatusLine().toString() + ": " + getResponseBody(response));
 		}
 
-		// This is only useful if converting string from entity that is a json object, if breaks other 
-		// code by putting quotes around returned value. 
-//		if (String.class.isAssignableFrom(type)) {
-//			return (T)getResponseBody(response);
-//		}
+		T data = null;
 		
-		T data = new ObjectMapper().readValue(response.getEntity().getContent(), type);
+		if (Void.class.isAssignableFrom(type)) {
+			// Void is a special case for returning nothing
+		} else if (StringBuilder.class.isAssignableFrom(type)) {
+			// This is purely for developing calls when want to get the string value - the object mapper throws an exception 
+			// when it encounters json notation about when using String.class
+			data = (T)new StringBuilder(getResponseBody(response));
+		} else {		
+			data = new ObjectMapper().readValue(response.getEntity().getContent(), type);
+		}
 
 		EntityUtils.consume(response.getEntity());
 
