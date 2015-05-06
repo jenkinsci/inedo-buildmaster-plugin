@@ -1,6 +1,8 @@
 # inedo-buildmaster-plugin
 Allows Jenkins to request version information and trigger a build on an application in BuildMaster (http://inedo.com/buildmaster) as part of a Jenkins build process.
 
+See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin) for more details.
+
 ## Building The Plugin
 -------------------
 
@@ -30,21 +32,3 @@ On importing the project to your IDE, the required dependencies will be download
 -------------------
 
 To spin up a Jenkins instance with this plugin installed for manual testing, run `gradlew clean server` (see "building the plugin" above). The Jenkins instance will be available on port 8080 on your localhost.
-
-# Usage
-The plugin has a lot of help that you can access while using Jenkins, but as a brief overview:
-
-## Global Configuratiuon
-Before using the plugin in a job you will need to go to the global configurn section at configure how the plugin will find your BuildMaster instance.
-
-![ScreenShot](/screenshots/global_configuration.png)
-
-## Select BuildMaster Application
-Within your Job optionally add a build step to select the BuildMaster application and set the release number and build number that you wish to trigger the build for.
-
-![ScreenShot](/screenshots/selectapplication_configuration.png)
-
-## Trigger Build
-Add the trigger build step.  If you haven't used the "Select BuildMaster Application" action then you will need to go into the advanced section and set the application id, release and build number details.
-
-![ScreenShot](/screenshots/triggerbuild_configuration.png)
