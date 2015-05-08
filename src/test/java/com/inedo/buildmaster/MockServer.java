@@ -1,8 +1,13 @@
 package com.inedo.buildmaster;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -38,19 +43,13 @@ public class MockServer {
 	
 	public MockServer(boolean mockRequests) throws IOException {
 		config = new BuildMasterConfig();
-		
-		// These must be set to valid values if not mocking
 		config.url = "http://buildmaster";
-		config.authentication = "ntlm";
-		config.user = "user";
-		config.password = "password";
-		config.domain = "domain";
-		config.apiKey = "apikey";
 		
 		if (mockRequests) {
+			config.authentication = "none";
+			
 			handler = new HttpHandler();
 			
-			config.authentication = "none";
 			
 			server = ServerBootstrap.bootstrap()
 						.setLocalAddress(InetAddress.getLocalHost())
@@ -61,6 +60,13 @@ public class MockServer {
 		    server.start();
 		    
 		    config.url = "http://" + server.getInetAddress().getHostName() + ":" + server.getLocalPort();
+		} else {
+			String[] cred = FileUtils.readFileToString(new File("c:/temp/bm.txt")).split(Pattern.quote("|"));
+			config.authentication = "ntlm";
+			config.user = cred[0];
+			config.password = cred[1];
+			config.domain = cred[2];
+			config.apiKey = cred[3];
 		}
 	}
 	
