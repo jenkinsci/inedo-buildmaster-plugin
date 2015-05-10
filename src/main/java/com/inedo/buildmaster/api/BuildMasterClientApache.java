@@ -55,6 +55,10 @@ public class BuildMasterClientApache {
 	public BuildMasterClientApache(BuildMasterConfig config) {
 		this.config = config;
 
+		if (config.url.endsWith("/")) {
+    		config.url = config.url.substring(0, config.url.length() - 1);
+    	}
+		
 		HttpClientBuilder httpbuilder = HttpClients.custom();
 		RequestConfig.Builder configbuilder = RequestConfig.custom();
 
