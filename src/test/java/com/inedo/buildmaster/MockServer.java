@@ -20,6 +20,7 @@ import org.apache.http.protocol.HttpRequestHandler;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
+import com.inedo.buildmaster.domain.BuildExecution;
 import com.inedo.buildmaster.domain.BuildExecutionDetails;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
@@ -143,7 +144,10 @@ public class MockServer {
 			case "Builds_GetExecutionLog":
 				response.setEntity(new StringEntity(BuildExecutionDetails.EXAMPLE));
 				break;
-				
+			
+			case "Builds_GetExecutions":
+				response.setEntity(new StringEntity(BuildExecution.EXAMPLE));
+			
 			case "Variables_GetVariableValues":
 				response.setEntity(new StringEntity(Variable.EXAMPLE));
 				break;
