@@ -35,7 +35,7 @@ import org.junit.Test;
  * @author Andrew Sumner
  */
 public class BuildMasterClientApacheTest {
-	private final boolean MOCK_REQUESTS = false;	// Set this value to false to run against a live BuildMaster installation 
+	private final boolean MOCK_REQUESTS = true;	// Set this value to false to run against a live BuildMaster installation 
 	private MockServer mockServer;
 	private BuildMasterClientApache buildmaster;
 	
