@@ -28,7 +28,6 @@ import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inedo.buildmaster.ConnectionType;
-import com.inedo.buildmaster.MockServer;
 import com.inedo.buildmaster.TriggerBuildHelper;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
