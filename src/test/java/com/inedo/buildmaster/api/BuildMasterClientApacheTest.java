@@ -16,7 +16,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
@@ -44,6 +47,87 @@ public class BuildMasterClientApacheTest {
 	@After
 	public void tearDown() throws Exception {
 		mockServer.stop();
+	}
+
+	/*
+	 * Checks what would happen if several Jenkins jobs trigger the same application at similar times
+	 * 
+	 * The job this is calling should have a BUILD STEP with a powershell action with this script:
+	 * 	echo "start sleep"
+	 *  Start-Sleep -s 60
+	 *	echo "end sleep"
+	 */
+	@Test
+	public void queueBuilds() throws IOException {
+		if (MOCK_REQUESTS) return;
+		
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+				
+		Map<String, String> variablesList = new HashMap<>();
+		int exectiontimes = 1;
+		
+		for (int i = 1; 0 < exectiontimes; i++) {
+			String testrun = String.valueOf(i + 1);
+			
+			System.out.println("");
+			System.out.println("Test Run: " + testrun);
+			String prevBuildNumber = buildmaster.getPreviousBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
+			System.out.println("PreviousBuildNumber=" + prevBuildNumber);
+						
+			variablesList.put("hello", "world" + testrun);			
+			String buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, variablesList);
+			System.out.println("BuildNumber=" + buildNumber);
+			
+			Variable[] variables = buildmaster.getVariableValues(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
+			String value = "not found";
+			
+			for (Variable variable : variables) {
+				if (variable.Variable_Name.equalsIgnoreCase("hello")) {
+					value = variable.Value_Text;
+				}
+			}
+			
+			System.out.println("Variable HELLO=" + value);
+		}
+	}
+	
+	/*
+	 * Checks what would happen if a Jenkins jobs trigger the same application while a deployment is in progress
+	 * 
+	 * The job this is calling should have a DEPLOYMENT STEP with a powershell action with this script:
+	 *  echo "start sleep"
+	 *  Start-Sleep -s 60
+	 *	echo "end sleep"
+	 */
+	@Test
+	public void addBuildsOnceExecuting() throws IOException, InterruptedException {
+		if (MOCK_REQUESTS) return;
+		
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		
+		System.out.println("Test Run: Start First Build");			
+		String buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
+		System.out.println("BuildNumber=" + buildNumber);
+		
+		Build build = buildmaster.getBuild(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
+
+		String status = build.Current_ExecutionStatus_Name;
+		System.out.println("\tExecution Status: " + status);
+
+		final List<String> pending = Arrays.asList(new String[] { null, "Pending" });
+
+		while (pending.contains(status)) {
+			Thread.sleep(7000);
+
+			build = buildmaster.getBuild(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
+
+			status = build.Current_ExecutionStatus_Name;
+			System.out.println("\tExecution Status: " + status);
+		}
+
+		System.out.println("Test Run: Start Second Build");			
+		buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
+		System.out.println("BuildNumber=" + buildNumber);
 	}
 	
 	@Test
@@ -94,13 +178,13 @@ public class BuildMasterClientApacheTest {
 	 
 	@Test
 	public void enableReleaseDeployable() throws IOException {
-		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
 		
-		ReleaseDetails before = buildmaster.getRelease(MockServer.APPLICATION_ID, testReleaseNumber);
+		ReleaseDetails before = buildmaster.getRelease(MockServer.APPLICATION_ID, releaseNumber);
 		
-		buildmaster.enableReleaseDeployable(MockServer.APPLICATION_ID, testReleaseNumber, "2077");
+		buildmaster.enableReleaseDeployable(MockServer.APPLICATION_ID, releaseNumber, "2077");
 		
-		ReleaseDetails after = buildmaster.getRelease(MockServer.APPLICATION_ID, testReleaseNumber);
+		ReleaseDetails after = buildmaster.getRelease(MockServer.APPLICATION_ID, releaseNumber);
 		
 		assertThat(after.Releases_Extended[0].Application_Id, is(before.Releases_Extended[0].Application_Id));
 		assertThat(after.Releases_Extended[0].Release_Number, is(before.Releases_Extended[0].Release_Number));
@@ -117,14 +201,14 @@ public class BuildMasterClientApacheTest {
 	
 	@Test
 	public void getRelease() throws IOException {
-		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		ReleaseDetails release = buildmaster.getRelease(MockServer.APPLICATION_ID, testReleaseNumber);
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		ReleaseDetails release = buildmaster.getRelease(MockServer.APPLICATION_ID, releaseNumber);
 				
 		assertThat("Expect Test Application to have active release", release.Releases_Extended.length, is(greaterThan(0)));
 
 		String status = release.Releases_Extended[0].ReleaseStatus_Name;
 		
-		assertThat("Expect Test Application to have active release " + testReleaseNumber, "Active", is(status));
+		assertThat("Expect Test Application to have active release " + releaseNumber, "Active", is(status));
 	}
 	
 	@Test
@@ -140,10 +224,10 @@ public class BuildMasterClientApacheTest {
 
 	@Test
 	public void getVariableValues() throws IOException {
-		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		String testBuildNumber = buildmaster.getPreviousBuildNumber(MockServer.APPLICATION_ID, testReleaseNumber);
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		String testBuildNumber = buildmaster.getPreviousBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
 		
-		Variable[] variables = buildmaster.getVariableValues(MockServer.APPLICATION_ID, testReleaseNumber, testBuildNumber);
+		Variable[] variables = buildmaster.getVariableValues(MockServer.APPLICATION_ID, releaseNumber, testBuildNumber);
 		
 		assertThat("Expect Test previous build to have variables defined", variables.length, is(greaterThan(0)));
 	}
@@ -157,8 +241,8 @@ public class BuildMasterClientApacheTest {
 	
 	@Test
 	public void getNextBuildNumber() throws NumberFormatException, IOException {
-		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		Integer nextBuildNumber = Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, testReleaseNumber));
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		Integer nextBuildNumber = Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, releaseNumber));
 		
 		assertThat("Expect nextBuildNumber to be greate than zero", nextBuildNumber , is(greaterThan(0)));
 		
@@ -167,27 +251,27 @@ public class BuildMasterClientApacheTest {
 	
 	@Test
 	public void createBuild() throws IOException, InterruptedException {
-		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		String buildNumber = buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, testReleaseNumber);
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		String buildNumber = buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
 		Map<String, String> variablesList = new HashMap<>();
 		variablesList.put("hello", "world");
 		variablesList.put("cause", "unit test");
 		
-		String buildMasterBuildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, testReleaseNumber, buildNumber, variablesList);
+		String buildMasterBuildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, buildNumber, variablesList);
 		
 		assertThat("Expect returned buildNumber to be the same as requested", buildNumber, is(buildMasterBuildNumber));
 		
-		boolean result = buildmaster.waitForBuildCompletion(MockServer.APPLICATION_ID, testReleaseNumber, buildMasterBuildNumber, true);
+		boolean result = buildmaster.waitForBuildCompletion(MockServer.APPLICATION_ID, releaseNumber, buildMasterBuildNumber, true);
 		
 		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
 	}
 	
 	@Test
 	public void getBuild() throws IOException {
-		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, testReleaseNumber)) - 1);
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, releaseNumber)) - 1);
 		
-		Build build = buildmaster.getBuild(MockServer.APPLICATION_ID, testReleaseNumber, buildNumber);
+		Build build = buildmaster.getBuild(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
 		
 		assertThat("Expect Test Application to have build number " + buildNumber, build.Build_Number.length() , is(greaterThan(0)));
 		
@@ -196,19 +280,19 @@ public class BuildMasterClientApacheTest {
 	
 	@Test
 	public void getWaitForBuildCompletion() throws IOException, InterruptedException {
-		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, testReleaseNumber)) - 1);
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, releaseNumber)) - 1);
 		
-		boolean result = buildmaster.waitForBuildCompletion(MockServer.APPLICATION_ID, testReleaseNumber, buildNumber, false);
+		boolean result = buildmaster.waitForBuildCompletion(MockServer.APPLICATION_ID, releaseNumber, buildNumber, false);
 		
 		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
 	}
 	
 	@Test
 	public void printExecutionLog() throws IOException, InterruptedException {
-		String testReleaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, testReleaseNumber)) - 1);
-		Build build = buildmaster.getBuild(MockServer.APPLICATION_ID, testReleaseNumber, buildNumber);
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, releaseNumber)) - 1);
+		Build build = buildmaster.getBuild(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
 		
 		PrintStream printSteamOrig = mockServer.getBuildMasterConfig().printStream;
 		ByteArrayOutputStream outContent  = new ByteArrayOutputStream();

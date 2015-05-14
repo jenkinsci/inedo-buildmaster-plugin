@@ -234,6 +234,8 @@ public class BuildMasterClientApache {
 	 * number and returns the build number of the new build. Error thrown on
 	 * failure.
 	 * 
+	 * @return BuildNumber
+	 * 
 	 * @throws IOException
 	 */
 	public String createBuild(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
@@ -244,6 +246,8 @@ public class BuildMasterClientApache {
 	/**
 	 * Creates a new build of an application and optionally promotes it to the
 	 * first environment. Error thrown on failure.
+	 * 
+	 * @return BuildNumber
 	 * 
 	 * @throws IOException
 	 */

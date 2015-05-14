@@ -67,6 +67,22 @@ public class TriggerBuildHelper {
 		Map<String, String> variablesList = getVariablesList(trigger.getVariables());
 		
 		if (trigger.getPreserveVariables()) {
+			// TODO: Queue task at this point.
+			
+			/*
+			 
+			 Wait while Builds_GetExecutionsInProgress(applicationId) returns a row and has Environment_Id = null
+			 as this indicates that there is a new build in progress...
+			 
+			 ...or
+			 
+			 Call that and add execution id as a parameter
+			 
+			 StoredProcs.Variables_GetVariableValues(Execution_Id: execution.Execution_Id
+			
+			*/
+					
+			
 			listener.getLogger().println(LOG_PREFIX + "Gather previous builds build variables");
 			
 			String prevBuildNumber = buildmaster.getPreviousBuildNumber(applicationId, releaseNumber);			

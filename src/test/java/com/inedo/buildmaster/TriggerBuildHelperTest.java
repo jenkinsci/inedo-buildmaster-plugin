@@ -43,6 +43,34 @@ public class TriggerBuildHelperTest {
 	public String releaseNumber;
 	public String buildNumber;
 		
+	@Before
+	public void before() throws IOException, InterruptedException {
+		mockServer = new MockServer(true);
+		TriggerBuildHelper.injectConfiguration(mockServer.getBuildMasterConfig());
+		
+		build = mock(AbstractBuild.class);;
+		//launcher = mock(Launcher.class);
+		listener = mock(BuildListener.class);
+		env = mock(EnvVars.class);
+		project = mock(AbstractProject.class);
+		logger = new PrintStream(outContent);
+		
+		when(build.getProject()).thenReturn(project);
+		when(build.getEnvironment(listener)).thenReturn(env);
+		when(env.expand(anyString())).then(returnsFirstArg());
+		when(listener.getLogger()).thenReturn(logger);
+		
+		BuildMasterClientApache buildmaster = new BuildMasterClientApache(mockServer.getBuildMasterConfig());
+		
+		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
+		this.buildNumber = buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
+	}
+	
+	@After
+	public void tearDown() throws Exception {
+		mockServer.stop();
+	}
+	
 	@Test
 	public void perform() throws IOException, InterruptedException {
 		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
@@ -123,33 +151,5 @@ public class TriggerBuildHelperTest {
 	
 	private String[] extractLogLinesRemovingApiCall() {
 		return outContent.toString().split("\\G.*Executing request.*[\\r\\n]|[\\r\\n]+");
-	}
-	
-	@Before
-	public void before() throws IOException, InterruptedException {
-		mockServer = new MockServer(true);
-		TriggerBuildHelper.injectConfiguration(mockServer.getBuildMasterConfig());
-		
-		build = mock(AbstractBuild.class);;
-		//launcher = mock(Launcher.class);
-		listener = mock(BuildListener.class);
-		env = mock(EnvVars.class);
-		project = mock(AbstractProject.class);
-		logger = new PrintStream(outContent);
-		
-		when(build.getProject()).thenReturn(project);
-		when(build.getEnvironment(listener)).thenReturn(env);
-		when(env.expand(anyString())).then(returnsFirstArg());
-		when(listener.getLogger()).thenReturn(logger);
-		
-		BuildMasterClientApache buildmaster = new BuildMasterClientApache(mockServer.getBuildMasterConfig());
-		
-		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		this.buildNumber = buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
-	}
-	
-	@After
-	public void tearDown() throws Exception {
-		mockServer.stop();
 	}
 }
