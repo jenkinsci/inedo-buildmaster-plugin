@@ -28,9 +28,11 @@ import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inedo.buildmaster.ConnectionType;
+import com.inedo.buildmaster.MockServer;
 import com.inedo.buildmaster.TriggerBuildHelper;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
+import com.inedo.buildmaster.domain.BuildExecution;
 import com.inedo.buildmaster.domain.BuildExecutionActionGroupActionLogEntries;
 import com.inedo.buildmaster.domain.BuildExecutionDetails;
 import com.inedo.buildmaster.domain.Deployable;
@@ -272,6 +274,33 @@ public class BuildMasterClientApache {
 	}
 
 	/**
+	 * Gets all executions in the executing state.
+	 * 
+	 * @throws IOException
+	 */
+	public String getExecutionsInProgress(String applicationId) throws IOException {
+		StringBuilder executions = doGet(StringBuilder.class, "Builds_GetExecutionsInProgress", "Application_Id", applicationId);
+
+		return executions.toString();
+	}
+
+	/**
+	 * Gets the latest build executions for the specified build
+	 * 
+	 * @return Latest execution or empty object if no executions have occurred yet
+	 * 
+	 * @throws IOException
+	 */
+	public BuildExecution getLatestExecution(String applicationId, String releaseNumber, String buildNumber) throws IOException {
+		BuildExecution[] executions = doGet(BuildExecution[].class, "Builds_GetExecutions", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber, "Execution_Count", "1");
+
+		if (executions.length > 0) {
+			return executions[0];
+		}
+
+		return new BuildExecution();
+	}
+	/**
 	 * Gets the variable values for the build scope.
 	 * 
 	 * @throws IOException
@@ -304,45 +333,45 @@ public class BuildMasterClientApache {
 	 * @throws InterruptedException
 	 */
 	public boolean waitForBuildCompletion(String applicationId, String releaseNumber, String buildNumber, boolean printLogOnFailure) throws IOException, InterruptedException {
-		final List<String> inProgess = Arrays.asList(new String[] { null,
-				"Pending", "Executing" });
-		final List<String> pending = Arrays.asList(new String[] { null,
-				"Pending" });
+		final List<String> executing = Arrays.asList(new String[] { null, "", "Pending", "Executing" });
+		final List<String> pending = Arrays.asList(new String[] { null, "", "Pending" });
 
-		Build build = getBuild(applicationId, releaseNumber, buildNumber);
-
-		String status = build.Current_ExecutionStatus_Name;
-		config.printStream.println("\tExecution Status: " + status);
-
-		long startTime = new Date().getTime();
-
-		while (inProgess.contains(status)) {
+		BuildExecution execution = getLatestExecution(applicationId, releaseNumber, buildNumber);		
+		config.printStream.println(String.format("\tExecution Status: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+		
+		Integer envrionmentId = execution.Environment_Id;
+		long startTime = new Date().getTime();		
+		
+		// Wait till both build step (if exists) and deployment to the first environment have completed (if has build step with AutoPromote flag set)
+		while (executing.contains(execution.ExecutionStatus_Name) || (execution.Environment_Id == null && execution.Build_AutoPromote_Indicator.equalsIgnoreCase("Y"))) {
 			Thread.sleep(7000);
-
-			build = getBuild(applicationId, releaseNumber, buildNumber);
-
-			status = build.Current_ExecutionStatus_Name;
-			config.printStream.println("\tExecution Status: " + status);
-
-			if (pending.contains(status)) {
+			
+			execution = getLatestExecution(applicationId, releaseNumber, buildNumber);
+			config.printStream.print(String.format("\tExecution Status: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+			
+			// Restart counter if now deploying to new environment
+			if (envrionmentId != execution.Environment_Id) {
+				envrionmentId = execution.Environment_Id;
+				startTime = new Date().getTime();
+			}
+			
+			// If have been waiting for more than 5 minutes to enter pending state then bail out  
+			if (pending.contains(execution.ExecutionStatus_Name)) {
 				long endTime = new Date().getTime();
 				long diffMinutes = (endTime - startTime) / (60 * 1000);
 
-				if (diffMinutes >= 2) {
-					config.printStream
-							.println(String
-									.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it",
-											diffMinutes));
+				if (diffMinutes >= 5) {
+					config.printStream.println(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
 					return false;
 				}
 			}
 		}
 
-		if (!"Succeeded".equals(status) && printLogOnFailure) {
-			printExecutionLog(build.Current_Execution_Id);
+		if (!"Succeeded".equals(execution.ExecutionStatus_Name) && printLogOnFailure) {
+			printExecutionLog(String.valueOf(execution.Execution_Id));
 		}
 
-		return "Succeeded".equals(status);
+		return "Succeeded".equals(execution.ExecutionStatus_Name);
 	}
 
 	/**

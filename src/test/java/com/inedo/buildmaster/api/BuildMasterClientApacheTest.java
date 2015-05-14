@@ -7,6 +7,7 @@ import com.inedo.buildmaster.MockServer;
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
+import com.inedo.buildmaster.domain.BuildExecution;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.ReleaseDetails;
@@ -34,7 +35,7 @@ import org.junit.Test;
  * @author Andrew Sumner
  */
 public class BuildMasterClientApacheTest {
-	private final boolean MOCK_REQUESTS = true;	// Set this value to false to run against a live BuildMaster installation 
+	private final boolean MOCK_REQUESTS = false;	// Set this value to false to run against a live BuildMaster installation 
 	private MockServer mockServer;
 	private BuildMasterClientApache buildmaster;
 	
@@ -109,25 +110,35 @@ public class BuildMasterClientApacheTest {
 		String buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
 		System.out.println("BuildNumber=" + buildNumber);
 		
-		Build build = buildmaster.getBuild(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
+		BuildExecution execution = buildmaster.getLatestExecution(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
+				
+		System.out.println("\tExecution ExecutionStatus_Name: " + execution.ExecutionStatus_Name);
+		System.out.println("\tExecution Execution_Id: " + execution.Execution_Id);
+		System.out.println("\tExecution Environment_Id: " + execution.Environment_Id);
+		System.out.println("\tExecution Environment_Name: " + execution.Environment_Name);
+		System.out.println("\tExecution BuildStatus_Name: " + execution.BuildStatus_Name);
+		System.out.println("\tExecution Build_AutoPromote_Indicator: " + execution.Build_AutoPromote_Indicator);
+		System.out.println("\tExecution PromotionStatus_Name: " + execution.PromotionStatus_Name);
 
-		String status = build.Current_ExecutionStatus_Name;
-		System.out.println("\tExecution Status: " + status);
+		final List<String> executing = Arrays.asList(new String[] { null, "", "Pending", "Executing" });
 
-		final List<String> pending = Arrays.asList(new String[] { null, "Pending" });
-
-		while (pending.contains(status)) {
+		// Wait till both build step (if exists) and deployment to the first environment have completed (if has build step with AutoPromote flag set)
+		while (executing.contains(execution.ExecutionStatus_Name) || (execution.Environment_Id == null && execution.Build_AutoPromote_Indicator.equalsIgnoreCase("Y"))) {
 			Thread.sleep(7000);
 
-			build = buildmaster.getBuild(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
-
-			status = build.Current_ExecutionStatus_Name;
-			System.out.println("\tExecution Status: " + status);
+			execution = buildmaster.getLatestExecution(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
+			
+			System.out.println("\tExecution ExecutionStatus_Name: " + execution.ExecutionStatus_Name);
+			System.out.println("\tExecution Execution_Id: " + execution.Execution_Id);
+			System.out.println("\tExecution Environment_Name: " + execution.Environment_Name);
+			System.out.println("\tExecution BuildStatus_Name: " + execution.BuildStatus_Name);
+			System.out.println("\tExecution Build_AutoPromote_Indicator: " + execution.Build_AutoPromote_Indicator);
+			System.out.println("\tExecution PromotionStatus_Name: " + execution.PromotionStatus_Name);
 		}
 
-		System.out.println("Test Run: Start Second Build");			
-		buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
-		System.out.println("BuildNumber=" + buildNumber);
+//		System.out.println("Test Run: Start Second Build");
+//		buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
+//		System.out.println("BuildNumber=" + buildNumber);
 	}
 	
 	@Test
