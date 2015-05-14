@@ -147,6 +147,7 @@ public class MockServer {
 			
 			case "Builds_GetExecutions":
 				response.setEntity(new StringEntity(BuildExecution.EXAMPLE));
+				break;
 			
 			case "Variables_GetVariableValues":
 				response.setEntity(new StringEntity(Variable.EXAMPLE));
