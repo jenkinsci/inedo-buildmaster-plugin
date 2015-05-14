@@ -28,7 +28,6 @@ import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inedo.buildmaster.ConnectionType;
-import com.inedo.buildmaster.MockServer;
 import com.inedo.buildmaster.TriggerBuildHelper;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
@@ -241,8 +240,10 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public String createBuild(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
+		//PromoteBuild_Indicator required for those that don't have a build step
 		return doGet(String.class, "Builds_CreateBuild", "Application_Id",
-				applicationId, "Release_Number", releaseNumber, "Requested_Build_Number", buildNumber, "BuildVariables_Xml", encodeVariables(variablesList));
+				applicationId, "Release_Number", releaseNumber, "Requested_Build_Number", buildNumber, 
+				"PromoteBuild_Indicator", "Y", "BuildVariables_Xml", encodeVariables(variablesList));
 	}
 
 	/**
@@ -324,6 +325,41 @@ public class BuildMasterClientApache {
 		return inScope.toArray(new Variable[inScope.size()]);
 	}
 
+	/**
+	 * Checks to see if any existing builds are running a build step, if so will wait for it to complete 
+	 * 
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public void waitForExistingBuildStepToComplete(String applicationId, String releaseNumber) throws IOException, InterruptedException {
+		config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Wait for any existing builds to complete");
+		
+		final List<String> executing = Arrays.asList(new String[] { null, "", "Pending", "Executing" });
+		final List<String> pending = Arrays.asList(new String[] { null, "", "Pending" });
+
+		BuildExecution execution = getLatestExecution(applicationId, releaseNumber, null);
+		
+		long startTime = new Date().getTime();		
+		
+		// Wait till both build step has completed
+		while (executing.contains(execution.ExecutionStatus_Name) && execution.Environment_Id == null) {
+			Thread.sleep(7000);
+			
+			execution = getLatestExecution(applicationId, releaseNumber, null);
+			config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+			
+			// If have been waiting for more than 5 minutes to enter pending state then bail out  
+			if (pending.contains(execution.ExecutionStatus_Name)) {
+				long endTime = new Date().getTime();
+				long diffMinutes = (endTime - startTime) / (60 * 1000);
+
+				if (diffMinutes >= 5) {
+					config.printStream.println(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
+					return;
+				}
+			}
+		}
+	}
 	
 	/**
 	 * Wait for the build to complete
@@ -337,7 +373,7 @@ public class BuildMasterClientApache {
 		final List<String> pending = Arrays.asList(new String[] { null, "", "Pending" });
 
 		BuildExecution execution = getLatestExecution(applicationId, releaseNumber, buildNumber);		
-		config.printStream.println(String.format("\tExecution Status: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+		config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
 		
 		Integer envrionmentId = execution.Environment_Id;
 		long startTime = new Date().getTime();		
@@ -347,7 +383,7 @@ public class BuildMasterClientApache {
 			Thread.sleep(7000);
 			
 			execution = getLatestExecution(applicationId, releaseNumber, buildNumber);
-			config.printStream.print(String.format("\tExecution Status: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+			config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
 			
 			// Restart counter if now deploying to new environment
 			if (envrionmentId != execution.Environment_Id) {
@@ -396,7 +432,7 @@ public class BuildMasterClientApache {
 
 	private String encodeVariables(Map<String, String> variablesList) throws UnsupportedEncodingException {
 		if (variablesList == null || variablesList.size() == 0) return null;
-
+		
 		StringBuilder variables = new StringBuilder();
 
 		variables.append("<Variables>");

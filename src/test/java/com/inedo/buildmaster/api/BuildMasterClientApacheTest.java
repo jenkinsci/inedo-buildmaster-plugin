@@ -7,7 +7,6 @@ import com.inedo.buildmaster.MockServer;
 import com.inedo.buildmaster.api.BuildMasterClientApache;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
-import com.inedo.buildmaster.domain.BuildExecution;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.ReleaseDetails;
@@ -17,10 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
@@ -35,7 +31,7 @@ import org.junit.Test;
  * @author Andrew Sumner
  */
 public class BuildMasterClientApacheTest {
-	private final boolean MOCK_REQUESTS = false;	// Set this value to false to run against a live BuildMaster installation 
+	private final boolean MOCK_REQUESTS = true;	// Set this value to false to run against a live BuildMaster installation 
 	private MockServer mockServer;
 	private BuildMasterClientApache buildmaster;
 	
@@ -59,7 +55,7 @@ public class BuildMasterClientApacheTest {
 	 *	echo "end sleep"
 	 */
 	@Test
-	public void queueBuilds() throws IOException {
+	public void queueBuilds() throws IOException, InterruptedException {
 		if (MOCK_REQUESTS) return;
 		
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
@@ -67,18 +63,19 @@ public class BuildMasterClientApacheTest {
 		Map<String, String> variablesList = new HashMap<>();
 		int exectiontimes = 1;
 		
-		for (int i = 1; 0 < exectiontimes; i++) {
+		for (int i = 0; i < exectiontimes; i++) {
 			String testrun = String.valueOf(i + 1);
 			
 			System.out.println("");
 			System.out.println("Test Run: " + testrun);
-			String prevBuildNumber = buildmaster.getPreviousBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
-			System.out.println("PreviousBuildNumber=" + prevBuildNumber);
 						
 			variablesList.put("hello", "world" + testrun);			
 			String buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, variablesList);
 			System.out.println("BuildNumber=" + buildNumber);
-			
+
+			String prevBuildNumber = buildmaster.getPreviousBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
+			System.out.println("PreviousBuildNumber=" + prevBuildNumber);
+
 			Variable[] variables = buildmaster.getVariableValues(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
 			String value = "not found";
 			
@@ -86,61 +83,16 @@ public class BuildMasterClientApacheTest {
 				if (variable.Variable_Name.equalsIgnoreCase("hello")) {
 					value = variable.Value_Text;
 				}
-			}
+			}			
 			
 			System.out.println("Variable HELLO=" + value);
-		}
-	}
-	
-	/*
-	 * Checks what would happen if a Jenkins jobs trigger the same application while a deployment is in progress
-	 * 
-	 * The job this is calling should have a DEPLOYMENT STEP with a powershell action with this script:
-	 *  echo "start sleep"
-	 *  Start-Sleep -s 60
-	 *	echo "end sleep"
-	 */
-	@Test
-	public void addBuildsOnceExecuting() throws IOException, InterruptedException {
-		if (MOCK_REQUESTS) return;
-		
-		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		
-		System.out.println("Test Run: Start First Build");			
-		String buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
-		System.out.println("BuildNumber=" + buildNumber);
-		
-		BuildExecution execution = buildmaster.getLatestExecution(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
-				
-		System.out.println("\tExecution ExecutionStatus_Name: " + execution.ExecutionStatus_Name);
-		System.out.println("\tExecution Execution_Id: " + execution.Execution_Id);
-		System.out.println("\tExecution Environment_Id: " + execution.Environment_Id);
-		System.out.println("\tExecution Environment_Name: " + execution.Environment_Name);
-		System.out.println("\tExecution BuildStatus_Name: " + execution.BuildStatus_Name);
-		System.out.println("\tExecution Build_AutoPromote_Indicator: " + execution.Build_AutoPromote_Indicator);
-		System.out.println("\tExecution PromotionStatus_Name: " + execution.PromotionStatus_Name);
-
-		final List<String> executing = Arrays.asList(new String[] { null, "", "Pending", "Executing" });
-
-		// Wait till both build step (if exists) and deployment to the first environment have completed (if has build step with AutoPromote flag set)
-		while (executing.contains(execution.ExecutionStatus_Name) || (execution.Environment_Id == null && execution.Build_AutoPromote_Indicator.equalsIgnoreCase("Y"))) {
-			Thread.sleep(7000);
-
-			execution = buildmaster.getLatestExecution(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
 			
-			System.out.println("\tExecution ExecutionStatus_Name: " + execution.ExecutionStatus_Name);
-			System.out.println("\tExecution Execution_Id: " + execution.Execution_Id);
-			System.out.println("\tExecution Environment_Name: " + execution.Environment_Name);
-			System.out.println("\tExecution BuildStatus_Name: " + execution.BuildStatus_Name);
-			System.out.println("\tExecution Build_AutoPromote_Indicator: " + execution.Build_AutoPromote_Indicator);
-			System.out.println("\tExecution PromotionStatus_Name: " + execution.PromotionStatus_Name);
+			buildmaster.waitForExistingBuildStepToComplete(MockServer.APPLICATION_ID, releaseNumber);
+			
+			//buildmaster.waitForBuildCompletion(MockServer.APPLICATION_ID, releaseNumber, buildNumber, false);
 		}
-
-//		System.out.println("Test Run: Start Second Build");
-//		buildNumber = buildmaster.createBuild(MockServer.APPLICATION_ID, releaseNumber, null);
-//		System.out.println("BuildNumber=" + buildNumber);
 	}
-	
+
 	@Test
 	public void checkConnection() throws IOException {
 		// An exception will be thrown if fails
@@ -275,6 +227,8 @@ public class BuildMasterClientApacheTest {
 		boolean result = buildmaster.waitForBuildCompletion(MockServer.APPLICATION_ID, releaseNumber, buildMasterBuildNumber, true);
 		
 		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
+		
+		
 	}
 	
 	@Test

@@ -64,27 +64,15 @@ public class TriggerBuildHelper {
 		String releaseNumber = expandVariable(build, listener, trigger.getReleaseNumber());
 		String buildNumber = expandVariable(build, listener, trigger.getBuildNumber());
 		
+		// TODO: I'd like to queue this task across all Jenkins jobs, as I haven't figured out how to do that and 
+		// don't want to queue the entire build we will wait till any existing build step has completed before kicking 
+		// off a new one - and hope that we don't get another job queued up in the mean time :-(
+		buildmaster.waitForExistingBuildStepToComplete(applicationId, releaseNumber);
+		
 		Map<String, String> variablesList = getVariablesList(trigger.getVariables());
 		
 		if (trigger.getPreserveVariables()) {
-			// TODO: Queue task at this point.
-			
-			/*
-			 
-			 Wait while Builds_GetExecutionsInProgress(applicationId) returns a row and has Environment_Id = null
-			 as this indicates that there is a new build in progress...
-			 
-			 ...or
-			 
-			 Call that and add execution id as a parameter
-			 
-			 StoredProcs.Variables_GetVariableValues(Execution_Id: execution.Execution_Id
-			
-			*/
-					
-			
 			listener.getLogger().println(LOG_PREFIX + "Gather previous builds build variables");
-			
 			String prevBuildNumber = buildmaster.getPreviousBuildNumber(applicationId, releaseNumber);			
 			Variable[] variables = buildmaster.getVariableValues(applicationId, releaseNumber, prevBuildNumber);
 			
