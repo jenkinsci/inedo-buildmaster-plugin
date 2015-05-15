@@ -68,8 +68,8 @@ public class TriggerBuildHelper {
 		// one is being performed.
 		buildmaster.waitForExistingBuildStepToComplete(applicationId, releaseNumber);
 		
-		Map<String, String> variablesList = getVariablesList(trigger.getVariables());
-		
+		Map<String, String> variablesList = getVariablesListExpanded(build, listener, trigger.getVariables());
+				
 		if (trigger.getPreserveVariables()) {
 			listener.getLogger().println(LOG_PREFIX + "Gather previous builds build variables");
 			String prevBuildNumber = buildmaster.getPreviousBuildNumber(applicationId, releaseNumber);			
@@ -130,6 +130,18 @@ public class TriggerBuildHelper {
 		return expanded;
 	}
 
+	public static Map<String, String> getVariablesListExpanded(AbstractBuild<?, ?> build, BuildListener listener, String variables) throws IOException {
+		Map<String, String> variablesList = getVariablesList(variables);
+		
+		for (Map.Entry<String, String> variable : variablesList.entrySet())
+		{
+			variable.setValue(expandVariable(build, listener, variable.getValue()));
+		}
+		
+		return variablesList;
+	}
+	
+	
 	public static Map<String, String> getVariablesList(String variables) throws IOException {
 		Map<String, String> variablesList = new HashMap<>();
 		
