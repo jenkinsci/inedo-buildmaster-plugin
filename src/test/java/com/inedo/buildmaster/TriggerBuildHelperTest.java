@@ -17,6 +17,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+
 import hudson.EnvVars;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
@@ -39,15 +40,15 @@ public class TriggerBuildHelperTest {
 	//public Launcher launcher;
 	public BuildListener listener;
 	public EnvVars env;
-	public PrintStream logger;
 	public ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-
+	public PrintStream logger = new PrintStream(outContent);
+	
 	public String releaseNumber;
 	public String buildNumber;
 		
 	@Before
 	public void before() throws IOException, InterruptedException {
-		mockServer = new MockServer(true);
+		mockServer = new MockServer(true, logger);
 		TriggerBuildHelper.injectConfiguration(mockServer.getBuildMasterConfig());
 		
 		build = mock(AbstractBuild.class);;
@@ -55,7 +56,6 @@ public class TriggerBuildHelperTest {
 		listener = mock(BuildListener.class);
 		env = mock(EnvVars.class);
 		project = mock(AbstractProject.class);
-		logger = new PrintStream(outContent);
 		
 		when(build.getProject()).thenReturn(project);
 		when(build.getEnvironment(listener)).thenReturn(env);

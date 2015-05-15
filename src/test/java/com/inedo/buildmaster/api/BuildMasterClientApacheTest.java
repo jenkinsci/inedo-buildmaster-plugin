@@ -37,7 +37,7 @@ public class BuildMasterClientApacheTest {
 	
 	@Before
     public void before() throws IOException {
-		mockServer = new MockServer(MOCK_REQUESTS);
+		mockServer = new MockServer(MOCK_REQUESTS, System.out);
 		buildmaster = new BuildMasterClientApache(mockServer.getBuildMasterConfig());
 	}
 	

@@ -2,6 +2,7 @@ package com.inedo.buildmaster;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.regex.Pattern;
@@ -41,9 +42,10 @@ public class MockServer {
 	private HttpServer server = null;
 	private HttpRequestHandler handler;
 	
-	public MockServer(boolean mockRequests) throws IOException {
+	public MockServer(boolean mockRequests, PrintStream logger) throws IOException {
 		config = new BuildMasterConfig();
 		config.url = "http://buildmaster";
+		config.printStream = logger;
 		
 		if (mockRequests) {
 			config.authentication = "none";
