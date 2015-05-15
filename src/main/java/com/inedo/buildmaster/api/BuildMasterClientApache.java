@@ -47,6 +47,7 @@ import com.inedo.buildmaster.domain.Variable;
 public class BuildMasterClientApache {
 	private BuildMasterConfig config;
 	private HttpClient httpclient;
+	private boolean logRequest = true;
 
 	public BuildMasterClientApache(HttpClient httpclient, BuildMasterConfig config) {
 		this.httpclient = httpclient;
@@ -333,32 +334,36 @@ public class BuildMasterClientApache {
 	 * @throws InterruptedException
 	 */
 	public void waitForExistingBuildStepToComplete(String applicationId, String releaseNumber) throws IOException, InterruptedException {
-		config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Wait for any existing builds to complete");
-		
 		final List<String> executing = Arrays.asList(new String[] { null, "", "Pending", "Executing" });
 		final List<String> pending = Arrays.asList(new String[] { null, "", "Pending" });
 
-		BuildExecution execution = getLatestExecution(applicationId, releaseNumber, null);
+		this.logRequest = false;
 		
-		long startTime = new Date().getTime();		
-		
-		// Wait till both build step has completed
-		while (executing.contains(execution.ExecutionStatus_Name) && execution.Environment_Id == null) {
-			Thread.sleep(7000);
+		try {
+			BuildExecution execution = getLatestExecution(applicationId, releaseNumber, null);
 			
-			execution = getLatestExecution(applicationId, releaseNumber, null);
-			config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+			long startTime = new Date().getTime();		
 			
-			// If have been waiting for more than 5 minutes to enter pending state then bail out  
-			if (pending.contains(execution.ExecutionStatus_Name)) {
-				long endTime = new Date().getTime();
-				long diffMinutes = (endTime - startTime) / (60 * 1000);
-
-				if (diffMinutes >= 5) {
-					config.printStream.println(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
-					return;
+			// Wait till both build step has completed
+			while (executing.contains(execution.ExecutionStatus_Name) && execution.Environment_Id == null) {
+				Thread.sleep(7000);
+				
+				execution = getLatestExecution(applicationId, releaseNumber, null);
+				config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+				
+				// If have been waiting for more than 5 minutes to enter pending state then bail out  
+				if (pending.contains(execution.ExecutionStatus_Name)) {
+					long endTime = new Date().getTime();
+					long diffMinutes = (endTime - startTime) / (60 * 1000);
+	
+					if (diffMinutes >= 5) {
+						config.printStream.println(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
+						return;
+					}
 				}
 			}
+		} finally {
+			this.logRequest = true;
 		}
 	}
 	
@@ -373,37 +378,45 @@ public class BuildMasterClientApache {
 		final List<String> executing = Arrays.asList(new String[] { null, "", "Pending", "Executing" });
 		final List<String> pending = Arrays.asList(new String[] { null, "", "Pending" });
 
-		BuildExecution execution = getLatestExecution(applicationId, releaseNumber, buildNumber);		
-		config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+		BuildExecution execution;
 		
-		Integer envrionmentId = execution.Environment_Id;
-		long startTime = new Date().getTime();		
+		this.logRequest = false;
 		
-		// Wait till both build step (if exists) and deployment to the first environment have completed (if has build step with AutoPromote flag set)
-		while (executing.contains(execution.ExecutionStatus_Name) || (execution.Environment_Id == null && execution.Build_AutoPromote_Indicator.equalsIgnoreCase("Y"))) {
-			Thread.sleep(7000);
-			
-			execution = getLatestExecution(applicationId, releaseNumber, buildNumber);
+		try {
+			execution = getLatestExecution(applicationId, releaseNumber, buildNumber);		
 			config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
 			
-			// Restart counter if now deploying to new environment
-			if (envrionmentId != execution.Environment_Id) {
-				envrionmentId = execution.Environment_Id;
-				startTime = new Date().getTime();
-			}
+			Integer envrionmentId = execution.Environment_Id;
+			long startTime = new Date().getTime();		
 			
-			// If have been waiting for more than 5 minutes to enter pending state then bail out  
-			if (pending.contains(execution.ExecutionStatus_Name)) {
-				long endTime = new Date().getTime();
-				long diffMinutes = (endTime - startTime) / (60 * 1000);
-
-				if (diffMinutes >= 5) {
-					config.printStream.println(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
-					return false;
+			// Wait till both build step (if exists) and deployment to the first environment have completed (if has build step with AutoPromote flag set)
+			while (executing.contains(execution.ExecutionStatus_Name) || (execution.Environment_Id == null && execution.Build_AutoPromote_Indicator.equalsIgnoreCase("Y"))) {
+				Thread.sleep(7000);
+				
+				execution = getLatestExecution(applicationId, releaseNumber, buildNumber);
+				config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+				
+				// Restart counter if now deploying to new environment
+				if (envrionmentId != execution.Environment_Id) {
+					envrionmentId = execution.Environment_Id;
+					startTime = new Date().getTime();
+				}
+				
+				// If have been waiting for more than 5 minutes to enter pending state then bail out  
+				if (pending.contains(execution.ExecutionStatus_Name)) {
+					long endTime = new Date().getTime();
+					long diffMinutes = (endTime - startTime) / (60 * 1000);
+	
+					if (diffMinutes >= 5) {
+						config.printStream.println(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
+						return false;
+					}
 				}
 			}
+		} finally {
+			this.logRequest = true;
 		}
-
+		
 		if (!"Succeeded".equals(execution.ExecutionStatus_Name) && printLogOnFailure) {
 			printExecutionLog(String.valueOf(execution.Execution_Id));
 		}
@@ -488,7 +501,9 @@ public class BuildMasterClientApache {
 		HttpGet httpget = new HttpGet(url.toString());
 		HttpClientContext context = HttpClientContext.create();
 
-		config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Executing request " + URLDecoder.decode(httpget.getRequestLine().getUri(), "UTF-8"));
+		if (logRequest) {
+			config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Executing request " + URLDecoder.decode(httpget.getRequestLine().getUri(), "UTF-8"));
+		}
 		HttpResponse response = httpclient.execute(httpget, context);
 
 		if (response.getStatusLine().getStatusCode() > 399) {

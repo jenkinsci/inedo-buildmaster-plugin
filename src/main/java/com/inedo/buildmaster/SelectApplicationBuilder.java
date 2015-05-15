@@ -8,6 +8,9 @@ import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
+import hudson.model.Resource;
+import hudson.model.ResourceActivity;
+import hudson.model.ResourceList;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.util.FormValidation;
@@ -26,15 +29,21 @@ import com.inedo.buildmaster.domain.ReleaseDetails;
 /**
  * The SelectApplicationBuildStep will populate environment variables for the BuildMaster application, release and build numbers 
  * as a build step.
+ * 
+ * This Action also locks any other Jenkins jobs from running FOR THE SAME BUILDMASTER APPLICATION until this job has completed.  
  *
  * @author Andrew Sumner
+ *
+ * TODO: Now that I am locking resources this possibly should be a JobConfiguration item and not a build step, although it
+ * doesn't seem to matter for resource locking purposes.
  * 
  * TODO: Release Number selection: 
  * If a specific release number is selected (for example an emergency patch might want to go on an earlier release than the latest one) this will 
  * become invalid once the release is finalised in BuildMaster.  There may be scope for an enhancement here to provide alternative forms of matching on release number - eg by
  * branch name.
  */
-public class SelectApplicationBuilder extends Builder {
+ 
+public class SelectApplicationBuilder extends Builder implements ResourceActivity {
 	private static final String LATEST_RELEASE = "LATEST"; 
 	private static final String NOT_REQUIRED = "NOT_REQUIRED";
 	private static final String LOG_PREFIX = "[BuildMaster] "; 
@@ -76,8 +85,7 @@ public class SelectApplicationBuilder extends Builder {
 			return false;
 		}
     	
-    	BuildMasterConfig config = TriggerBuildHelper.getBuildMasterConfig();
-    	config.printStream = listener.getLogger();
+    	BuildMasterConfig config = TriggerBuildHelper.getBuildMasterConfig(listener.getLogger());
     	BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
 		
     	// Pouplate BUILDMASTER_APPLICATION_ID variable
@@ -184,7 +192,7 @@ public class SelectApplicationBuilder extends Builder {
             	isBuildMasterAvailable = true;
                 
                 try {
-                	buildmaster = new BuildMasterClientApache(TriggerBuildHelper.getBuildMasterConfig());            
+                	buildmaster = new BuildMasterClientApache(TriggerBuildHelper.getBuildMasterConfig(System.out));            
                 	buildmaster.checkConnection();
                 } catch (Exception ex) {
                 	isBuildMasterAvailable = false;
@@ -325,5 +333,21 @@ public class SelectApplicationBuilder extends Builder {
             return items;
         }
     }
+    
+ // ResourceActivity
+ 	@Override
+ 	public ResourceList getResourceList() {
+ 		ResourceList list = new ResourceList();
+ 		Resource r = new Resource("BuildMaster Application " + this.applicationId );
+ 		list.w(r);
+ 		
+ 		return list;
+ 	}
+
+ 	// ResourceActivity
+ 	@Override
+ 	public String getDisplayName() {
+ 		return "BuildMaster Application Resource";
+ 	}
 }
 

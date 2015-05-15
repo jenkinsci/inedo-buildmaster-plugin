@@ -214,7 +214,6 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 			try {
 				buildmaster.checkConnection();
 			} catch (Exception ex) {
-				System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
 				return FormValidation.error("Failed. Please check the configuration. " + ex.getClass().getName() + ": " + ex.getMessage());
 			}
 			

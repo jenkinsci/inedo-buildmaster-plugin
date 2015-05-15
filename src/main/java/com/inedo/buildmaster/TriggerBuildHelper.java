@@ -4,6 +4,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,12 +40,12 @@ public class TriggerBuildHelper {
 		return getSharedDescriptor().validatePluginConfiguration();
 	}
 
-	public static BuildMasterConfig getBuildMasterConfig() {
+	public static BuildMasterConfig getBuildMasterConfig(PrintStream logger) {
 		if (config != null) {
 			return config;
 		}
 		
-		return getSharedDescriptor().getBuildMasterConfig();
+		return getSharedDescriptor().getBuildMasterConfig(logger);
 	}
 	
 	private static BuildMasterConfiguration.DescriptorImpl getSharedDescriptor() {
@@ -57,16 +58,14 @@ public class TriggerBuildHelper {
 			return false;
 		}
 		
-		BuildMasterConfig config = getBuildMasterConfig();
-		config.printStream = listener.getLogger();
+		BuildMasterConfig config = getBuildMasterConfig(listener.getLogger());
 		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);		
 		String applicationId = expandVariable(build, listener, trigger.getApplicationId());
 		String releaseNumber = expandVariable(build, listener, trigger.getReleaseNumber());
 		String buildNumber = expandVariable(build, listener, trigger.getBuildNumber());
 		
-		// TODO: I'd like to queue this task across all Jenkins jobs, as I haven't figured out how to do that and 
-		// don't want to queue the entire build we will wait till any existing build step has completed before kicking 
-		// off a new one - and hope that we don't get another job queued up in the mean time :-(
+		// This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing
+		// one is being performed.
 		buildmaster.waitForExistingBuildStepToComplete(applicationId, releaseNumber);
 		
 		Map<String, String> variablesList = getVariablesList(trigger.getVariables());
