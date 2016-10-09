@@ -11,7 +11,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.inedo.buildmaster.api.BuildMasterClientApache;
+import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 
 import hudson.Extension;
@@ -209,7 +209,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 			config.password = password;
 			config.apiKey = apiKey;
 			
-			BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
+			BuildMasterApi buildmaster = new BuildMasterApi(config);
 			
 			try {
 				buildmaster.checkConnection();

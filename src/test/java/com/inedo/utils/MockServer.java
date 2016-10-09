@@ -1,13 +1,8 @@
-package com.inedo.buildmaster;
+package com.inedo.utils;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.URI;
-import java.util.regex.Pattern;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -34,42 +29,26 @@ import com.inedo.buildmaster.domain.Variable;
  * @author Andrew Sumner
  */
 public class MockServer {
-	public static final String APPLICATION_ID = "36";	// BuildMaster application id to get/create builds for
-	
-	private BuildMasterConfig config;
-	
 	// Required for mocking via test server
 	private HttpServer server = null;
 	private HttpRequestHandler handler;
-	
-	public MockServer(boolean mockRequests, PrintStream logger) throws IOException {
+
+	private BuildMasterConfig config;
+
+	public MockServer() throws IOException {
+		handler = new HttpHandler();
+		server = ServerBootstrap.bootstrap()
+					.setLocalAddress(InetAddress.getLocalHost())
+					.setListenerPort(0)	// Any free port
+					.registerHandler("*", handler)
+					.create();
+	    
+	    server.start();
+
 		config = new BuildMasterConfig();
-		config.url = "http://buildmaster";
-		config.printStream = logger;
-		
-		if (mockRequests) {
-			config.authentication = "none";
-			
-			handler = new HttpHandler();
-			
-			
-			server = ServerBootstrap.bootstrap()
-						.setLocalAddress(InetAddress.getLocalHost())
-						.setListenerPort(0)	// Any free port
-						.registerHandler("*", handler)
-						.create();
-		    
-		    server.start();
-		    
-		    config.url = "http://" + server.getInetAddress().getHostName() + ":" + server.getLocalPort();
-		} else {
-			String[] cred = FileUtils.readFileToString(new File("c:/temp/bm.txt")).split(Pattern.quote("|"));
-			config.authentication = "ntlm";
-			config.user = cred[0];
-			config.password = cred[1];
-			config.domain = cred[2];
-			config.apiKey = cred[3];
-		}
+		config.url = "http://" + server.getInetAddress().getHostName() + ":" + server.getLocalPort();
+		//config.printStream = logger;
+		config.authentication = "none";
 	}
 	
 	public BuildMasterConfig getBuildMasterConfig() {
@@ -77,7 +56,9 @@ public class MockServer {
 	}
 	
 	public void stop() {
-		if (server!= null) server.stop();
+		if (server!= null) {
+			server.stop();
+		}
 	}
 	
 	// Handler for the test server that returns responses based on the requests.

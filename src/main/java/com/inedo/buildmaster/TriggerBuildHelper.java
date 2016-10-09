@@ -4,15 +4,14 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import jenkins.model.Jenkins;
-
-import com.inedo.buildmaster.api.BuildMasterClientApache;
+import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.Variable;
+import com.inedo.jenkins.GlobalConfig;
+import com.inedo.jenkins.VariableInjectionAction;
 
 /**
  * Does the real work of Trigger a BuildMaster build, has been seperated out from the Builder and Publisher actions
@@ -23,43 +22,15 @@ import com.inedo.buildmaster.domain.Variable;
 public class TriggerBuildHelper {
 	public static final String LOG_PREFIX = "[BuildMaster] "; 
 	public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
-	private static BuildMasterConfig config = null;
-	
-	/**
-	 * TODO: As I haven't been able to successfully mock a static class this is my work around for testing purposes
-	 */
-	public static void injectConfiguration(BuildMasterConfig value) {
-		config = value;
-	}
-	
-	public static boolean validateBuildMasterConfig() {
-		if (config != null) {
-			return true;
-		}
 		
-		return getSharedDescriptor().validatePluginConfiguration();
-	}
-
-	public static BuildMasterConfig getBuildMasterConfig(PrintStream logger) {
-		if (config != null) {
-			return config;
-		}
-		
-		return getSharedDescriptor().getBuildMasterConfig(logger);
-	}
-	
-	private static BuildMasterConfiguration.DescriptorImpl getSharedDescriptor() {
-		return (BuildMasterConfiguration.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(BuildMasterConfiguration.class);
-	}
-	
 	public static boolean triggerBuild(AbstractBuild<?, ?> build, BuildListener listener, Triggerable trigger) throws IOException, InterruptedException {
-		if (!validateBuildMasterConfig()) {
+		if (!GlobalConfig.validateBuildMasterConfig()) {
 			listener.getLogger().println("Please configure BuildMaster Plugin global settings");
 			return false;
 		}
 		
-		BuildMasterConfig config = getBuildMasterConfig(listener.getLogger());
-		BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);		
+		BuildMasterConfig config = GlobalConfig.getBuildMasterConfig(); //listener.getLogger()
+		BuildMasterApi buildmaster = new BuildMasterApi(config);		
 		String applicationId = expandVariable(build, listener, trigger.getApplicationId());
 		String releaseNumber = expandVariable(build, listener, trigger.getReleaseNumber());
 		String buildNumber = expandVariable(build, listener, trigger.getBuildNumber());

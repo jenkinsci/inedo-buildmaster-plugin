@@ -19,12 +19,16 @@ import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.api.BuildMasterClientApache;
+import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
+import com.inedo.jenkins.GlobalConfig;
+import com.inedo.jenkins.JenkinsHelper;
+import com.inedo.jenkins.JenkinsLogWriter;
+import com.inedo.jenkins.VariableInjectionAction;
 
 /**
  * The SelectApplicationBuildStep will populate environment variables for the BuildMaster application, release and build numbers 
@@ -46,7 +50,6 @@ import com.inedo.buildmaster.domain.ReleaseDetails;
 public class SelectApplicationBuilder extends Builder implements ResourceActivity {
 	private static final String LATEST_RELEASE = "LATEST"; 
 	private static final String NOT_REQUIRED = "NOT_REQUIRED";
-	private static final String LOG_PREFIX = "[BuildMaster] "; 
 	
 	private final String applicationId;
     private final String releaseNumber;
@@ -80,16 +83,19 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
     
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-    	if( !TriggerBuildHelper.validateBuildMasterConfig()) {
-			listener.getLogger().println(LOG_PREFIX + "Please configure BuildMaster Plugin global settings");
+    	JenkinsHelper helper = new JenkinsHelper(build, listener);
+		JenkinsLogWriter logWriter = helper.getLogWriter();
+		
+    	if (!GlobalConfig.validateBuildMasterConfig()) {
+    		logWriter.error("Please configure BuildMaster Plugin global settings");
 			return false;
 		}
     	
-    	BuildMasterConfig config = TriggerBuildHelper.getBuildMasterConfig(listener.getLogger());
-    	BuildMasterClientApache buildmaster = new BuildMasterClientApache(config);
+    	BuildMasterConfig config = GlobalConfig.getBuildMasterConfig();
+    	BuildMasterApi buildmaster = new BuildMasterApi(config);
 		
     	// Pouplate BUILDMASTER_APPLICATION_ID variable
-    	listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_APPLICATION_ID=" + applicationId);
+    	logWriter.info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + applicationId);
  		build.addAction(new VariableInjectionAction("BUILDMASTER_APPLICATION_ID", applicationId));
         
  		// Populate BUILDMASTER_RELEASE_NUMBER variable
@@ -99,12 +105,12 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 			actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(applicationId);
 			
 			if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
-				listener.getLogger().println(LOG_PREFIX + "No active releases found in BuildMaster for applicationId " + applicationId);
+				logWriter.error("No active releases found in BuildMaster for applicationId " + applicationId);
 				return false;
 			}
  		}
  		
-        listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + actualReleaseNumber);
+ 		logWriter.info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + actualReleaseNumber);
 		build.addAction(new VariableInjectionAction("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber));
 		
 		//Populate BUILDMASTER_BUILD_NUMBER variable
@@ -114,7 +120,7 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 		case "BUILDMASTER":
 			actualBuildNumber = buildmaster.getNextBuildNumber(applicationId, actualReleaseNumber);
 			
-			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
+			logWriter.info("Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
 			
 			break;
@@ -124,13 +130,13 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 			try {
 				envVars = build.getEnvironment(listener);
 			} catch (Exception e) {
-				listener.getLogger().println(e.getMessage());
+				logWriter.error(e.getMessage());
 				return false;
 			}
 
 			actualBuildNumber = envVars.get("BUILD_NUMBER");
 			
-			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number=" + actualBuildNumber);
+			logWriter.info("Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number=" + actualBuildNumber);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
 			
 			break;
@@ -140,13 +146,13 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 			break;
 			
 		default:
-			listener.getLogger().println(LOG_PREFIX + "Unknown buildNumberSource " + buildNumberSource);
+			logWriter.error("Unknown buildNumberSource " + buildNumberSource);
 			return false;
 		}
 		
 		// Populate BUILDMASTER_DEPLOYABLE_ID variable
 		if (!NOT_REQUIRED.equals(deployableId)) {
-			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + deployableId);
+			logWriter.info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + deployableId);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_DEPLOYABLE_ID", deployableId));
 		}
 		
@@ -160,7 +166,7 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
     
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-    	private BuildMasterClientApache buildmaster = null;
+    	private BuildMasterApi buildmaster = null;
     	private Boolean isBuildMasterAvailable = null;
     	private String connectionError = "";
 
@@ -192,7 +198,7 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
             	isBuildMasterAvailable = true;
                 
                 try {
-                	buildmaster = new BuildMasterClientApache(TriggerBuildHelper.getBuildMasterConfig(System.out));            
+                	buildmaster = new BuildMasterApi(); //System.out            
                 	buildmaster.checkConnection();
                 } catch (Exception ex) {
                 	isBuildMasterAvailable = false;

@@ -2,7 +2,6 @@ package com.inedo.buildmaster.api;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,24 +9,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.auth.NTCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.AuthSchemes;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.inedo.buildmaster.ConnectionType;
 import com.inedo.buildmaster.TriggerBuildHelper;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
@@ -38,56 +19,66 @@ import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.domain.Variable;
+import com.inedo.http.HttpEasy;
+import com.inedo.http.LogWriter;
+import com.inedo.jenkins.GlobalConfig;
+import com.inedo.jenkins.JenkinsLogWriter;
 
 /**
  * BuildMaster json api interface
  * 
  * @author Andrew Sumner
  */
-public class BuildMasterClientApache {
+public class BuildMasterApi {
 	private BuildMasterConfig config;
-	private HttpClient httpclient;
-	private boolean logRequest = true;
 
-	public BuildMasterClientApache(HttpClient httpclient, BuildMasterConfig config) {
-		this.httpclient = httpclient;
-		this.config = config;
+	public BuildMasterApi() {
+		this(GlobalConfig.getBuildMasterConfig(), new JenkinsLogWriter(null));
 	}
-
-	public BuildMasterClientApache(BuildMasterConfig config) {
-		this.config = config;
-
-		if (config.url.endsWith("/")) {
-    		config.url = config.url.substring(0, config.url.length() - 1);
-    	}
 		
-		HttpClientBuilder httpbuilder = HttpClients.custom();
-		RequestConfig.Builder configbuilder = RequestConfig.custom();
-
-		if (ConnectionType.BASIC.getId().equalsIgnoreCase(config.authentication)) {
-			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-			credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(config.user,config.password));
-
-			httpbuilder.setDefaultCredentialsProvider(credentialsProvider);
-			configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC));
-		}
-
-		if (ConnectionType.NTLM.getId().equalsIgnoreCase(config.authentication)) {
-			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-			credentialsProvider.setCredentials(
-					AuthScope.ANY,
-					new NTCredentials(config.user, config.password, config.getHost(), config.domain));
-
-			httpbuilder.setDefaultCredentialsProvider(credentialsProvider);
-			configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM));
-		}
+	public BuildMasterApi(BuildMasterConfig config) {
+		this(config, new JenkinsLogWriter(null));
+	}
+	
+	private BuildMasterApi(BuildMasterConfig config, LogWriter logWriter) {
+		this.config = config;
+		
+		HttpEasy.withDefaults()
+			.allowAllHosts()
+			.trustAllCertificates()
+			.baseUrl(config.url)
+			.withLogWriter(logWriter);
+		
+		
+//		HttpClientBuilder httpbuilder = HttpClients.custom();
+//		RequestConfig.Builder configbuilder = RequestConfig.custom();
+//
+//		if (ConnectionType.BASIC.getId().equalsIgnoreCase(config.authentication)) {
+//			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+//			credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(config.user,config.password));
+//
+//			httpbuilder.setDefaultCredentialsProvider(credentialsProvider);
+//			configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC));
+//		}
+//
+//		if (ConnectionType.NTLM.getId().equalsIgnoreCase(config.authentication)) {
+//			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+//			credentialsProvider.setCredentials(
+//					AuthScope.ANY,
+//					new NTCredentials(config.user, config.password, config.getHost(), config.domain));
+//
+//			httpbuilder.setDefaultCredentialsProvider(credentialsProvider);
+//			configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM));
+//		}
 
 		// Finally we instantiate the client. Client is a thread safe object and
 		// can be used by several threads at the same time.
 		// Client can be used for several request. The life span of the client
 		// must be equal to the life span of this EJB.
-		httpclient = httpbuilder.setDefaultRequestConfig(configbuilder.build()).build();
+		////httpclient = httpbuilder.setDefaultRequestConfig(configbuilder.build()).build();
+
 	}
+
 
 	/**
 	 * Ensure can call BuildMaster api. An exception will be thrown if cannot.
@@ -95,7 +86,14 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public void checkConnection() throws IOException {
-		doGet(Application[].class, "Applications_GetApplications", "Application_Count", "1");
+		//doGet(Application[].class, "Applications_GetApplications", "Application_Count", "1");
+		
+		HttpEasy.request()
+				.path("/api/json/Applications_GetApplications?API_Key={}&Application_Count={}")
+				.urlParameters(config.apiKey, 1)
+				.get()
+				.getJsonReader()
+				.asJson(Application[].class);
 	}
 
 	/**
@@ -104,7 +102,14 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public Application[] getApplications() throws IOException {
-		return doGet(Application[].class, "Applications_GetApplications");
+		//return doGet(Application[].class, "Applications_GetApplications");
+		
+		return HttpEasy.request()
+				.path("/api/json/Applications_GetApplications?API_Key={}")
+				.urlParameters(config.apiKey, 1)
+				.get()
+				.getJsonReader()
+				.asJson(Application[].class);
 	}
 
 	/**
@@ -113,7 +118,14 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public Deployable[] getDeployables(String applicationId) throws IOException {
-		return doGet(Deployable[].class, "Applications_GetDeployables", "Application_Id", applicationId);
+		//return doGet(Deployable[].class, "Applications_GetDeployables", "Application_Id", applicationId);
+		
+		return HttpEasy.request()
+				.path("/api/json/Applications_GetDeployables?API_Key={}&Application_Id={}")
+				.urlParameters(config.apiKey, applicationId)
+				.get()
+				.getJsonReader()
+				.asJson(Deployable[].class);
 	}
 	
 	/**
@@ -122,7 +134,14 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public Deployable getDeployable(String deployableId) throws IOException {
-		Deployable[] deployables = doGet(Deployable[].class, "Applications_GetDeployable", "Deployable_Id", deployableId);
+		//Deployable[] deployables = doGet(Deployable[].class, "Applications_GetDeployable", "Deployable_Id", deployableId);
+		
+		Deployable[] deployables = HttpEasy.request()
+				.path("/api/json/Applications_GetDeployable?API_Key={}&Deployable_Id={}")
+				.urlParameters(config.apiKey, deployableId)
+				.get()
+				.getJsonReader()
+				.asJson(Deployable[].class);
 		
 		if (deployables.length > 0) {
 			return deployables[0];
@@ -137,7 +156,14 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public ReleaseDetails getRelease(String applicationId, String releaseNumber) throws IOException {
-		return doGet(ReleaseDetails.class, "Releases_GetRelease", "Application_Id", applicationId, "Release_Number", releaseNumber);
+		//return doGet(ReleaseDetails.class, "Releases_GetRelease", "Application_Id", applicationId, "Release_Number", releaseNumber);
+		
+		return HttpEasy.request()
+				.path("/api/json/Releases_GetRelease?API_Key={}&Application_Id={}&Release_Number={}")
+				.urlParameters(config.apiKey, applicationId, releaseNumber)
+				.get()
+				.getJsonReader()
+				.asJson(ReleaseDetails.class);
 	}
 	
 	/**
@@ -146,7 +172,14 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public Release[] getActiveReleases(String applicationId) throws IOException {
-		return doGet(Release[].class, "Releases_GetReleases", "Application_Id", applicationId, "ReleaseStatus_Name", "Active");
+		//return doGet(Release[].class, "Releases_GetReleases", "Application_Id", applicationId, "ReleaseStatus_Name", "Active");
+		
+		return HttpEasy.request()
+				.path("/api/json/Releases_GetReleases?API_Key={}&Application_Id={}&ReleaseStatus_Name={}")
+				.urlParameters(config.apiKey, applicationId, "Active")
+				.get()
+				.getJsonReader()
+				.asJson(Release[].class);
 	}
 
 	/**
@@ -156,9 +189,16 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public String getLatestActiveReleaseNumber(String applicationId) throws IOException {
-		Release[] release = doGet(Release[].class, "Releases_GetReleases",
-				"Application_Id", applicationId, "ReleaseStatus_Name", "Active", "Release_Count", "1");
+//		Release[] release = doGet(Release[].class, "Releases_GetReleases",
+//				"Application_Id", applicationId, "ReleaseStatus_Name", "Active", "Release_Count", "1");
 
+		Release[] release = HttpEasy.request()
+				.path("/api/json/Releases_GetReleases?API_Key={}&Application_Id={}&ReleaseStatus_Name={}&Release_Count={}")
+				.urlParameters(config.apiKey, applicationId, "Active", 1)
+				.get()
+				.getJsonReader()
+				.asJson(Release[].class);
+		
 		if (release.length > 0) {
 			return release[0].Release_Number;
 		}
@@ -196,14 +236,19 @@ public class BuildMasterClientApache {
 		
 		Release release = releaseDetails.Releases_Extended[0]; 
 		
-		doGet(Void.class, "Releases_CreateOrUpdateRelease", 
-				"Application_Id", String.valueOf(release.Application_Id), 
-				"Release_Number", release.Release_Number,
-			    "Workflow_Id", String.valueOf(release.Workflow_Id),
-			    "Target_Date", release.Target_Date,
-			    "Release_Name", release.Release_Name,
-			    //Notes_Text
-			    "DeployableIds_Xml", encodeDeployables(deployables));
+		HttpEasy.request()
+				.path("/api/json/Releases_CreateOrUpdateRelease?API_Key={}&Application_Id={}&Release_Number={}&Workflow_Id={}&Target_Date={}&Release_Name={}&DeployableIds_Xml={}")
+				.urlParameters(config.apiKey, release.Application_Id, release.Release_Number, release.Workflow_Id, release.Target_Date, release.Release_Name, encodeDeployables(deployables))
+				.get();
+		
+//		doGet(Void.class, "Releases_CreateOrUpdateRelease", 
+//				"Application_Id", String.valueOf(release.Application_Id), 
+//				"Release_Number", release.Release_Number,
+//			    "Workflow_Id", String.valueOf(release.Workflow_Id),
+//			    "Target_Date", release.Target_Date,
+//			    "Release_Name", release.Release_Name,
+//			    //Notes_Text
+//			    "DeployableIds_Xml", encodeDeployables(deployables));
 	}
 	/**
 	 * Gets the next available build number for the given release, if no builds
@@ -212,8 +257,15 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public String getNextBuildNumber(String applicationId, String releaseNumber) throws IOException {
-		Build[] builds = doGet(Build[].class, "Builds_GetBuilds", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Count", "1");
+//		Build[] builds = doGet(Build[].class, "Builds_GetBuilds", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Count", "1");
 
+		Build[] builds = HttpEasy.request()
+				.path("/api/json/Builds_GetBuilds?API_Key={}&Application_Id={}&Release_Number={}&Build_Count={}")
+				.urlParameters(config.apiKey, applicationId, releaseNumber, 1)
+				.get()
+				.getJsonReader()
+				.asJson(Build[].class);
+		
 		if (builds.length > 0) {
 			return String.valueOf(Integer.parseInt(builds[0].Build_Number) + 1);
 		}
@@ -222,7 +274,14 @@ public class BuildMasterClientApache {
 	}
 
 	public String getPreviousBuildNumber(String applicationId, String releaseNumber) throws IOException {
-		Build[] builds = doGet(Build[].class, "Builds_GetBuilds", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Count", "1");
+		// Build[] builds = doGet(Build[].class, "Builds_GetBuilds", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Count", "1");
+		
+		Build[] builds = HttpEasy.request()
+				.path("/api/json/Builds_GetBuilds?API_Key={}&Application_Id={}&Release_Number={}&Build_Count={}")
+				.urlParameters(config.apiKey, applicationId, releaseNumber, 1)
+				.get()
+				.getJsonReader()
+				.asJson(Build[].class);
 
 		if (builds.length > 0) {
 			return builds[0].Build_Number;
@@ -242,9 +301,16 @@ public class BuildMasterClientApache {
 	 */
 	public String createBuild(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
 		//PromoteBuild_Indicator required for those that don't have a build step
-		return doGet(String.class, "Builds_CreateBuild", "Application_Id",
-				applicationId, "Release_Number", releaseNumber, "Requested_Build_Number", buildNumber, 
-				"PromoteBuild_Indicator", "Y", "BuildVariables_Xml", encodeVariables(variablesList));
+//		return doGet(String.class, "Builds_CreateBuild", "Application_Id",
+//				applicationId, "Release_Number", releaseNumber, "Requested_Build_Number", buildNumber, 
+//				"PromoteBuild_Indicator", "Y", "BuildVariables_Xml", encodeVariables(variablesList));
+		
+		return HttpEasy.request()
+				.path("/api/json/Builds_CreateBuild?API_Key={}&Application_Id={}&Release_Number={}&Requested_Build_Number={}&PromoteBuild_Indicator={}&BuildVariables_Xml={}")
+				.urlParameters(config.apiKey, applicationId, releaseNumber, buildNumber, "Y", encodeVariables(variablesList))
+				.get()
+				.getJsonReader()
+				.asJson(String.class);
 	}
 
 	/**
@@ -265,14 +331,15 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public Build getBuild(String applicationId, String releaseNumber, String buildNumber) throws IOException {
-		Build[] builds = doGet(Build[].class, "Builds_GetBuild",
-				"Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber);
+//		Build[] builds = doGet(Build[].class, "Builds_GetBuild",
+//				"Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber);
 
-		if (builds.length > 0) {
-			return builds[0];
-		}
-
-		return null;
+		return HttpEasy.request()
+				.path("/api/json/Builds_GetBuild?API_Key={}&Application_Id={}&Release_Number={}&Build_Number={}")
+				.urlParameters(config.apiKey, applicationId, releaseNumber, buildNumber)
+				.get()
+				.getJsonReader()
+				.asJson(Build.class);
 	}
 
 	/**
@@ -281,9 +348,15 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public String getExecutionsInProgress(String applicationId) throws IOException {
-		StringBuilder executions = doGet(StringBuilder.class, "Builds_GetExecutionsInProgress", "Application_Id", applicationId);
-
-		return executions.toString();
+//		StringBuilder executions = doGet(StringBuilder.class, "Builds_GetExecutionsInProgress", "Application_Id", applicationId);
+//
+//		return executions.toString();
+		
+		return HttpEasy.request()
+				.path("/api/json/Builds_GetExecutionsInProgress?API_Key={}&Application_Id={}")
+				.urlParameters(config.apiKey, applicationId)
+				.get()
+				.asString();
 	}
 
 	/**
@@ -294,8 +367,15 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public BuildExecution getLatestExecution(String applicationId, String releaseNumber, String buildNumber) throws IOException {
-		BuildExecution[] executions = doGet(BuildExecution[].class, "Builds_GetExecutions", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber, "Execution_Count", "1");
+		// BuildExecution[] executions = doGet(BuildExecution[].class, "Builds_GetExecutions", "Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber, "Execution_Count", "1");
 
+		BuildExecution[] executions = HttpEasy.request()
+				.path("/api/json/Builds_GetExecutions?API_Key={}&Application_Id={}&Release_Number={}&Build_Number={}&Execution_Count={}")
+				.urlParameters(config.apiKey, applicationId, releaseNumber, buildNumber, 1)
+				.get()
+				.getJsonReader()
+				.asJson(BuildExecution[].class);
+		
 		if (executions.length > 0) {
 			return executions[0];
 		}
@@ -313,8 +393,15 @@ public class BuildMasterClientApache {
 		if (releaseNumber == null || releaseNumber.isEmpty()) return new Variable[0]; 
 		if (buildNumber == null || buildNumber.isEmpty()) return new Variable[0]; 
 
-		Variable[] variables = doGet(Variable[].class, "Variables_GetVariableValues",
-				"Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber);
+//		Variable[] variables = doGet(Variable[].class, "Variables_GetVariableValues",
+//				"Application_Id", applicationId, "Release_Number", releaseNumber, "Build_Number", buildNumber);
+		
+		Variable[] variables = HttpEasy.request()
+				.path("/api/json/Variables_GetVariableValues?API_Key={}&Application_Id={}&Release_Number={}&Build_Number={}")
+				.urlParameters(config.apiKey, applicationId, releaseNumber, buildNumber)
+				.get()
+				.getJsonReader()
+				.asJson(Variable[].class);
 		
 		ArrayList<Variable> inScope = new ArrayList<Variable>();
 		
@@ -337,7 +424,8 @@ public class BuildMasterClientApache {
 		final List<String> executing = Arrays.asList(new String[] { null, "", "Pending", "Executing" });
 		final List<String> pending = Arrays.asList(new String[] { null, "", "Pending" });
 
-		this.logRequest = false;
+		//TODO ?
+		//this.logRequest = false;
 		
 		try {
 			BuildExecution execution = getLatestExecution(applicationId, releaseNumber, null);
@@ -363,7 +451,8 @@ public class BuildMasterClientApache {
 				}
 			}
 		} finally {
-			this.logRequest = true;
+			//TODO ?
+			//this.logRequest = true;
 		}
 	}
 	
@@ -380,7 +469,8 @@ public class BuildMasterClientApache {
 
 		BuildExecution execution;
 		
-		this.logRequest = false;
+		//TODO ?
+		//this.logRequest = false;
 		
 		try {
 			execution = getLatestExecution(applicationId, releaseNumber, buildNumber);		
@@ -414,7 +504,8 @@ public class BuildMasterClientApache {
 				}
 			}
 		} finally {
-			this.logRequest = true;
+			//TODO ?
+			//this.logRequest = true;
 		}
 		
 		if (!"Succeeded".equals(execution.ExecutionStatus_Name) && printLogOnFailure) {
@@ -430,9 +521,16 @@ public class BuildMasterClientApache {
 	 * @throws IOException
 	 */
 	public void printExecutionLog(String executionId) throws IOException {
-		BuildExecutionDetails log = doGet(BuildExecutionDetails.class,
-				"Builds_GetExecutionLog", "Execution_Id", executionId);
+//		BuildExecutionDetails log = doGet(BuildExecutionDetails.class,
+//				"Builds_GetExecutionLog", "Execution_Id", executionId);
 
+		BuildExecutionDetails log = HttpEasy.request()
+				.path("/api/json/Builds_GetExecutionLog?API_Key={}&Execution_Id={}")
+				.urlParameters(config.apiKey, executionId)
+				.get()
+				.getJsonReader()
+				.asJson(BuildExecutionDetails.class);
+		
 		config.printStream.println("");
 		config.printStream.println("BuildMaster Execution Log:");
 		config.printStream.println("-------------------------");
@@ -487,6 +585,7 @@ public class BuildMasterClientApache {
 	}
 	
 	// Do the work
+	/*
 	@SuppressWarnings("unchecked")
 	protected <T> T doGet(Class<T> type, String path, String... query) throws IOException {
 		StringBuilder url = new StringBuilder();
@@ -526,7 +625,7 @@ public class BuildMasterClientApache {
 
 		return data;
 	}
-	
+		
 	private String getResponseBody(HttpResponse response) throws UnsupportedOperationException, IOException {
 		String encoding = response.getEntity().getContentEncoding() == null ? "UTF-8" : response.getEntity().getContentEncoding().getName();
 		String body = IOUtils.toString(response.getEntity().getContent(), encoding);
@@ -534,5 +633,5 @@ public class BuildMasterClientApache {
 		return body;
 		
 	}
-
+	*/
 }

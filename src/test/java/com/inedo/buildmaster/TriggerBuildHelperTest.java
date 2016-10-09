@@ -23,7 +23,11 @@ import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 
-import com.inedo.buildmaster.api.BuildMasterClientApache;
+import com.inedo.buildmaster.api.BuildMasterApi;
+import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.jenkins.GlobalConfig;
+import com.inedo.utils.MockServer;
+import com.inedo.utils.TestConfig;
 
 /**
  * Tests for the TriggerBuildHelper class
@@ -45,11 +49,19 @@ public class TriggerBuildHelperTest {
 	
 	public String releaseNumber;
 	public String buildNumber;
-		
+			
 	@Before
 	public void before() throws IOException, InterruptedException {
-		mockServer = new MockServer(true, logger);
-		TriggerBuildHelper.injectConfiguration(mockServer.getBuildMasterConfig());
+		BuildMasterConfig config;
+
+		if (TestConfig.useMockServer()) {
+			mockServer = new MockServer();
+			config = mockServer.getBuildMasterConfig();
+		} else {
+			config = TestConfig.getProGetConfig();
+		}
+
+		GlobalConfig.injectConfiguration(config);
 		
 		build = mock(AbstractBuild.class);;
 		//launcher = mock(Launcher.class);
@@ -62,20 +74,22 @@ public class TriggerBuildHelperTest {
 		when(env.expand(anyString())).then(returnsFirstArg());
 		when(listener.getLogger()).thenReturn(logger);
 		
-		BuildMasterClientApache buildmaster = new BuildMasterClientApache(mockServer.getBuildMasterConfig());
+		BuildMasterApi buildmaster = new BuildMasterApi(mockServer.getBuildMasterConfig());
 		
-		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(MockServer.APPLICATION_ID);
-		this.buildNumber = buildmaster.getNextBuildNumber(MockServer.APPLICATION_ID, releaseNumber);
+		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
+		this.buildNumber = buildmaster.getNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
 	}
 	
 	@After
 	public void tearDown() throws Exception {
-		mockServer.stop();
+		if (mockServer != null) {
+			mockServer.stop();
+		}
 	}
 	
 	@Test
 	public void perform() throws IOException, InterruptedException {
-		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber);
+		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber);
 	
 		restLog();
 		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
@@ -87,7 +101,7 @@ public class TriggerBuildHelperTest {
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber)
+		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
 			.setWaitTillBuildCompleted(true)
 			.setPrintLogOnFailure(true);
 		
@@ -100,7 +114,7 @@ public class TriggerBuildHelperTest {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber)
+		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
 			.setSetBuildVariables(true)
 			.setVariables("hello=performSetVariables")
 			.setPreserveVariables(false);
@@ -125,7 +139,7 @@ public class TriggerBuildHelperTest {
 	
 	@Test
 	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
-		TriggerableData data = new TriggerableData(MockServer.APPLICATION_ID, releaseNumber, buildNumber)
+		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
 			.setEnableReleaseDeployable(true)
 			.setDeployableId("2077");
 		

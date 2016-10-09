@@ -1,4 +1,4 @@
-package com.inedo.buildmaster;
+package com.inedo.jenkins;
 
 import hudson.EnvVars;
 import hudson.model.EnvironmentContributingAction;
