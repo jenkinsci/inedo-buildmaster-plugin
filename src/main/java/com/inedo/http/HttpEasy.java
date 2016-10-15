@@ -129,7 +129,7 @@ public class HttpEasy {
 	private String authString = null;
 	private String baseURI = "";
 	private String path = "";
-	private String query = "";
+	private StringBuilder query = new StringBuilder();
 	private String startToken = "{";
 	private String endToken = "}";
 	private Object[] urlParams = new Object[0];
@@ -202,7 +202,36 @@ public class HttpEasy {
 	 * @return A self reference
 	 */
 	public HttpEasy query(String query) {
-		this.query = query;
+		this.query = new StringBuilder(query);
+		return this;
+	}
+
+	/**
+	 * Appends parameter to query portion of url.
+	 * 
+	 * <ul>
+	 * <li>If value is null then parameter will not be added</li>
+	 * <li>If value is empty then parameter will be added as 'name='</li>
+	 * </ul>
+	 * @param name Parameter name
+	 * @param value Parameter value
+	 * @return A self reference
+	 */
+	public HttpEasy parameter(String name, Object value) {
+		if (name == null || name.isEmpty()) {
+			return this;
+		}
+		
+		if (value == null) {
+			return this;
+		}
+		
+		if (this.query.length() > 0) {
+			this.query.append("&");
+		}
+		
+		this.query.append(name).append("=").append(value.toString());
+		
 		return this;
 	}
 
@@ -510,12 +539,12 @@ public class HttpEasy {
 	private URL getURL() throws MalformedURLException {
 		String spec = "";
 		
-		if (!containsProtol(path) && !containsProtol(query)) {
+		if (!containsProtol(path) && !containsProtol(query.toString())) {
 			spec = (baseURI == null || baseURI.isEmpty()) ? defaultbaseURI : baseURI;	
 		}
 		
 		spec = appendSegmentToUrl(spec, path, "/");
-		spec = appendSegmentToUrl(spec, query, "?");
+		spec = appendSegmentToUrl(spec, query.toString(), "?");
 		spec = replaceParameters(spec);
 
 		URL url = new URL(spec);
@@ -560,12 +589,15 @@ public class HttpEasy {
 	private String replaceParameters(String url) {
 		int index = 0;
 		int param = 0;
-		String currentParameter = "";
-
+		
 		// Check all occurrences
 		while ((index = url.indexOf(startToken, index)) > 0) {
+			String currentParameter = "";
+			
 			if (param < urlParams.length) {
-				currentParameter = String.valueOf(urlParams[param]);
+				if (urlParams[param] != null) {
+					currentParameter = String.valueOf(urlParams[param]);
+				}
 				param++;
 			}
 

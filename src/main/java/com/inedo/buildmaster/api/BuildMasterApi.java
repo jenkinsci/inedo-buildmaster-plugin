@@ -235,21 +235,45 @@ public class BuildMasterApi {
 		deployables.add(deployable);
 		
 		Release release = releaseDetails.Releases_Extended[0]; 
-		
+
 		HttpEasy.request()
-				.path("/api/json/Releases_CreateOrUpdateRelease?API_Key={}&Application_Id={}&Release_Number={}&Workflow_Id={}&Target_Date={}&Release_Name={}&DeployableIds_Xml={}")
-				.urlParameters(config.apiKey, release.Application_Id, release.Release_Number, release.Workflow_Id, release.Target_Date, release.Release_Name, encodeDeployables(deployables))
-				.get();
+			.path("/api/json/Releases_CreateOrUpdateReleaseDeployable")
+			.parameter("API_Key", config.apiKey) 
+			.parameter("Application_Id", String.valueOf(release.Application_Id)) 
+			.parameter("Release_Number", release.Release_Number)
+			.parameter("Deployable_Id", id)
+//			.parameter("Referenced_Application_Id", ?)
+//			.parameter("Referenced_Release_Number", ?)
+			.get();
 		
-//		doGet(Void.class, "Releases_CreateOrUpdateRelease", 
-//				"Application_Id", String.valueOf(release.Application_Id), 
-//				"Release_Number", release.Release_Number,
-//			    "Workflow_Id", String.valueOf(release.Workflow_Id),
-//			    "Target_Date", release.Target_Date,
-//			    "Release_Name", release.Release_Name,
-//			    //Notes_Text
-//			    "DeployableIds_Xml", encodeDeployables(deployables));
+//TODO First attempt - realised no deployable details, How enable deployable now?
+//		HttpEasy.request()
+//				.path("/api/json/Releases_CreateOrUpdateRelease")
+//				.parameter("API_Key", config.apiKey) 
+//				.parameter("Application_Id", String.valueOf(release.Application_Id)) 
+//				.parameter("Release_Number", release.Release_Number)
+//				.parameter("Pipeline_Id", String.valueOf(release.Pipeline_Id))
+//				.parameter("Target_Date", release.Target_Date)
+//				.parameter("Release_Name", release.Release_Name)
+//				.parameter("ReleaseTemplate_Name", release.ReleaseTemplate_Name)
+//				.get();
+
+//OLD WAY		
+//		HttpEasy.request()
+//				.path("/api/json/Releases_CreateOrUpdateRelease")
+//				.parameter("API_Key", config.apiKey) 
+//				.parameter("Application_Id", String.valueOf(release.Application_Id)) 
+//				.parameter("Release_Number", release.Release_Number)
+//				.parameter("Workflow_Id", String.valueOf(release.Workflow_Id))
+//				.parameter("Target_Date", release.Target_Date)
+//				.parameter("Release_Name", release.Release_Name)
+//				//Notes_Text
+//				.parameter("DeployableIds_Xml", encodeDeployables(deployables))
+//				//.urlParameters(config.apiKey, release.Application_Id, release.Release_Number, release.Workflow_Id, release.Target_Date, release.Release_Name, encodeDeployables(deployables))
+//				.get();
+
 	}
+
 	/**
 	 * Gets the next available build number for the given release, if no builds
 	 * have been performed will return 1

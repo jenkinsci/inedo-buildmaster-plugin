@@ -111,21 +111,32 @@ public class BuildMasterApiTest {
 		
 		ReleaseDetails before = buildmaster.getRelease(TestConfig.getApplicationid(), releaseNumber);
 		
-		buildmaster.enableReleaseDeployable(TestConfig.getApplicationid(), releaseNumber, "2077");
+		Deployable[] deployables = buildmaster.getDeployables(TestConfig.getApplicationid());
+		
+		buildmaster.enableReleaseDeployable(TestConfig.getApplicationid(), releaseNumber, String.valueOf(deployables[0].Deployable_Id));
 		
 		ReleaseDetails after = buildmaster.getRelease(TestConfig.getApplicationid(), releaseNumber);
 		
 		assertThat(after.Releases_Extended[0].Application_Id, is(before.Releases_Extended[0].Application_Id));
 		assertThat(after.Releases_Extended[0].Release_Number, is(before.Releases_Extended[0].Release_Number));
-		assertThat(after.Releases_Extended[0].Workflow_Id, is(before.Releases_Extended[0].Workflow_Id));
+		assertThat(after.Releases_Extended[0].Latest_Build_Id, is(before.Releases_Extended[0].Latest_Build_Id));
+		assertThat(after.Releases_Extended[0].Pipeline_Id, is(before.Releases_Extended[0].Pipeline_Id));
+		assertThat(after.Releases_Extended[0].ReleaseTemplate_Name, is(before.Releases_Extended[0].ReleaseTemplate_Name));
 		
 		assertThat(after.Releases_Extended[0].Target_Date, is(before.Releases_Extended[0].Target_Date));
 		assertThat(after.Releases_Extended[0].Release_Name, is(before.Releases_Extended[0].Release_Name));
 		assertThat(after.Releases_Extended[0].Notes_Text, is(before.Releases_Extended[0].Notes_Text));
 		
-		if (!TestConfig.useMockServer()) {
-			assertThat(after.ReleaseDeployables_Extended.length, is(before.ReleaseDeployables_Extended.length + 1));
+		boolean found = false;
+		
+		for (Deployable deployable : after.ReleaseDeployables_Extended) {
+			if (deployable.Deployable_Id == deployables[0].Deployable_Id) {
+				found = true;
+				break;
+			}
 		}
+		
+		assertThat(found, is(true));
 	}
 	
 	@Test
