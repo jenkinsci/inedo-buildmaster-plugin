@@ -217,7 +217,7 @@ public class HttpEasy {
 	 * @param value Parameter value
 	 * @return A self reference
 	 */
-	public HttpEasy parameter(String name, Object value) {
+	public HttpEasy queryParam(String name, Object value) {
 		if (name == null || name.isEmpty()) {
 			return this;
 		}

@@ -50,7 +50,7 @@ public class BuildMasterApiTest {
 
 		GlobalConfig.injectConfiguration(config);
 		
-		buildmaster = new BuildMasterApi();
+		buildmaster = new BuildMasterApi().setRecordResult();
 	}
 		
 	@AfterClass
@@ -86,34 +86,35 @@ public class BuildMasterApiTest {
 	public void getApplications() throws IOException  {
     	Application[] applications = buildmaster.getApplications();
     	
-        assertThat("Expect BuildMaster to have applications created", applications.length, is(greaterThan(0)));
-//        System.out.println(applications[0].Application_Name);
+    	assertThat("API Structure has not changed", Application.getExampleArray(), is(buildmaster.getLastResult()));
+    	assertThat("Expect BuildMaster to have applications created", applications.length, is(greaterThan(0)));
 	}
 	
 	@Test
 	public void getDeployables() throws IOException  {
     	Deployable[] deployables = buildmaster.getDeployables(TestConfig.getApplicationid());
     	
+    	assertThat("API Structure has not changed", Deployable.getExampleArray(), is(buildmaster.getLastResult()));
         assertThat("Expect BuildMaster to have applications created", deployables.length, is(greaterThan(0)));
 	}
-	
-	
+		
 	@Test
 	public void getDeployable() throws IOException  {
     	Deployable[] deployables = buildmaster.getDeployables(TestConfig.getApplicationid());
+    	Deployable deployable = buildmaster.getDeployable(deployables[0].Deployable_Id);
     	
-        assertThat("Expect BuildMaster to have applications created", deployables.length, is(greaterThan(0)));
+    	// NOTE: returns array even though should only be a single value
+    	assertThat("API Structure has not changed", Deployable.getExampleArray(), is(buildmaster.getLastResult()));
+        assertThat("Expect deployable", deployable.Deployable_Id, is(deployables[0].Deployable_Id));
 	}
 	 
 	@Test
 	public void enableReleaseDeployable() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		
 		ReleaseDetails before = buildmaster.getRelease(TestConfig.getApplicationid(), releaseNumber);
-		
 		Deployable[] deployables = buildmaster.getDeployables(TestConfig.getApplicationid());
 		
-		buildmaster.enableReleaseDeployable(TestConfig.getApplicationid(), releaseNumber, String.valueOf(deployables[0].Deployable_Id));
+		buildmaster.enableReleaseDeployable(TestConfig.getApplicationid(), releaseNumber, deployables[0].Deployable_Id);
 		
 		ReleaseDetails after = buildmaster.getRelease(TestConfig.getApplicationid(), releaseNumber);
 		
@@ -143,7 +144,9 @@ public class BuildMasterApiTest {
 	public void getRelease() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		ReleaseDetails release = buildmaster.getRelease(TestConfig.getApplicationid(), releaseNumber);
-				
+
+		//TODO Check structure of JSON rather than values: have some code in 
+		//assertThat("API Structure has not changed", Deployable.getExampleArray(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test Application to have active release", release.Releases_Extended.length, is(greaterThan(0)));
 
 		String status = release.Releases_Extended[0].ReleaseStatus_Name;
@@ -156,10 +159,6 @@ public class BuildMasterApiTest {
 		Release[] releases = buildmaster.getActiveReleases(TestConfig.getApplicationid());
 		
 		assertThat("Expect Test Application to have active release(s)", releases.length, is(greaterThan(0)));
-		
-//		for (Release release : releases) {
-//			System.out.println(release.Release_Number);
-//		}
 	}
 
 	@Test
@@ -204,8 +203,6 @@ public class BuildMasterApiTest {
 		boolean result = buildmaster.waitForBuildCompletion(TestConfig.getApplicationid(), releaseNumber, buildMasterBuildNumber, true);
 		
 		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
-		
-		
 	}
 	
 	@Test

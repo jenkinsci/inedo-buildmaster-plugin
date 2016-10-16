@@ -316,7 +316,7 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
             // Validate release is still active
             if (!NOT_REQUIRED.equals(value)) {
 	        	try {
-	        		Deployable deployable = buildmaster.getDeployable(value);
+	        		Deployable deployable = buildmaster.getDeployable(Integer.valueOf(value));
 	                                    
 	        		if (deployable == null) {
 	            		return FormValidation.error("The deployable " + value + " does not exist for this application");

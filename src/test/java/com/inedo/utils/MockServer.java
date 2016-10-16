@@ -72,15 +72,15 @@ public class MockServer {
 			
 			switch (method) {
 			case "Applications_GetApplications":
-				response.setEntity(new StringEntity(Application.EXAMPLE));
+				response.setEntity(new StringEntity(Application.getExampleArray()));
 				break;
 				
 			case "Applications_GetDeployables":
-				response.setEntity(new StringEntity(Deployable.EXAMPLE));
+				response.setEntity(new StringEntity(Deployable.getExampleArray()));
 				break;
 				
 			case "Applications_GetDeployable":
-				response.setEntity(new StringEntity(Deployable.EXAMPLE));
+				response.setEntity(new StringEntity(Deployable.getExampleSingle()));
 				break;	
 				
 			case "Releases_GetReleases":

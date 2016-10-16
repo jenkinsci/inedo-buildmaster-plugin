@@ -57,7 +57,7 @@ public class TriggerBuildHelper {
 			String deployableId = expandVariable(build, listener, trigger.getDeployableId());
 			listener.getLogger().println(LOG_PREFIX + "Enable release deployable with id=" + deployableId);
 			
-			buildmaster.enableReleaseDeployable(applicationId, releaseNumber, deployableId);			
+			buildmaster.enableReleaseDeployable(applicationId, releaseNumber, Integer.valueOf(deployableId));			
 		}
 		
 		String buildMasterBuildNumber;

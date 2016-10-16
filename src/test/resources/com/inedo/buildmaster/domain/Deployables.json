@@ -1,0 +1,14 @@
+[
+  {
+    "Deployable_Id": 1,
+    "Deployable_Name": "sampleDeployable",
+    "CreatedBy_User_Name": "Admin",
+    "CreatedOn_Date": "2016-10-09T08:47:59.153",
+    "ModifiedBy_User_Name": "Admin",
+    "ModifiedOn_Date": "2016-10-09T09:38:14.63",
+    "Application_Id": 1,
+    "Application_Name": "Sample",
+    "Dependencies_Count": 0,
+    "Dependants_Count": 0
+  }
+]
