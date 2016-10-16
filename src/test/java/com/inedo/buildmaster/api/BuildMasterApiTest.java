@@ -25,6 +25,7 @@ import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests for the BuildMasterClientApache class
@@ -39,6 +40,9 @@ public class BuildMasterApiTest {
 	
 	@BeforeClass
     public static void beforeClass() throws IOException {
+		// Set the default log level for SLF4J simple logger to TRACE (defaults to INFO)
+		System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
+		
 		BuildMasterConfig config;
 
 		if (TestConfig.useMockServer()) {

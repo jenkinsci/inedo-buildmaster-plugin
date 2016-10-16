@@ -103,7 +103,7 @@ public class BuildMasterApi {
 				.queryParam("Application_Count", 1)
 				.get()
 				.getJsonReader()
-				.asJson(Application[].class);
+				.fromJson(Application[].class);
 	}
 
 	/**
@@ -122,7 +122,7 @@ public class BuildMasterApi {
 			result = reader.asPrettyString();
 		}
 		
-		return reader.asJson(Application[].class);
+		return reader.fromJson(Application[].class);
 	}
 
 	/**
@@ -142,7 +142,7 @@ public class BuildMasterApi {
 			result = reader.asPrettyString();
 		}
 		
-		return reader.asJson(Deployable[].class);
+		return reader.fromJson(Deployable[].class);
 	}
 	
 	/**
@@ -162,7 +162,7 @@ public class BuildMasterApi {
 			result = reader.asPrettyString();
 		}
 		
-		Deployable[] deployables = reader.asJson(Deployable[].class);
+		Deployable[] deployables = reader.fromJson(Deployable[].class);
 		
 		if (deployables.length > 0) {
 			return deployables[0];
@@ -184,7 +184,7 @@ public class BuildMasterApi {
 				.queryParam("Release_Number", releaseNumber)
 				.get()
 				.getJsonReader()
-				.asJson(ReleaseDetails.class);
+				.fromJson(ReleaseDetails.class);
 	}
 	
 	/**
@@ -200,7 +200,7 @@ public class BuildMasterApi {
 				.queryParam("ReleaseStatus_Name", "Active")
 				.get()
 				.getJsonReader()
-				.asJson(Release[].class);
+				.fromJson(Release[].class);
 	}
 
 	/**
@@ -218,7 +218,7 @@ public class BuildMasterApi {
 				.queryParam("Release_Count", 1)
 				.get()
 				.getJsonReader()
-				.asJson(Release[].class);
+				.fromJson(Release[].class);
 		
 		if (release.length > 0) {
 			return release[0].Release_Number;
@@ -274,7 +274,7 @@ public class BuildMasterApi {
 				.queryParam("Build_Count", 1)
 				.get()
 				.getJsonReader()
-				.asJson(Build[].class);
+				.fromJson(Build[].class);
 		
 		if (builds.length > 0) {
 			return String.valueOf(Integer.parseInt(builds[0].Build_Number) + 1);
@@ -292,7 +292,7 @@ public class BuildMasterApi {
 				.queryParam("Build_Count", 1)
 				.get()
 				.getJsonReader()
-				.asJson(Build[].class);
+				.fromJson(Build[].class);
 
 		if (builds.length > 0) {
 			return builds[0].Build_Number;
@@ -311,12 +311,36 @@ public class BuildMasterApi {
 	 * @throws IOException
 	 */
 	public String createBuild(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
-		//TODO Params changed
-//		Application_Id (Int32)
-//		Release_Number (String)
-//		Build_Number (String)
-//		BuildImporter_Configuration (String)
+		//TODO Missing BuildNumber parameter
+		HttpEasy request = HttpEasy.request()
+				.logRequestDetails()
+				.path("/api/releases/packages/create")
+				.field("apiKey", config.apiKey)
+				.field("applicationId", applicationId) 
+				.field("releaseNumber", releaseNumber);
+				
+		for (Map.Entry<String, String> variable : variablesList.entrySet()) {
+			request.field("$" + variable.getKey(), variable.getValue());
+		}
 		
+		return request.put().asString();
+
+		/*
+		HttpEasy request = HttpEasy.request()
+				.logRequestDetails()
+				.path("/api/releases/packages/create")
+				.queryParam("apiKey", config.apiKey)
+				.queryParam("applicationId", applicationId) 
+				.queryParam("releaseNumber", releaseNumber);
+				
+		for (Map.Entry<String, String> variable : variablesList.entrySet()) {
+			request.queryParam("$" + variable.getKey(), variable.getValue());
+		}
+		
+		return request.get().asString();
+		*/
+				
+/*		
 		return HttpEasy.request()
 				.path("/api/json/Builds_CreateBuild")
 				.queryParam("API_Key", config.apiKey)
@@ -328,8 +352,7 @@ public class BuildMasterApi {
 				.queryParam("BuildVariables_Xml", encodeVariables(variablesList))
 				.get()
 				.asString();
-//				.getJsonReader()
-//				.asJson(String.class);
+*/
 	}
 
 	/**
@@ -358,7 +381,7 @@ public class BuildMasterApi {
 				.queryParam("Build_Number", buildNumber)
 				.get()
 				.getJsonReader()
-				.asJson(Build.class);
+				.fromJson(Build.class);
 	}
 
 	/**
@@ -392,7 +415,7 @@ public class BuildMasterApi {
 				.queryParam("Execution_Count", 1)
 				.get()
 				.getJsonReader()
-				.asJson(BuildExecution[].class);
+				.fromJson(BuildExecution[].class);
 		
 		if (executions.length > 0) {
 			return executions[0];
@@ -419,7 +442,7 @@ public class BuildMasterApi {
 				.queryParam("Build_Number", buildNumber)
 				.get()
 				.getJsonReader()
-				.asJson(Variable[].class);
+				.fromJson(Variable[].class);
 		
 		ArrayList<Variable> inScope = new ArrayList<Variable>();
 		
@@ -547,7 +570,7 @@ public class BuildMasterApi {
 				.urlParameters(config.apiKey, executionId)
 				.get()
 				.getJsonReader()
-				.asJson(BuildExecutionDetails.class);
+				.fromJson(BuildExecutionDetails.class);
 		
 		config.printStream.println("");
 		config.printStream.println("BuildMaster Execution Log:");
