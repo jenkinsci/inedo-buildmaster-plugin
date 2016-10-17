@@ -1,8 +1,6 @@
 package com.inedo.buildmaster.api;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -583,6 +581,7 @@ public class BuildMasterApi {
 		config.printStream.println("");
 	}
 
+	/*
 	private String encodeVariables(Map<String, String> variablesList) throws UnsupportedEncodingException {
 		if (variablesList == null || variablesList.size() == 0) return null;
 		
@@ -601,8 +600,7 @@ public class BuildMasterApi {
 
 		return URLEncoder.encode(variables.toString(), "UTF-8");
 	}
-			
-	/*
+	
 	private String encodeDeployables(List<Deployable> deployablesList) throws UnsupportedEncodingException {
 		if (deployablesList == null || deployablesList.size() == 0) return null;
 
