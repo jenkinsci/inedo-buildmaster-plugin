@@ -118,7 +118,7 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 		
 		switch (buildNumberSource) {
 		case "BUILDMASTER":
-			actualBuildNumber = buildmaster.getNextBuildNumber(applicationId, actualReleaseNumber);
+			actualBuildNumber = buildmaster.getNextPackageNumber(applicationId, actualReleaseNumber);
 			
 			logWriter.info("Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));

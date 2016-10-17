@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.buildmaster.domain.ApiPackage;
 import com.inedo.buildmaster.domain.Variable;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.VariableInjectionAction;
@@ -43,7 +44,7 @@ public class TriggerBuildHelper {
 				
 		if (trigger.getPreserveVariables()) {
 			listener.getLogger().println(LOG_PREFIX + "Gather previous builds build variables");
-			String prevBuildNumber = buildmaster.getPreviousBuildNumber(applicationId, releaseNumber);			
+			String prevBuildNumber = buildmaster.getPreviousPackageNumber(applicationId, releaseNumber);			
 			Variable[] variables = buildmaster.getVariableValues(applicationId, releaseNumber, prevBuildNumber);
 			
 			for (Variable variable : variables) {
@@ -60,26 +61,26 @@ public class TriggerBuildHelper {
 			buildmaster.enableReleaseDeployable(applicationId, releaseNumber, Integer.valueOf(deployableId));			
 		}
 		
-		String buildMasterBuildNumber;
+		ApiPackage apiPackage;
 		
 		if (buildNumber != null && !buildNumber.isEmpty() && !DEFAULT_BUILD_NUMBER.equals(buildNumber)) {
 			listener.getLogger().println(LOG_PREFIX + "Create BuildMaster build with BuildNumber=" + buildNumber);
-			buildMasterBuildNumber = buildmaster.createBuild(applicationId, releaseNumber, buildNumber, variablesList);
+			apiPackage = buildmaster.createPackage(applicationId, releaseNumber, buildNumber, variablesList);
 			
-			if (!buildMasterBuildNumber.equals(buildNumber)) {
-				listener.getLogger().println(LOG_PREFIX + String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.", buildNumber, buildMasterBuildNumber));
+			if (!apiPackage.number.equals(buildNumber)) {
+				listener.getLogger().println(LOG_PREFIX + String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.", buildNumber, apiPackage.number));
 			}
 		} else {
 			listener.getLogger().println(LOG_PREFIX + "Create BuildMaster build");
-			buildMasterBuildNumber = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
+			apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList);
 			
-			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER=" + buildMasterBuildNumber);
-			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", buildMasterBuildNumber));
+			listener.getLogger().println(LOG_PREFIX + "Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.number);
+			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.number));
 		}
 		
 		if (trigger.getWaitTillBuildCompleted()) {
 			listener.getLogger().println(LOG_PREFIX + "Wait till build completed");
-			return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, buildMasterBuildNumber, trigger.getPrintLogOnFailure());
+			return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, apiPackage.number, trigger.getPrintLogOnFailure());
 		}
 
 		return true;

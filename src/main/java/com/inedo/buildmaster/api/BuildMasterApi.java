@@ -16,6 +16,8 @@ import com.inedo.buildmaster.domain.BuildExecutionDetails;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
+import com.inedo.buildmaster.domain.ApiDeployment;
+import com.inedo.buildmaster.domain.ApiPackage;
 import com.inedo.buildmaster.domain.Variable;
 import com.inedo.http.HttpEasy;
 import com.inedo.http.JsonReader;
@@ -263,7 +265,7 @@ public class BuildMasterApi {
 	 * 
 	 * @throws IOException
 	 */
-	public String getNextBuildNumber(String applicationId, String releaseNumber) throws IOException {
+	public String getNextPackageNumber(String applicationId, String releaseNumber) throws IOException {
 		Build[] builds = HttpEasy.request()
 				.path("/api/json/Builds_GetBuilds")
 				.queryParam("API_Key", config.apiKey)
@@ -281,7 +283,7 @@ public class BuildMasterApi {
 		return "1";
 	}
 
-	public String getPreviousBuildNumber(String applicationId, String releaseNumber) throws IOException {
+	public String getPreviousPackageNumber(String applicationId, String releaseNumber) throws IOException {
 		Build[] builds = HttpEasy.request()
 				.path("/api/json/Builds_GetBuilds")
 				.queryParam("API_Key", config.apiKey)
@@ -308,12 +310,12 @@ public class BuildMasterApi {
 	 * 
 	 * @throws IOException
 	 */
-	public String createBuild(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
+	public ApiPackage createPackage(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
 		//TODO Missing BuildNumber parameter
 		HttpEasy request = HttpEasy.request()
 				.logRequestDetails()
 				.path("/api/releases/packages/create")
-				.field("apiKey", config.apiKey)
+				.field("key", config.apiKey)
 				.field("applicationId", applicationId) 
 				.field("releaseNumber", releaseNumber);
 				
@@ -321,8 +323,22 @@ public class BuildMasterApi {
 			request.field("$" + variable.getKey(), variable.getValue());
 		}
 		
-		return request.put().asString();
+		ApiPackage apiPackage = request.put()
+				.getJsonReader()
+				.fromJson(ApiPackage.class);
+		
+		ApiDeployment[] deployments = HttpEasy.request()
+				.logRequestDetails()
+				.path("/api/releases/packages/deploy")
+				.field("key", config.apiKey)
+				.field("packageId", apiPackage.id)
+				.field("applicationId", applicationId) 
+				.field("releaseNumber", releaseNumber)
+				.put()
+				.getJsonReader()
+				.fromJson(ApiDeployment[].class);
 
+		return apiPackage;
 		/*
 		HttpEasy request = HttpEasy.request()
 				.logRequestDetails()
@@ -354,15 +370,15 @@ public class BuildMasterApi {
 	}
 
 	/**
-	 * Creates a new build of an application and optionally promotes it to the
+	 * Creates a new build of an application and promote it to the
 	 * first environment. Error thrown on failure.
 	 * 
 	 * @return BuildNumber
 	 * 
 	 * @throws IOException
 	 */
-	public String createBuild(String applicationId, String releaseNumber, Map<String, String> variablesList) throws IOException {
-		return createBuild(applicationId, releaseNumber, null, variablesList);
+	public ApiPackage createPackage(String applicationId, String releaseNumber, Map<String, String> variablesList) throws IOException {
+		return createPackage(applicationId, releaseNumber, null, variablesList);
 	}
 
 	/**
@@ -410,6 +426,7 @@ public class BuildMasterApi {
 				.queryParam("Application_Id", applicationId)
 				.queryParam("Release_Number", releaseNumber)
 				.queryParam("Build_Number", buildNumber)
+				//.queryParam("PipelineStage_Name", "")
 				.queryParam("Execution_Count", 1)
 				.get()
 				.getJsonReader()

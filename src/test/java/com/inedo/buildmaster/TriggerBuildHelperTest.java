@@ -77,7 +77,7 @@ public class TriggerBuildHelperTest {
 		BuildMasterApi buildmaster = new BuildMasterApi(mockServer.getBuildMasterConfig());
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		this.buildNumber = buildmaster.getNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
+		this.buildNumber = buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 	}
 	
 	@After

@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
+import com.inedo.buildmaster.domain.ApiPackage;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
 import com.inedo.buildmaster.domain.Release;
@@ -167,9 +168,9 @@ public class BuildMasterApiTest {
 	@Test
 	public void getVariableValues() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		String testBuildNumber = buildmaster.getPreviousBuildNumber(TestConfig.getApplicationid(), releaseNumber);
+		String testPackageNumber = buildmaster.getPreviousPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 		
-		Variable[] variables = buildmaster.getVariableValues(TestConfig.getApplicationid(), releaseNumber, testBuildNumber);
+		Variable[] variables = buildmaster.getVariableValues(TestConfig.getApplicationid(), releaseNumber, testPackageNumber);
 		
 		assertThat("Expect Test previous build to have variables defined", variables.length, is(greaterThan(0)));
 	}
@@ -182,59 +183,59 @@ public class BuildMasterApiTest {
 	}
 	
 	@Test
-	public void getNextBuildNumber() throws NumberFormatException, IOException {
+	public void getNextPackageNumber() throws NumberFormatException, IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		Integer nextBuildNumber = Integer.parseInt(buildmaster.getNextBuildNumber(TestConfig.getApplicationid(), releaseNumber));
+		Integer nextPackageNumber = Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber));
 		
-		assertThat("Expect nextBuildNumber to be greate than zero", nextBuildNumber , is(greaterThan(0)));
+		assertThat("Expect nextPackageNumber to be greate than zero", nextPackageNumber , is(greaterThan(0)));
 		
-//		System.out.println("nextBuildNumber: " + nextBuildNumber);
+//		System.out.println("nextPackageNumber: " + nextPackageNumber);
 	}
 	
 	@Test
-	public void createBuild() throws IOException, InterruptedException {
+	public void createPackage() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		String buildNumber = buildmaster.getNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
+		String packageNumber = buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 		Map<String, String> variablesList = new HashMap<>();
 		variablesList.put("hello", "world");
 		variablesList.put("cause", "unit test");
 		
-		String buildMasterBuildNumber = buildmaster.createBuild(TestConfig.getApplicationid(), releaseNumber, buildNumber, variablesList);
+		ApiPackage apiPackage = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber, variablesList);
 		
-		assertThat("Expect returned buildNumber to be the same as requested", buildNumber, is(buildMasterBuildNumber));
+		assertThat("Expect returned packageNumber to be the same as requested", packageNumber, is(apiPackage.number));
 		
-		boolean result = buildmaster.waitForBuildCompletion(TestConfig.getApplicationid(), releaseNumber, buildMasterBuildNumber, true);
+		boolean result = buildmaster.waitForBuildCompletion(TestConfig.getApplicationid(), releaseNumber, apiPackage.number, true);
 		
-		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
+		assertThat("Expect Test build " + packageNumber + " to have built and deployed successfully", result);
 	}
 	
 	@Test
-	public void getBuild() throws IOException {
+	public void getPackage() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
+		String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
 		
-		Build build = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, buildNumber);
+		Build build = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
-		assertThat("Expect Test Application to have build number " + buildNumber, build.Build_Number.length() , is(greaterThan(0)));
+		assertThat("Expect Test Application to have build number " + packageNumber, build.Build_Number.length() , is(greaterThan(0)));
 		
-//		System.out.println("Current_ExecutionStatus_Name for build " + buildNumber + " is " + build.Current_ExecutionStatus_Name);
+//		System.out.println("Current_ExecutionStatus_Name for build " + packageNumber + " is " + build.Current_ExecutionStatus_Name);
 	}
 	
 	@Test
 	public void getWaitForBuildCompletion() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
+		String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
 		
-		boolean result = buildmaster.waitForBuildCompletion(TestConfig.getApplicationid(), releaseNumber, buildNumber, false);
+		boolean result = buildmaster.waitForBuildCompletion(TestConfig.getApplicationid(), releaseNumber, packageNumber, false);
 		
-		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
+		assertThat("Expect Test build " + packageNumber + " to have built and deployed successfully", result);
 	}
 	
 	@Test
 	public void printExecutionLog() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getNextBuildNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
-		Build build = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, buildNumber);
+		String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
+		Build build = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
 		PrintStream printSteamOrig = mockServer.getBuildMasterConfig().printStream;
 		ByteArrayOutputStream outContent  = new ByteArrayOutputStream();
@@ -248,7 +249,7 @@ public class BuildMasterApiTest {
 			mockServer.getBuildMasterConfig().printStream = printSteamOrig;
 		}
 		
-		assertThat("Expect Test build " + buildNumber + " to have an execution log", outContent.size(), is(greaterThan(0)));
+		assertThat("Expect Test build " + packageNumber + " to have an execution log", outContent.size(), is(greaterThan(0)));
 		
 //		System.out.println(outContent.toString());
 	}
@@ -277,13 +278,13 @@ public class BuildMasterApiTest {
 			System.out.println("Test Run: " + testrun);
 						
 			variablesList.put("hello", "world" + testrun);			
-			String buildNumber = buildmaster.createBuild(TestConfig.getApplicationid(), releaseNumber, variablesList);
-			System.out.println("BuildNumber=" + buildNumber);
+			ApiPackage apiPackage = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, variablesList);
+			System.out.println("PackageNumber=" + apiPackage.number);
 
-			String prevBuildNumber = buildmaster.getPreviousBuildNumber(TestConfig.getApplicationid(), releaseNumber);
-			System.out.println("PreviousBuildNumber=" + prevBuildNumber);
+			String prevPackageNumber = buildmaster.getPreviousPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+			System.out.println("PreviousPackageNumber=" + prevPackageNumber);
 
-			Variable[] variables = buildmaster.getVariableValues(TestConfig.getApplicationid(), releaseNumber, buildNumber);
+			Variable[] variables = buildmaster.getVariableValues(TestConfig.getApplicationid(), releaseNumber, apiPackage.number);
 			String value = "not found";
 			
 			for (Variable variable : variables) {
@@ -296,7 +297,7 @@ public class BuildMasterApiTest {
 			
 			buildmaster.waitForExistingBuildStepToComplete(TestConfig.getApplicationid(), releaseNumber);
 			
-			//buildmaster.waitForBuildCompletion(TestConfig.getApplicationid(), releaseNumber, buildNumber, false);
+			//buildmaster.waitForBuildCompletion(TestConfig.getApplicationid(), releaseNumber, packageNumber, false);
 		}
 	}
 
