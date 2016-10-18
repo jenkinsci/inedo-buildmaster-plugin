@@ -52,34 +52,9 @@ public class BuildMasterApi {
 			.baseUrl(config.url)
 			.withLogWriter(logWriter);
 		
-		
-//		HttpClientBuilder httpbuilder = HttpClients.custom();
-//		RequestConfig.Builder configbuilder = RequestConfig.custom();
-//
-//		if (ConnectionType.BASIC.getId().equalsIgnoreCase(config.authentication)) {
-//			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-//			credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(config.user,config.password));
-//
-//			httpbuilder.setDefaultCredentialsProvider(credentialsProvider);
-//			configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC));
-//		}
-//
-//		if (ConnectionType.NTLM.getId().equalsIgnoreCase(config.authentication)) {
-//			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-//			credentialsProvider.setCredentials(
-//					AuthScope.ANY,
-//					new NTCredentials(config.user, config.password, config.getHost(), config.domain));
-//
-//			httpbuilder.setDefaultCredentialsProvider(credentialsProvider);
-//			configbuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM));
-//		}
-
-		// Finally we instantiate the client. Client is a thread safe object and
-		// can be used by several threads at the same time.
-		// Client can be used for several request. The life span of the client
-		// must be equal to the life span of this EJB.
-		////httpclient = httpbuilder.setDefaultRequestConfig(configbuilder.build()).build();
-
+		if (config.user != null && !config.user.isEmpty() && config.password != null && !config.password.isEmpty()) {
+			HttpEasy.withDefaults().authorization(config.user, config.password);
+		}
 	}
 
 

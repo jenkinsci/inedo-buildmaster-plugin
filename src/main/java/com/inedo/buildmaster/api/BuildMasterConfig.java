@@ -12,8 +12,6 @@ import java.net.UnknownHostException;
 public class BuildMasterConfig {
 	// Global Configuration Items
 	public String url;
-	public String authentication;
-	public String domain;
 	public String user;
 	public String password;
 	public String apiKey;

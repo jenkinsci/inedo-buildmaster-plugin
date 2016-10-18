@@ -1,5 +1,7 @@
 package com.inedo.http;
 
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.security.cert.X509Certificate;
 
@@ -70,6 +72,22 @@ public class HttpEasyDefaults {
 
 		// Install the all-trusting host verifier
 		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+		
+		return this;
+	}
+	
+	/**
+	 * Add default authorization.
+	 * @param username username if need NTLM authentication format would be DOMAIN\\user
+	 * @param password password
+	 * @return A self reference
+	 */
+	public HttpEasyDefaults authorization(final String username, final String password) {
+		Authenticator.setDefault(new Authenticator() {
+		    protected PasswordAuthentication getPasswordAuthentication() {
+		        return new PasswordAuthentication(username, password.toCharArray());
+		    }
+		});
 		
 		return this;
 	}

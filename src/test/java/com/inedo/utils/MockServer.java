@@ -48,7 +48,6 @@ public class MockServer {
 		config = new BuildMasterConfig();
 		config.url = "http://" + server.getInetAddress().getHostName() + ":" + server.getLocalPort();
 		//config.printStream = logger;
-		config.authentication = "none";
 	}
 	
 	public BuildMasterConfig getBuildMasterConfig() {

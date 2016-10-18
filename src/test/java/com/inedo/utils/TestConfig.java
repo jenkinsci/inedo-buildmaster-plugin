@@ -21,8 +21,6 @@ public class TestConfig {
     private static boolean useMockServer;
     private static String url;
     private static String apiKey;
-    private static String authentication;
-    private static String domain;
     private static String username;
     private static String password;
     private static String applicationId;
@@ -44,8 +42,6 @@ public class TestConfig {
 
         url = getOptionalProperty(prop, "url");
         apiKey = getOptionalProperty(prop, "apiKey");
-        authentication = getOptionalProperty(prop, "authentication");
-        domain = getOptionalProperty(prop, "domain");
         username = getOptionalProperty(prop, "username");
         password = getOptionalProperty(prop, "password");
         applicationId = getOptionalProperty(prop, "applicationId");
@@ -152,8 +148,6 @@ public class TestConfig {
         BuildMasterConfig config = new BuildMasterConfig();
 
         config.url = url;
-        config.authentication = authentication;
-        config.domain = domain;
         config.apiKey = apiKey;
         config.user = username;
         config.password = password;

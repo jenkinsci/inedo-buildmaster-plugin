@@ -18,7 +18,6 @@ import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import hudson.util.ListBoxModel;
 
 /**
  * Has fields for global configuration
@@ -38,8 +37,6 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
          * If you don't want fields to be persisted, use <tt>transient</tt>.
          */
     	private String url;
-    	private String authentication;
-    	private String domain;
     	private String user;
         private Secret password;
         private String apiKey;
@@ -71,14 +68,6 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             url = value;
         }
 
-        public void setAuthentication(String value) {
-			this.authentication = value;
-		}
-
-        public void setDomain(String value) {
-			this.domain = value;
-		}
-        
         public void setUser(String value) {
             user = value;
         }
@@ -98,14 +87,6 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             return url;
         }
         
-        public String getAuthentication() {
-			return authentication;
-		}
-
-        public String getDomain() {
-			return domain;
-		}
-
         public String getUser() {
             return user;
         }
@@ -148,54 +129,26 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             
             return FormValidation.ok();
         }
-        
-        public FormValidation doCheckDomain(@QueryParameter String value, @QueryParameter String authentication) throws IOException, ServletException {
-            if (value.length() == 0 && "ntlm".equals(authentication))
-                return FormValidation.error("Domain is required");
-            
-            if (value.length() > 0 && "none".equals(authentication))
-                return FormValidation.warning("Value will be ignored as only valid for NTLM authentication method");
-            
-            return FormValidation.ok();
-        }
 
-        public FormValidation doCheckUser(@QueryParameter String value, @QueryParameter String authentication) throws IOException, ServletException {
-            if (value.length() == 0 && !"none".equals(authentication))
+        public FormValidation doCheckUser(@QueryParameter String value, @QueryParameter String password) throws IOException, ServletException {
+        	if (password != null && !password.isEmpty() && value.length() == 0)
                 return FormValidation.error("User is required");
 
-            if (value.length() > 0 && "none".equals(authentication))
-                return FormValidation.warning("Value will be ignored as no authentication method selected");
-
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckPassword(@QueryParameter String value, @QueryParameter String authentication) throws IOException, ServletException {
-            if (value.length() == 0 && !"none".equals(authentication))
+        public FormValidation doCheckPassword(@QueryParameter String value, @QueryParameter String user) throws IOException, ServletException {
+            if (user != null && !user.isEmpty() && value.length() == 0)
                 return FormValidation.error("Password is required");
 
-            if (value.length() > 0 && "none".equals(authentication))
-                return FormValidation.warning("Value will be ignored as no authentication method selected");
-
             return FormValidation.ok();
         }
 
-        public ListBoxModel doFillAuthenticationItems() {
-            ListBoxModel items = new ListBoxModel();
-        
-            items.add(ConnectionType.NONE.getLabel(), ConnectionType.NONE.getId());
-            items.add(ConnectionType.BASIC.getLabel(), ConnectionType.BASIC.getId());
-            items.add(ConnectionType.NTLM.getLabel(), ConnectionType.NTLM.getId());
-        	
-            return items;
-        }
-        
         /**
          *  BuildMaster connection test
          */
 		public FormValidation doTestConnection(
 			@QueryParameter("url") final String url,
-			@QueryParameter("authentication") final String authentication,
-			@QueryParameter("domain") final String domain,
 			@QueryParameter("user") final String user,
 			@QueryParameter("password") final String password,
 			@QueryParameter("apiKey") final String apiKey) throws IOException, ServletException {
@@ -203,8 +156,6 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 			BuildMasterConfig config = new BuildMasterConfig();
 			
 			config.url = url;
-			config.authentication = authentication;
-			config.domain = domain;
 			config.user = user;
 			config.password = password;
 			config.apiKey = apiKey;
@@ -214,7 +165,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 			try {
 				buildmaster.checkConnection();
 			} catch (Exception ex) {
-				return FormValidation.error("Failed. Please check the configuration. " + ex.getClass().getName() + ": " + ex.getMessage());
+				return FormValidation.error(url + "." + apiKey + "." + user + password + "Failed. Please check the configuration. " + ex.getClass().getName() + ": " + ex.getMessage());
 			}
 			
 			return FormValidation.ok("Success. Connection with BuildMaster verified.");			
@@ -224,8 +175,6 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 			BuildMasterConfig config = new BuildMasterConfig();
    		 
 			config.url = url;
-			config.authentication = authentication;
-			config.domain = domain;
 			config.user = user;
 			config.password = Secret.toString(password);
 			config.apiKey = apiKey;
