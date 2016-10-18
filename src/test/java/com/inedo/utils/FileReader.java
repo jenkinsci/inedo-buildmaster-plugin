@@ -1,4 +1,4 @@
-package nz.govt.msd.data.utils;
+package com.inedo.utils;
 
 import java.io.IOException;
 import java.io.InputStream;

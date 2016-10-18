@@ -1,4 +1,4 @@
-package nz.govt.msd.data.utils;
+package com.inedo.utils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -13,12 +13,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-
-import nz.govt.msd.driver.http.JsonReader;
+import com.inedo.http.JsonReader;
 
 public class JsonLoader {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JsonLoader.class);
@@ -34,19 +29,16 @@ public class JsonLoader {
 		LOGGER.debug("Loading JSON file {}", jsonFile);
 		JsonReader json = new JsonReader(FileReader.readFile(jsonFile));
 
-		Gson builder = new GsonBuilder()
-				.registerTypeAdapter(XMLGregorianCalendar.class, new XMLGregorianCalendarConverter.Deserializer())
-				.registerTypeAdapter(XMLGregorianCalendar.class, new XMLGregorianCalendarConverter.Serializer())
-				.create();
+		
 
 		T result = json.fromJson(builder, returnType);
 
-		validateAllDataLoaded(json.asJson(), result, "");
+		validateJsonStructure(json.asJson(), result, "");
 
 		return result;
 	}
 
-	private static void validateAllDataLoaded(JsonElement element, Object returnType, String entryName) throws IOException {
+	private static void validateJsonStructure(JsonElement element, Object returnType, String entryName) throws IOException {
 
 		if (element.isJsonNull()) {
 			return;
