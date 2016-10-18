@@ -11,6 +11,11 @@
  *
  */
 
+buildscript {
+    repositories {
+		maven { url 'http://repo1.maven.org/maven2' }
+	}
+}
 
 plugins {
   id 'org.jenkins-ci.jpi' version '0.18.1'
@@ -44,7 +49,8 @@ jenkinsPlugin {
 }
 
 repositories {
-	jcenter()
+    maven { url 'http://repo1.maven.org/maven2' }
+	// jcenter()
 }
 
 dependencies {
