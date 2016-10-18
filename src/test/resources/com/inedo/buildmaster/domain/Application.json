@@ -1,0 +1,39 @@
+{
+	"Applications_Extended": [{
+		"Application_Id": 1,
+		"Application_Name": "Sample",
+		"Application_Description": null,
+		"ReleaseNumber_Scheme_Name": "MajorMinorRevision",
+		"BuildNumber_Scheme_Name": "Sequential",
+		"AllowMultipleActiveBuilds_Indicator": false,
+		"IssueTracking_Provider_Id": null,
+		"IssueTracking_CategoryIdList_Text": null,
+		"IssueTracking_Filter_Configuration": null,
+		"IssueTracking_AllowBuildMasterIssues_Indicator": true,
+		"CreatedBy_User_Name": "Admin",
+		"CreatedOn_Date": "2016-08-26T02:36:49.937",
+		"ModifiedBy_User_Name": "Admin",
+		"ModifiedOn_Date": "2016-08-26T02:36:49.96",
+		"Dashboard_Text": null,
+		"ApplicationGroup_Id": null,
+		"ApplicationGroup_Name": null,
+		"ApplicationGroup_Description": null,
+		"Active_Releases_Count": 1,
+		"VariableSupport_Code": "N",
+		"Issues_LastSynchronized_Date": null,
+		"ShowDeployables_Indicator": true,
+		"Active_Indicator": true
+	}],
+	"Deployables_Extended": [{
+		"Deployable_Id": 1,
+		"Deployable_Name": "sampleDeployable",
+		"CreatedBy_User_Name": "Admin",
+		"CreatedOn_Date": "2016-10-09T08:47:59.153",
+		"ModifiedBy_User_Name": "Admin",
+		"ModifiedOn_Date": "2016-10-09T09:38:14.63",
+		"Application_Id": 1,
+		"Application_Name": "Sample",
+		"Dependencies_Count": 0,
+		"Dependants_Count": 0
+	}]
+}

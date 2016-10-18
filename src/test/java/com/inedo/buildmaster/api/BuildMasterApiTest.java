@@ -5,12 +5,12 @@ import static org.hamcrest.Matchers.*;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiPackage;
+import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Build;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.ReleaseDetails;
-import com.inedo.buildmaster.domain.Variable;
 import com.inedo.http.HttpEasy;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.utils.MockServer;
@@ -95,6 +95,14 @@ public class BuildMasterApiTest {
 	}
 	
 	@Test
+	public void getApplication() throws IOException  {
+    	Application application = buildmaster.getApplication(TestConfig.getApplicationid());
+    	
+    	//assertThat("API Structure has not changed", Application.getExampleSingle(), is(buildmaster.getLastResult()));
+    	assertThat("Expect BuildMaster to have sample application", application.Application_Name, is("Sample"));
+	}
+	
+	@Test
 	public void getDeployables() throws IOException  {
     	Deployable[] deployables = buildmaster.getDeployables(TestConfig.getApplicationid());
     	
@@ -166,11 +174,11 @@ public class BuildMasterApiTest {
 	}
 
 	@Test
-	public void getVariableValues() throws IOException {
+	public void getPackageVariables() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		String testPackageNumber = buildmaster.getPreviousPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 		
-		Variable[] variables = buildmaster.getVariableValues(TestConfig.getApplicationid(), releaseNumber, testPackageNumber);
+		ApiVariable[] variables = buildmaster.getPackageVariables(TestConfig.getApplicationid(), releaseNumber, testPackageNumber);
 		
 		assertThat("Expect Test previous build to have variables defined", variables.length, is(greaterThan(0)));
 	}
@@ -237,16 +245,19 @@ public class BuildMasterApiTest {
 		String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
 		Build build = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
-		PrintStream printSteamOrig = mockServer.getBuildMasterConfig().printStream;
-		ByteArrayOutputStream outContent  = new ByteArrayOutputStream();
+		
+		BuildMasterConfig config = GlobalConfig.getBuildMasterConfig();
+		PrintStream printSteamOrig = config.printStream;
+		ByteArrayOutputStream outContent = new ByteArrayOutputStream();
 		
 		try {
 			PrintStream printSteam = new PrintStream(outContent);
-			mockServer.getBuildMasterConfig().printStream = printSteam;
 			
-			buildmaster.printExecutionLog(build.Current_Execution_Id);
+			config.printStream = printSteam;
+			
+			buildmaster.printExecutionLog(build.Latest_Execution_Id);//.Current_Execution_Id);
 		} finally {
-			mockServer.getBuildMasterConfig().printStream = printSteamOrig;
+			config.printStream = printSteamOrig;
 		}
 		
 		assertThat("Expect Test build " + packageNumber + " to have an execution log", outContent.size(), is(greaterThan(0)));
@@ -284,12 +295,12 @@ public class BuildMasterApiTest {
 			String prevPackageNumber = buildmaster.getPreviousPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 			System.out.println("PreviousPackageNumber=" + prevPackageNumber);
 
-			Variable[] variables = buildmaster.getVariableValues(TestConfig.getApplicationid(), releaseNumber, apiPackage.number);
+			ApiVariable[] variables = buildmaster.getPackageVariables(TestConfig.getApplicationid(), releaseNumber, apiPackage.number);
 			String value = "not found";
 			
-			for (Variable variable : variables) {
-				if (variable.Variable_Name.equalsIgnoreCase("hello")) {
-					value = variable.Value_Text;
+			for (ApiVariable variable : variables) {
+				if (variable.name.equalsIgnoreCase("hello")) {
+					value = variable.value;
 				}
 			}			
 			

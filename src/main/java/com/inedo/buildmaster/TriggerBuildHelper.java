@@ -10,7 +10,7 @@ import java.util.Map;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.ApiPackage;
-import com.inedo.buildmaster.domain.Variable;
+import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.VariableInjectionAction;
 
@@ -45,11 +45,11 @@ public class TriggerBuildHelper {
 		if (trigger.getPreserveVariables()) {
 			listener.getLogger().println(LOG_PREFIX + "Gather previous builds build variables");
 			String prevBuildNumber = buildmaster.getPreviousPackageNumber(applicationId, releaseNumber);			
-			Variable[] variables = buildmaster.getVariableValues(applicationId, releaseNumber, prevBuildNumber);
+			ApiVariable[] variables = buildmaster.getPackageVariables(applicationId, releaseNumber, prevBuildNumber);
 			
-			for (Variable variable : variables) {
-				if (!variablesList.containsKey(variable.Variable_Name)) {
-					variablesList.put(variable.Variable_Name, variable.Value_Text);
+			for (ApiVariable variable : variables) {
+				if (!variablesList.containsKey(variable.name)) {
+					variablesList.put(variable.name, variable.value);
 				}
 			}
 		}

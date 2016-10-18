@@ -7,18 +7,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonElement;
 import com.inedo.buildmaster.TriggerBuildHelper;
 import com.inedo.buildmaster.domain.Application;
+import com.inedo.buildmaster.domain.ApplicationDetail;
 import com.inedo.buildmaster.domain.Build;
 import com.inedo.buildmaster.domain.BuildExecution;
-import com.inedo.buildmaster.domain.BuildExecutionActionGroupActionLogEntries;
-import com.inedo.buildmaster.domain.BuildExecutionDetails;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiPackage;
-import com.inedo.buildmaster.domain.Variable;
+import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.http.HttpEasy;
 import com.inedo.http.JsonReader;
 import com.inedo.http.LogWriter;
@@ -125,6 +125,27 @@ public class BuildMasterApi {
 		return reader.fromJson(Application[].class);
 	}
 
+	public Application getApplication(String applicationId) throws IOException {
+		JsonReader reader = HttpEasy.request()
+				.path("/api/json/Applications_GetApplication")
+				.queryParam("API_Key", config.apiKey)
+				.queryParam("Application_Id", applicationId)
+				.get()
+				.getJsonReader();
+		
+		if (recordResult) {
+			result = reader.asPrettyString();
+		}
+		
+		ApplicationDetail applicaton = reader.fromJson(ApplicationDetail.class);
+		
+		if (applicaton != null && applicaton.Applications_Extended.length > 0) {
+			return applicaton.Applications_Extended[0];
+		}
+		
+		return null;
+	}
+		
 	/**
 	 * Gets the deployables for a specific application
 	 * 
@@ -313,7 +334,6 @@ public class BuildMasterApi {
 	public ApiPackage createPackage(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
 		//TODO Missing BuildNumber parameter
 		HttpEasy request = HttpEasy.request()
-				.logRequestDetails()
 				.path("/api/releases/packages/create")
 				.field("key", config.apiKey)
 				.field("applicationId", applicationId) 
@@ -328,7 +348,6 @@ public class BuildMasterApi {
 				.fromJson(ApiPackage.class);
 		
 		ApiDeployment[] deployments = HttpEasy.request()
-				.logRequestDetails()
 				.path("/api/releases/packages/deploy")
 				.field("key", config.apiKey)
 				.field("packageId", apiPackage.id)
@@ -339,34 +358,6 @@ public class BuildMasterApi {
 				.fromJson(ApiDeployment[].class);
 
 		return apiPackage;
-		/*
-		HttpEasy request = HttpEasy.request()
-				.logRequestDetails()
-				.path("/api/releases/packages/create")
-				.queryParam("apiKey", config.apiKey)
-				.queryParam("applicationId", applicationId) 
-				.queryParam("releaseNumber", releaseNumber);
-				
-		for (Map.Entry<String, String> variable : variablesList.entrySet()) {
-			request.queryParam("$" + variable.getKey(), variable.getValue());
-		}
-		
-		return request.get().asString();
-		*/
-				
-/*		
-		return HttpEasy.request()
-				.path("/api/json/Builds_CreateBuild")
-				.queryParam("API_Key", config.apiKey)
-				.queryParam("Application_Id", applicationId) 
-				.queryParam("Release_Number", releaseNumber)
-				.queryParam("Requested_Build_Number", buildNumber) 
-				//PromoteBuild_Indicator required for those that don't have a build step
-				.queryParam("PromoteBuild_Indicator", "Y")
-				.queryParam("BuildVariables_Xml", encodeVariables(variablesList))
-				.get()
-				.asString();
-*/
 	}
 
 	/**
@@ -444,30 +435,44 @@ public class BuildMasterApi {
 	 * 
 	 * @throws IOException
 	 */
-	public Variable[] getVariableValues(String applicationId, String releaseNumber, String buildNumber) throws IOException {
-		if (applicationId == null || applicationId.isEmpty()) return new Variable[0];
-		if (releaseNumber == null || releaseNumber.isEmpty()) return new Variable[0]; 
-		if (buildNumber == null || buildNumber.isEmpty()) return new Variable[0]; 
+	public ApiVariable[] getPackageVariables(String applicationId, String releaseNumber, String packageNumber) throws IOException {
+		if (applicationId == null) return new ApiVariable[0];
+		if (releaseNumber == null || releaseNumber.isEmpty()) return new ApiVariable[0]; 
+		if (packageNumber == null || packageNumber.isEmpty()) return new ApiVariable[0]; 
 		
-		Variable[] variables = HttpEasy.request()
-				.path("/api/json/Variables_GetVariableValues")
-				.queryParam("API_Key", config.apiKey)
-				.queryParam("Application_Id", applicationId)
-				.queryParam("Release_Number", releaseNumber)
-				.queryParam("Build_Number", buildNumber)
+		Application application = getApplication(applicationId);
+		
+		JsonReader reader = HttpEasy.request()
+				.path("/api/variables/packages/{«application-name»}/{«release-number»}/{«package-number»}")
+				.urlParameters(application.Application_Name, releaseNumber, packageNumber)
+				.queryParam("key", config.apiKey)
 				.get()
-				.getJsonReader()
-				.fromJson(Variable[].class);
+				.getJsonReader();
 		
-		ArrayList<Variable> inScope = new ArrayList<Variable>();
+		List<ApiVariable> variables = new ArrayList<ApiVariable>();
 		
-		for (Variable variable : variables) {
-			if ("B".equals(variable.Scope_Code)) {
-				inScope.add(variable);
+		for (Map.Entry<String,JsonElement> entry : reader.asJson().getAsJsonObject().entrySet()) {
+			ApiVariable var = new ApiVariable();
+			var.name = entry.getKey();
+			if (entry.getValue().isJsonObject()) {
+				for (Map.Entry<String,JsonElement> value : entry.getValue().getAsJsonObject().entrySet()) {
+					switch (value.getKey()) {
+					case "value":
+						var.value = value.getValue().getAsString();
+						break;
+					case "sensitive":
+						var.sensitive = value.getValue().getAsBoolean();
+						break;
+					}
+				}
+			} else {
+				var.value = entry.getValue().getAsString();
 			}
+			
+			variables.add(var);
 		}
 		
-		return inScope.toArray(new Variable[inScope.size()]);
+		return variables.toArray(new ApiVariable[variables.size()]);
 	}
 
 	/**
@@ -565,7 +570,7 @@ public class BuildMasterApi {
 		}
 		
 		if (!"Succeeded".equals(execution.ExecutionStatus_Name) && printLogOnFailure) {
-			printExecutionLog(String.valueOf(execution.Execution_Id));
+			printExecutionLog(execution.Execution_Id);
 		}
 
 		return "Succeeded".equals(execution.ExecutionStatus_Name);
@@ -576,26 +581,24 @@ public class BuildMasterApi {
 	 * 
 	 * @throws IOException
 	 */
-	public void printExecutionLog(String executionId) throws IOException {
-//		BuildExecutionDetails log = doGet(BuildExecutionDetails.class,
-//				"Builds_GetExecutionLog", "Execution_Id", executionId);
-
-		BuildExecutionDetails log = HttpEasy.request()
-				.path("/api/json/Builds_GetExecutionLog?API_Key={}&Execution_Id={}")
-				.urlParameters(config.apiKey, executionId)
-				.get()
-				.getJsonReader()
-				.fromJson(BuildExecutionDetails.class);
-		
-		config.printStream.println("");
-		config.printStream.println("BuildMaster Execution Log:");
-		config.printStream.println("-------------------------");
-
-		for (BuildExecutionActionGroupActionLogEntries entry : log.BuildExecution_ActionGroupActionLogEntries) {
-			config.printStream.println(entry.LogEntry_Text);
-		}
-
-		config.printStream.println("");
+	public void printExecutionLog(int executionId) throws IOException {
+//		TODO: This is no longer supported and is waiting on an update to the api
+//		BuildExecutionDetails log = HttpEasy.request()
+//				.path("/api/json/Builds_GetExecutionLog?API_Key={}&Execution_Id={}")
+//				.urlParameters(config.apiKey, executionId)
+//				.get()
+//				.getJsonReader()
+//				.fromJson(BuildExecutionDetails.class);
+//		
+//		config.printStream.println("");
+//		config.printStream.println("BuildMaster Execution Log:");
+//		config.printStream.println("-------------------------");
+//
+//		for (BuildExecutionActionGroupActionLogEntries entry : log.BuildExecution_ActionGroupActionLogEntries) {
+//			config.printStream.println(entry.LogEntry_Text);
+//		}
+//
+//		config.printStream.println("");
 	}
 
 	/*

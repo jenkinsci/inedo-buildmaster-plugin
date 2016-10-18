@@ -18,4 +18,8 @@ public class Application
 	public static String getExampleArray() throws IOException {
 		return IOUtils.toString(Application.class.getResourceAsStream("Applications.json")).replace(IOUtils.LINE_SEPARATOR_WINDOWS, IOUtils.LINE_SEPARATOR_UNIX);
 	}
+
+	public static String getExampleSingle() throws IOException {
+		return IOUtils.toString(Application.class.getResourceAsStream("Application.json")).replace(IOUtils.LINE_SEPARATOR_WINDOWS, IOUtils.LINE_SEPARATOR_UNIX);
+	}
 }
