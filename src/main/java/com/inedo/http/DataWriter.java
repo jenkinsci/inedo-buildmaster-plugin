@@ -18,6 +18,6 @@ interface DataWriter {
 	 * 
 	 * @throws IOException
 	 */
-	public void write(Logger logger) throws IOException;
+	public void write(HttpEasyLogWriter logger) throws IOException;
 
 }

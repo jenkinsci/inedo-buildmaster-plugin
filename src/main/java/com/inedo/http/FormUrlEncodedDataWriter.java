@@ -54,9 +54,9 @@ class FormUrlEncodedDataWriter implements DataWriter {
 	}
 
 	@Override
-	public void write(Logger logger) throws IOException {
+	public void write(HttpEasyLogWriter logger) throws IOException {
 		if (logger != null) {
-			logger.trace("With Content:{}\t{}", System.lineSeparator(), new String(postEndcoded, "UTF-8"));
+			logger.log("With Content:{}\t{}", System.lineSeparator(), new String(postEndcoded, "UTF-8"));
 		}
 
 		try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {

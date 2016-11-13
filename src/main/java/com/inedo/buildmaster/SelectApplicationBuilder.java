@@ -20,14 +20,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
-import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.jenkins.GlobalConfig;
+import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.jenkins.JenkinsHelper;
-import com.inedo.jenkins.JenkinsLogWriter;
+import com.inedo.jenkins.JenkinsTaskLogWriter;
 import com.inedo.jenkins.VariableInjectionAction;
 
 /**
@@ -84,15 +84,14 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
     	JenkinsHelper helper = new JenkinsHelper(build, listener);
-		JenkinsLogWriter logWriter = helper.getLogWriter();
+		JenkinsTaskLogWriter logWriter = helper.getLogWriter();
 		
     	if (!GlobalConfig.validateBuildMasterConfig()) {
     		logWriter.error("Please configure BuildMaster Plugin global settings");
 			return false;
 		}
     	
-    	BuildMasterConfig config = GlobalConfig.getBuildMasterConfig();
-    	BuildMasterApi buildmaster = new BuildMasterApi(config);
+    	BuildMasterApi buildmaster = new BuildMasterApi(listener);
 		
     	// Pouplate BUILDMASTER_APPLICATION_ID variable
     	logWriter.info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + applicationId);
@@ -187,7 +186,7 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
         
         @Override
         public String getDisplayName() {
-            return "Select BuildMaster Application";
+            return "BuildMaster: Select Application";
         }
 
 		/**
@@ -198,7 +197,7 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
             	isBuildMasterAvailable = true;
                 
                 try {
-                	buildmaster = new BuildMasterApi(); //System.out            
+                	buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());            
                 	buildmaster.checkConnection();
                 } catch (Exception ex) {
                 	isBuildMasterAvailable = false;

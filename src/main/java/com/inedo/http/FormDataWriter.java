@@ -48,7 +48,7 @@ class FormDataWriter implements DataWriter {
 	}
 
 	@Override
-	public void write(Logger logger) throws IOException {
+	public void write(HttpEasyLogWriter logger) throws IOException {
 		outputStream = connection.getOutputStream();
 		
 		if (logger != null) {
@@ -71,7 +71,7 @@ class FormDataWriter implements DataWriter {
 			writeFinalBoundary();
 		} finally {
 			if (logger != null) {
-				logger.trace("With Content:{}\t{}", LINE_FEED, logBuffer.toString().replace(LINE_FEED, LINE_FEED + "\t"));
+				logger.log("With Content:{}\t{}", LINE_FEED, logBuffer.toString().replace(LINE_FEED, LINE_FEED + "\t"));
 			}
 
 			if (writer != null) {

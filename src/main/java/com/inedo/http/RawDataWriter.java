@@ -62,7 +62,7 @@ class RawDataWriter implements DataWriter {
 	}
 
 	@Override
-	public void write(Logger logger) throws IOException {
+	public void write(HttpEasyLogWriter logger) throws IOException {
 		StringBuilder logBuffer = null;
 
 		if (logger != null) {
@@ -97,7 +97,7 @@ class RawDataWriter implements DataWriter {
 		}
 
 		if (logger != null) {
-			logger.trace("With Content:{}\t{}", System.lineSeparator(), logBuffer);
+			logger.log("With Content:{}\t{}", System.lineSeparator(), logBuffer);
 		}
 	}
 	

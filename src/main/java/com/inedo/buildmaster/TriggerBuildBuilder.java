@@ -109,7 +109,7 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 	
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-		return TriggerBuildHelper.triggerBuild(build, listener, this);
+		return BuildHelper.triggerBuild(build, listener, this);
 	}
 
 	@Extension
@@ -133,14 +133,14 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 
 		@Override
 		public String getDisplayName() {
-			return "Trigger BuildMaster Build";
+			return "BuildMaster: Trigger Build";
 		}
 		
 		// TODO jelly expandableTextbox does not support form validation currently so this does nothing: 
 		// https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/lib/form/expandableTextbox.jelly
 		public FormValidation doCheckVariables(@QueryParameter String value) {
 			try {
-				TriggerBuildHelper.getVariablesList(value);
+				BuildHelper.getVariablesList(value);
 			} catch (Exception e) {
                 return FormValidation.error(e.getMessage());
             }
@@ -149,7 +149,7 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 		}
 		
 		public String getDefaultBuildNumber() {
-			return TriggerBuildHelper.DEFAULT_BUILD_NUMBER;
+			return BuildHelper.DEFAULT_BUILD_NUMBER;
 		}
 	}
 }

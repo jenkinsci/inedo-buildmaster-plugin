@@ -11,7 +11,7 @@ import hudson.model.TaskListener;
 public class JenkinsHelper {
 	private final AbstractBuild<?, ?> build;
 	private final TaskListener listener;
-	private JenkinsLogWriter logWriter = null;
+	private JenkinsTaskLogWriter logWriter = null;
 	
 	/**
 	 * For unit tests as they don't have access to the build or listener
@@ -54,11 +54,15 @@ public class JenkinsHelper {
 		build.addAction(new VariableInjectionAction(key, value));
 	}
 	
-	public JenkinsLogWriter getLogWriter() {
+	public JenkinsTaskLogWriter getLogWriter() {
 		if (logWriter == null) {
-			logWriter = new JenkinsLogWriter(listener);	
+			logWriter = new JenkinsTaskLogWriter(listener);	
 		}
 		
 		return logWriter;
 	}
+
+    public static void fail(String value) {
+        throw new RuntimeException(JenkinsLogWriter.LOG_PREFIX + value + " is not in the format 'variable=value'");
+    }
 }

@@ -13,12 +13,12 @@ import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.http.HttpEasy;
 import com.inedo.jenkins.GlobalConfig;
+import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,7 +54,7 @@ public class BuildMasterApiTest {
 
 		GlobalConfig.injectConfiguration(config);
 		
-		buildmaster = new BuildMasterApi().setRecordResult();
+		buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter()).setRecordResult();
 	}
 		
 	@AfterClass
@@ -245,19 +245,19 @@ public class BuildMasterApiTest {
 		String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
 		Build build = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
-		
-		BuildMasterConfig config = GlobalConfig.getBuildMasterConfig();
-		PrintStream printSteamOrig = config.printStream;
+        //TODO May need to do something with printstream...
+//		BuildMasterConfig config = GlobalConfig.getBuildMasterConfig();
+//		PrintStream printSteamOrig = config.printStream;
 		ByteArrayOutputStream outContent = new ByteArrayOutputStream();
 		
 		try {
-			PrintStream printSteam = new PrintStream(outContent);
+//			PrintStream printSteam = new PrintStream(outContent);
 			
-			config.printStream = printSteam;
+//			config.printStream = printSteam;
 			
 			buildmaster.printExecutionLog(build.Latest_Execution_Id);//.Current_Execution_Id);
 		} finally {
-			config.printStream = printSteamOrig;
+//			config.printStream = printSteamOrig;
 		}
 		
 		assertThat("Expect Test build " + packageNumber + " to have an execution log", outContent.size(), is(greaterThan(0)));

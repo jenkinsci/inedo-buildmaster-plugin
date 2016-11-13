@@ -630,8 +630,8 @@ public class HttpEasy {
 			authUser = " as user '" + authUser + "'";
 		}
 
-		log("Sending " + requestMethod + " to " + url.toString());
-		//LOGGER.debug("Sending {}{} to {}", requestMethod, authUser, url.toString());
+//		log("Sending " + requestMethod + " to " + url.toString());
+		getLogWriter().log("Sending {}{} to {}", requestMethod, authUser, url.toString());
 		
 		if (logRequestDetails) {
 			StringBuilder sb = new StringBuilder();
@@ -642,28 +642,39 @@ public class HttpEasy {
 				}
 			}
 
-			log("With Request Headers:" + System.lineSeparator() + sb.toString());
-			//LOGGER.trace("With Request Headers:{}{}", System.lineSeparator(), sb);
+			//log("With Request Headers:" + System.lineSeparator() + sb.toString());
+			getLogWriter().log("With Request Headers:{}{}", System.lineSeparator(), sb);
 		}
 
 		connection.connect();
 
 		if (dataWriter != null) {
-			dataWriter.write(logRequestDetails ? LOGGER : null);
+			//dataWriter.write(logRequestDetails ? LOGGER : null);
+			dataWriter.write(getLogWriter());
 		}
 
 		return connection;
 	}
 
-	private void log(String message) {
-		if (logWriter != null) {
-			logWriter.info(message);
-		} else if (HttpEasyDefaults.getDefaultLogWriter() != null) {
-			HttpEasyDefaults.getDefaultLogWriter().info(message);
-		} else {
-			LOGGER.trace(message);
-		}		
+	// TODO This would probably be a lot nicer as a listener...
+	private HttpEasyLogWriter logWriterWrapper = null;
+	
+	private HttpEasyLogWriter getLogWriter() {
+	    if (logWriterWrapper == null) {
+	        logWriterWrapper = new HttpEasyLogWriter(logWriter);
+	    }
+	    
+	    return logWriterWrapper;
 	}
+//	private void log(String message) {
+//		if (logWriter != null) {
+//			logWriter.info(message);
+//		} else if (HttpEasyDefaults.getDefaultLogWriter() != null) {
+//			HttpEasyDefaults.getDefaultLogWriter().info(message);
+//		} else {
+//			LOGGER.trace(message);
+//		}		
+//	}
 
 	private DataWriter getDataWriter(DataWriter dataWriter, URL url, HttpURLConnection connection) throws UnsupportedEncodingException {
 		if (dataContentType == DataContentType.AUTO_SELECT) {

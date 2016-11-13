@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
-import com.inedo.buildmaster.TriggerBuildHelper;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ApplicationDetail;
 import com.inedo.buildmaster.domain.Build;
@@ -23,7 +22,10 @@ import com.inedo.http.HttpEasy;
 import com.inedo.http.JsonReader;
 import com.inedo.http.LogWriter;
 import com.inedo.jenkins.GlobalConfig;
-import com.inedo.jenkins.JenkinsLogWriter;
+import com.inedo.jenkins.JenkinsHelper;
+import com.inedo.jenkins.JenkinsTaskLogWriter;
+
+import hudson.model.TaskListener;
 
 /**
  * BuildMaster json api interface
@@ -31,21 +33,28 @@ import com.inedo.jenkins.JenkinsLogWriter;
  * @author Andrew Sumner
  */
 public class BuildMasterApi {
-	private BuildMasterConfig config;
+    private final BuildMasterConfig config;
+    private final LogWriter logWriter;
+    
 	private boolean recordResult = false;
 	private String result = "";
 
-	public BuildMasterApi() {
-		this(GlobalConfig.getBuildMasterConfig(), new JenkinsLogWriter(null));
+	public BuildMasterApi(TaskListener listener) {
+        this(GlobalConfig.getBuildMasterConfig(), new JenkinsTaskLogWriter(listener));
+        
+        if (!GlobalConfig.validateBuildMasterConfig()) {
+            JenkinsHelper.fail("Please configure BuildMaster Plugin global settings");
+        }
+    }
+
+	public BuildMasterApi(LogWriter listener) {
+	    this(GlobalConfig.getBuildMasterConfig(), listener);
 	}
-			
-	public BuildMasterApi(BuildMasterConfig config) {
-		this(config, new JenkinsLogWriter(null));
-	}
-	
-	private BuildMasterApi(BuildMasterConfig config, LogWriter logWriter) {
+
+	public BuildMasterApi(BuildMasterConfig config, LogWriter logWriter) {
 		this.config = config;
-		
+		this.logWriter = logWriter;
+
 		HttpEasy.withDefaults()
 			.allowAllHosts()
 			.trustAllCertificates()
@@ -72,7 +81,7 @@ public class BuildMasterApi {
 	 * @throws IOException
 	 */
 	public void checkConnection() throws IOException {
-		HttpEasy.request()
+	    HttpEasy.request()
 				.path("/api/json/Applications_GetApplications")
 				.queryParam("API_Key", config.apiKey)
 				.queryParam("Application_Count", 1)
@@ -234,7 +243,7 @@ public class BuildMasterApi {
 		for (Deployable deployable : releaseDetails.ReleaseDeployables_Extended) {
 			if ("I".equals(deployable.InclusionType_Code)) {
 				if (deployable.Deployable_Id == deployableId) {
-					config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Deployable already enabled");
+				    logWriter.info("Deployable already enabled");
 					return;
 				}
 			}
@@ -298,44 +307,6 @@ public class BuildMasterApi {
 	}
 	
 	/**
-	 * Creates a new build for an application requesting it use a specific build
-	 * number and returns the build number of the new build. Error thrown on
-	 * failure.
-	 * 
-	 * @return BuildNumber
-	 * 
-	 * @throws IOException
-	 */
-	public ApiPackage createPackage(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
-		//TODO Missing BuildNumber parameter
-		HttpEasy request = HttpEasy.request()
-				.path("/api/releases/packages/create")
-				.field("key", config.apiKey)
-				.field("applicationId", applicationId) 
-				.field("releaseNumber", releaseNumber);
-				
-		for (Map.Entry<String, String> variable : variablesList.entrySet()) {
-			request.field("$" + variable.getKey(), variable.getValue());
-		}
-		
-		ApiPackage apiPackage = request.put()
-				.getJsonReader()
-				.fromJson(ApiPackage.class);
-		
-		ApiDeployment[] deployments = HttpEasy.request()
-				.path("/api/releases/packages/deploy")
-				.field("key", config.apiKey)
-				.field("packageId", apiPackage.id)
-				.field("applicationId", applicationId) 
-				.field("releaseNumber", releaseNumber)
-				.put()
-				.getJsonReader()
-				.fromJson(ApiDeployment[].class);
-
-		return apiPackage;
-	}
-
-	/**
 	 * Creates a new build of an application and promote it to the
 	 * first environment. Error thrown on failure.
 	 * 
@@ -347,6 +318,64 @@ public class BuildMasterApi {
 		return createPackage(applicationId, releaseNumber, null, variablesList);
 	}
 
+    /**
+     * Creates a new build for an application requesting it use a specific build
+     * number and returns the build number of the new build. Error thrown on
+     * failure.
+     * 
+     * @return BuildNumber
+     * 
+     * @throws IOException
+     */
+    public ApiPackage createPackage(String applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList) throws IOException {
+        //TODO Missing BuildNumber parameter
+        HttpEasy request = HttpEasy.request()
+                .path("/api/releases/packages/create")
+                .field("key", config.apiKey)
+                .field("applicationId", applicationId) 
+                .field("releaseNumber", releaseNumber);
+                
+        for (Map.Entry<String, String> variable : variablesList.entrySet()) {
+            request.field("$" + variable.getKey(), variable.getValue());
+        }
+        
+        ApiPackage apiPackage = request.put()
+                .getJsonReader()
+                .fromJson(ApiPackage.class);
+        
+        deployPackageToStage(applicationId, releaseNumber, apiPackage.number, null);
+
+        return apiPackage;
+    }
+    
+    /**
+     * 
+     * @param applicationId Required
+     * @param releaseNumber Required
+     * @param packageNumber Required
+     * @param toStage Optional. If not supplied, the next stage in the pipeline will be used.
+     * @return ApiDeployment[]
+     * @throws IOException
+     */
+    public ApiDeployment[] deployPackageToStage(String applicationId, String releaseNumber, String packageNumber, String toStage) throws IOException {
+        HttpEasy request = HttpEasy.request()
+                .path("/api/releases/packages/deploy")
+                .field("key", config.apiKey)
+                .field("applicationId", applicationId) 
+                .field("releaseNumber", releaseNumber)
+                .field("packageNumber", packageNumber);
+
+        if (toStage != null && !toStage.trim().isEmpty()) {
+            request.field("toStage", toStage);
+        }
+        
+        ApiDeployment[] deployments = request.put()
+                .getJsonReader()
+                .fromJson(ApiDeployment[].class);
+
+        return deployments;
+    }
+    
 	/**
 	 * Gets the details for a specified build.
 	 * 
@@ -473,7 +502,7 @@ public class BuildMasterApi {
 				Thread.sleep(7000);
 				
 				execution = getLatestExecution(applicationId, releaseNumber, null);
-				config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+				logWriter.info(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
 				
 				// If have been waiting for more than 5 minutes to enter pending state then bail out  
 				if (pending.contains(execution.ExecutionStatus_Name)) {
@@ -481,7 +510,7 @@ public class BuildMasterApi {
 					long diffMinutes = (endTime - startTime) / (60 * 1000);
 	
 					if (diffMinutes >= 5) {
-						config.printStream.println(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
+						logWriter.info(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
 						return;
 					}
 				}
@@ -510,7 +539,7 @@ public class BuildMasterApi {
 		
 		try {
 			execution = getLatestExecution(applicationId, releaseNumber, buildNumber);		
-			config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+			logWriter.info(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
 			
 			Integer envrionmentId = execution.Environment_Id;
 			long startTime = new Date().getTime();		
@@ -520,7 +549,7 @@ public class BuildMasterApi {
 				Thread.sleep(7000);
 				
 				execution = getLatestExecution(applicationId, releaseNumber, buildNumber);
-				config.printStream.println(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
+				logWriter.info(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
 				
 				// Restart counter if now deploying to new environment
 				if (envrionmentId != execution.Environment_Id) {
@@ -534,7 +563,7 @@ public class BuildMasterApi {
 					long diffMinutes = (endTime - startTime) / (60 * 1000);
 	
 					if (diffMinutes >= 5) {
-						config.printStream.println(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
+						logWriter.info(String.format("\tRelease has been pending for over %s minutes, check the status of the build in BuildMaster to see if there is anything blocking it", diffMinutes));
 						return false;
 					}
 				}
@@ -565,15 +594,15 @@ public class BuildMasterApi {
 //				.getJsonReader()
 //				.fromJson(BuildExecutionDetails.class);
 //		
-//		config.printStream.println("");
-//		config.printStream.println("BuildMaster Execution Log:");
-//		config.printStream.println("-------------------------");
+//		logWriter.info("");
+//		logWriter.info("BuildMaster Execution Log:");
+//		logWriter.info("-------------------------");
 //
 //		for (BuildExecutionActionGroupActionLogEntries entry : log.BuildExecution_ActionGroupActionLogEntries) {
-//			config.printStream.println(entry.LogEntry_Text);
+//			logWriter.info(entry.LogEntry_Text);
 //		}
 //
-//		config.printStream.println("");
+//		logWriter.info("");
 	}
 
 	/*
@@ -637,7 +666,7 @@ public class BuildMasterApi {
 		HttpClientContext context = HttpClientContext.create();
 
 		if (logRequest) {
-			config.printStream.println(TriggerBuildHelper.LOG_PREFIX + "Executing request " + URLDecoder.decode(httpget.getRequestLine().getUri(), "UTF-8"));
+			logWriter.info("Executing request " + URLDecoder.decode(httpget.getRequestLine().getUri(), "UTF-8"));
 		}
 		HttpResponse response = httpclient.execute(httpget, context);
 

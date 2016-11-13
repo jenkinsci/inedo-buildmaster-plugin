@@ -26,6 +26,7 @@ import hudson.model.AbstractProject;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.jenkins.GlobalConfig;
+import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
 
@@ -74,7 +75,7 @@ public class TriggerBuildHelperTest {
 		when(env.expand(anyString())).then(returnsFirstArg());
 		when(listener.getLogger()).thenReturn(logger);
 		
-		BuildMasterApi buildmaster = new BuildMasterApi(mockServer.getBuildMasterConfig());
+		BuildMasterApi buildmaster = new BuildMasterApi(mockServer.getBuildMasterConfig(), new JenkinsConsoleLogWriter());
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		this.buildNumber = buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
@@ -92,7 +93,7 @@ public class TriggerBuildHelperTest {
 		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber);
 	
 		restLog();
-		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
+		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		String log[] = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
@@ -106,7 +107,7 @@ public class TriggerBuildHelperTest {
 			.setPrintLogOnFailure(true);
 		
 		restLog();
-		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
+		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		String log[] = extractLogLines();
 		assertThat("Wait step should be the last actioned performed for successful build." , log[log.length - 1], containsString("Execution Status: Succeeded"));
@@ -120,7 +121,7 @@ public class TriggerBuildHelperTest {
 			.setPreserveVariables(false);
 		
 		restLog();
-		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
+		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		String log = extractLog();
 		assertThat("Variable passed", log, containsString("performSetVariables"));
@@ -130,7 +131,7 @@ public class TriggerBuildHelperTest {
 		data.setVariables("trying=again");
 		
 		restLog();
-		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
+		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		log = extractLog();		
 		assertThat("Variable passed", log, containsString("hello"));
@@ -144,7 +145,7 @@ public class TriggerBuildHelperTest {
 			.setDeployableId("2077");
 		
 		restLog();
-		assertThat("Result should be successful", TriggerBuildHelper.triggerBuild(build, listener, data), is(true));
+		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		String log = extractLog();
 		assertThat("Has requested updated", log, containsString("Releases_CreateOrUpdateRelease"));

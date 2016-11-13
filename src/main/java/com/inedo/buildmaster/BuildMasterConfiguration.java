@@ -1,8 +1,6 @@
 package com.inedo.buildmaster;
 
 import java.io.IOException;
-import java.io.PrintStream;
-
 import javax.servlet.ServletException;
 
 import jenkins.model.GlobalConfiguration;
@@ -13,6 +11,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.jenkins.JenkinsConsoleLogWriter;
 
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -160,7 +159,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 			config.password = password;
 			config.apiKey = apiKey;
 			
-			BuildMasterApi buildmaster = new BuildMasterApi(config);
+			BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
 			
 			try {
 				buildmaster.checkConnection();
@@ -181,11 +180,5 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 			
     		return config;
 		}
-
-		public BuildMasterConfig getBuildMasterConfig(PrintStream logger) {
-			BuildMasterConfig config = getBuildMasterConfig();
-			config.printStream = logger;
-			return config;
-		}
-    }
+	}
 }

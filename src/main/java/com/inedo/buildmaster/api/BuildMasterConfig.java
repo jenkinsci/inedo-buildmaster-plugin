@@ -1,6 +1,5 @@
 package com.inedo.buildmaster.api;
 
-import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -15,7 +14,6 @@ public class BuildMasterConfig {
 	public String user;
 	public String password;
 	public String apiKey;
-	public PrintStream printStream = System.out;
     
 	/**
 	 * Get the name of the host the service is running on.
