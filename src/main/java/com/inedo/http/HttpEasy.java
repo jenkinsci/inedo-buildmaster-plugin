@@ -21,7 +21,6 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.codec.binary.Base64;
 import com.google.common.net.MediaType;
-import com.inedo.http.HttpEasyReader.Family;
 
 /**
  * Fluent wrapper around {@link HttpURLConnection} with full support for HTTP messages such as GET, POST, HEAD, etc
@@ -300,7 +299,7 @@ public class HttpEasy {
 	 * @return A self reference
 	 */
 	public HttpEasy logRequestDetails() {
-	    this.eventManager.addListener(new LogWriter().setLogRequestDetails(true));
+	    this.eventManager.setLogRequestDetails(true);
 		return this;
 	}
 
@@ -533,8 +532,8 @@ public class HttpEasy {
 		return this;
 	}
 
-	public HttpEasy withLogWriter(HttpEasyListener logWriter) {
-		this.eventManager.addListener(logWriter);
+	public HttpEasy withLogListener(HttpEasyListener listener) {
+		this.eventManager.addListener(listener);
 		return this;
 	}
 
@@ -593,6 +592,7 @@ public class HttpEasy {
 		setHeaders(connection);
 
 		connection.setRequestMethod(requestMethod);
+		connection.setUseCaches(false);
 
 		if (timeout != null) {
 			connection.setConnectTimeout(timeout);
