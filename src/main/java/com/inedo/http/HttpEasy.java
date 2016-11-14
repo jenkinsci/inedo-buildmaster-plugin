@@ -20,9 +20,6 @@ import java.util.Map.Entry;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.net.MediaType;
 import com.inedo.http.HttpEasyReader.Family;
 
@@ -161,13 +158,12 @@ import com.inedo.http.HttpEasyReader.Family;
  * </p>
  */
 public class HttpEasy {
-	static final Logger LOGGER = LoggerFactory.getLogger(HttpEasy.class);
-
 	// These only apply per request - but are visible to package
 	List<Integer> ignoreResponseCodes = new ArrayList<Integer>();
 	List<Family> ignoreResponseFamily = new ArrayList<Family>();
 
 	// These only apply per request
+	private final EventManager eventManager = new EventManager(HttpEasyDefaults.getEventManager());
 	private String authString = null;
 	private String baseURI = "";
 	private String path = "";
@@ -181,14 +177,8 @@ public class HttpEasy {
 	private MediaType rawDataMediaType = null;
 	private Map<String, Object> headers = new LinkedHashMap<String, Object>();
 	private List<Field> fields = new ArrayList<Field>();
-	private LogWriter logWriter = null;
-	private boolean logRequestDetails;
 	private Integer timeout = null;
-
-	boolean isLogRequestDetails() {
-		return logRequestDetails;
-	}
-
+	
 	/**
 	 * @return Default settings object
 	 */
@@ -310,7 +300,7 @@ public class HttpEasy {
 	 * @return A self reference
 	 */
 	public HttpEasy logRequestDetails() {
-		this.logRequestDetails = true;
+	    this.eventManager.addListener(new LogWriter().setLogRequestDetails(true));
 		return this;
 	}
 
@@ -543,8 +533,8 @@ public class HttpEasy {
 		return this;
 	}
 
-	public HttpEasy withLogWriter(LogWriter logWriter) {
-		this.logWriter = logWriter;
+	public HttpEasy withLogWriter(HttpEasyListener logWriter) {
+		this.eventManager.addListener(logWriter);
 		return this;
 	}
 
@@ -630,51 +620,28 @@ public class HttpEasy {
 			authUser = " as user '" + authUser + "'";
 		}
 
-//		log("Sending " + requestMethod + " to " + url.toString());
-		getLogWriter().log("Sending {}{} to {}", requestMethod, authUser, url.toString());
-		
-		if (logRequestDetails) {
-			StringBuilder sb = new StringBuilder();
+		// Notify listeners
+		eventManager.request("Sending {}{} to {}", requestMethod, authUser, url.toString());
+				
+		StringBuilder sb = new StringBuilder();
 
-			for (Entry<String, List<String>> header : connection.getRequestProperties().entrySet()) {
-				for (String value : header.getValue()) {
-					sb.append("\t").append(header.getKey()).append(": ").append(value).append(System.lineSeparator());
-				}
+		for (Entry<String, List<String>> header : connection.getRequestProperties().entrySet()) {
+			for (String value : header.getValue()) {
+				sb.append("\t").append(header.getKey()).append(": ").append(value).append(System.lineSeparator());
 			}
-
-			//log("With Request Headers:" + System.lineSeparator() + sb.toString());
-			getLogWriter().log("With Request Headers:{}{}", System.lineSeparator(), sb);
 		}
 
+		eventManager.details("With Request Headers:{}{}", System.lineSeparator(), sb);
+
+		// Connect
 		connection.connect();
 
 		if (dataWriter != null) {
-			//dataWriter.write(logRequestDetails ? LOGGER : null);
-			dataWriter.write(getLogWriter());
+			dataWriter.write(eventManager);
 		}
 
 		return connection;
 	}
-
-	// TODO This would probably be a lot nicer as a listener...
-	private HttpEasyLogWriter logWriterWrapper = null;
-	
-	private HttpEasyLogWriter getLogWriter() {
-	    if (logWriterWrapper == null) {
-	        logWriterWrapper = new HttpEasyLogWriter(logWriter);
-	    }
-	    
-	    return logWriterWrapper;
-	}
-//	private void log(String message) {
-//		if (logWriter != null) {
-//			logWriter.info(message);
-//		} else if (HttpEasyDefaults.getDefaultLogWriter() != null) {
-//			HttpEasyDefaults.getDefaultLogWriter().info(message);
-//		} else {
-//			LOGGER.trace(message);
-//		}		
-//	}
 
 	private DataWriter getDataWriter(DataWriter dataWriter, URL url, HttpURLConnection connection) throws UnsupportedEncodingException {
 		if (dataContentType == DataContentType.AUTO_SELECT) {
@@ -855,4 +822,8 @@ public class HttpEasy {
 	private enum DataContentType {
 		AUTO_SELECT, RAW, X_WWW_FORM_URLENCODED, FORM_DATA; 
 	}
+
+    public EventManager getEventManager() {
+        return eventManager;
+    }
 }

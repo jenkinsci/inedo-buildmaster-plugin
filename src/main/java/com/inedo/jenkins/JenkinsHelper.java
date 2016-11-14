@@ -11,7 +11,7 @@ import hudson.model.TaskListener;
 public class JenkinsHelper {
 	private final AbstractBuild<?, ?> build;
 	private final TaskListener listener;
-	private JenkinsTaskLogWriter logWriter = null;
+	private JenkinsLogWriter logWriter = null;
 	
 	/**
 	 * For unit tests as they don't have access to the build or listener
@@ -19,11 +19,13 @@ public class JenkinsHelper {
 	public JenkinsHelper() {
 		this.build = null;
 		this.listener = null;
+		this.logWriter = new JenkinsConsoleLogWriter();
 	}
 	
 	public JenkinsHelper(AbstractBuild<?, ?> build, TaskListener listener) {
 		this.build = build;
 		this.listener = listener;
+		this.logWriter = new JenkinsTaskLogWriter(listener);
 	}
 
 	public String expandVariable(String variable) {
@@ -54,11 +56,7 @@ public class JenkinsHelper {
 		build.addAction(new VariableInjectionAction(key, value));
 	}
 	
-	public JenkinsTaskLogWriter getLogWriter() {
-		if (logWriter == null) {
-			logWriter = new JenkinsTaskLogWriter(listener);	
-		}
-		
+	public JenkinsLogWriter getLogWriter() {
 		return logWriter;
 	}
 

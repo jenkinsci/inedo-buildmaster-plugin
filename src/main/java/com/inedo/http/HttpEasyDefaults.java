@@ -4,7 +4,7 @@ import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.security.cert.X509Certificate;
-
+import java.util.Arrays;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -24,7 +24,7 @@ public class HttpEasyDefaults {
 	private static String proxyPassword = null;
 	private static boolean bypassProxyForLocalAddresses = true;
 	private static String baseURI = "";
-	private static LogWriter defaultLogWriter = null;
+	private static EventManager eventManager = new EventManager();
 	
 	/**
 	 * Create all-trusting certificate verifier.
@@ -52,7 +52,7 @@ public class HttpEasyDefaults {
 			sc.init(null, trustAllCerts, new java.security.SecureRandom());
 			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 		} catch (Exception e) {
-			HttpEasy.LOGGER.error(e.getMessage());
+		    eventManager.error(e.getMessage(), e);
 		}
 		
 		return this;
@@ -138,12 +138,16 @@ public class HttpEasyDefaults {
 	}
 
 	/**
-	 * Set the logger to write to
-	 * @param logWriter
+	 * Registers a default log listener
+	 * 
+	 * @param listener
 	 * @return A self reference
 	 */
-	public HttpEasyDefaults withLogWriter(LogWriter logWriter) {
-		HttpEasyDefaults.setDefaultLogWriter(logWriter);
+	public HttpEasyDefaults listeners(HttpEasyListener... listener) {
+	    EventManager em = new EventManager();
+	    em.addListeners(Arrays.asList(listener));
+	    HttpEasyDefaults.setEventManager(em);
+	    
 		return this;
 	}
 	
@@ -166,17 +170,13 @@ public class HttpEasyDefaults {
 	public static String getBaseURI() {
 		return HttpEasyDefaults.baseURI;
 	}
-
-	public static LogWriter getDefaultLogWriter() {
-		return HttpEasyDefaults.defaultLogWriter;
-	}
 	
 	private static void setBaseUrl(String baseUrl) {
 		HttpEasyDefaults.baseURI = baseUrl;
 	}
 
-	private static void setDefaultLogWriter(LogWriter logWriter) {
-		HttpEasyDefaults.defaultLogWriter = logWriter;
+	private static void setEventManager(EventManager eventManager) {
+	    HttpEasyDefaults.eventManager = eventManager;
 	}
 
 	private static void setProxy(Proxy proxy) {
@@ -191,4 +191,8 @@ public class HttpEasyDefaults {
 	private static void setBypassProxyForLocalAddresses(boolean bypassLocalAddresses) {
 		HttpEasyDefaults.bypassProxyForLocalAddresses = bypassLocalAddresses;
 	}
+
+    static EventManager getEventManager() {
+        return eventManager;
+    }
 }

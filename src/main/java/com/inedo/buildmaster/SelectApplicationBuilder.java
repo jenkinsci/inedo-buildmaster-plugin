@@ -24,10 +24,8 @@ import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
-import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.jenkins.JenkinsHelper;
-import com.inedo.jenkins.JenkinsTaskLogWriter;
 import com.inedo.jenkins.VariableInjectionAction;
 
 /**
@@ -84,17 +82,10 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
     	JenkinsHelper helper = new JenkinsHelper(build, listener);
-		JenkinsTaskLogWriter logWriter = helper.getLogWriter();
-		
-    	if (!GlobalConfig.validateBuildMasterConfig()) {
-    		logWriter.error("Please configure BuildMaster Plugin global settings");
-			return false;
-		}
-    	
-    	BuildMasterApi buildmaster = new BuildMasterApi(listener);
+    	BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 		
     	// Pouplate BUILDMASTER_APPLICATION_ID variable
-    	logWriter.info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + applicationId);
+    	helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + applicationId);
  		build.addAction(new VariableInjectionAction("BUILDMASTER_APPLICATION_ID", applicationId));
         
  		// Populate BUILDMASTER_RELEASE_NUMBER variable
@@ -104,12 +95,12 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 			actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(applicationId);
 			
 			if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
-				logWriter.error("No active releases found in BuildMaster for applicationId " + applicationId);
+			    helper.getLogWriter().error("No active releases found in BuildMaster for applicationId " + applicationId);
 				return false;
 			}
  		}
  		
- 		logWriter.info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + actualReleaseNumber);
+ 		helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + actualReleaseNumber);
 		build.addAction(new VariableInjectionAction("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber));
 		
 		//Populate BUILDMASTER_BUILD_NUMBER variable
@@ -119,7 +110,7 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 		case "BUILDMASTER":
 			actualBuildNumber = buildmaster.getNextPackageNumber(applicationId, actualReleaseNumber);
 			
-			logWriter.info("Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
+			helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
 			
 			break;
@@ -129,13 +120,13 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 			try {
 				envVars = build.getEnvironment(listener);
 			} catch (Exception e) {
-				logWriter.error(e.getMessage());
+			    helper.getLogWriter().error(e.getMessage());
 				return false;
 			}
 
 			actualBuildNumber = envVars.get("BUILD_NUMBER");
 			
-			logWriter.info("Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number=" + actualBuildNumber);
+			helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number=" + actualBuildNumber);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
 			
 			break;
@@ -145,13 +136,13 @@ public class SelectApplicationBuilder extends Builder implements ResourceActivit
 			break;
 			
 		default:
-			logWriter.error("Unknown buildNumberSource " + buildNumberSource);
+		    helper.getLogWriter().error("Unknown buildNumberSource " + buildNumberSource);
 			return false;
 		}
 		
 		// Populate BUILDMASTER_DEPLOYABLE_ID variable
 		if (!NOT_REQUIRED.equals(deployableId)) {
-			logWriter.info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + deployableId);
+		    helper.getLogWriter().info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + deployableId);
 			build.addAction(new VariableInjectionAction("BUILDMASTER_DEPLOYABLE_ID", deployableId));
 		}
 		

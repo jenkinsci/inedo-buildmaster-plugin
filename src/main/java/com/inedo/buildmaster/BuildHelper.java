@@ -26,7 +26,7 @@ public class BuildHelper {
 	public static boolean triggerBuild(AbstractBuild<?, ?> build, BuildListener listener, Triggerable trigger) throws IOException, InterruptedException {
 	    JenkinsHelper helper = new JenkinsHelper(build, listener);
                 
-        BuildMasterApi buildmaster = new BuildMasterApi(listener);
+        BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 		
 		String applicationId = helper.expandVariable(trigger.getApplicationId());
 		String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
@@ -143,7 +143,7 @@ public class BuildHelper {
             return false;
         }
         
-        BuildMasterApi buildmaster = new BuildMasterApi(listener);
+        BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
         
         String applicationId = helper.expandVariable(builder.getApplicationId());
         String releaseNumber = helper.expandVariable(builder.getReleaseNumber());

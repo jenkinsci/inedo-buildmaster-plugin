@@ -33,23 +33,11 @@ public class HttpEasyReader {
 	 * @throws IOException for connection errors
 	 */
 	public HttpEasyReader(HttpURLConnection connection, HttpEasy request) throws HttpResponseException, IOException {
-
 		this.connection = connection;
 
 		Family resposeFamily = getResponseCodeFamily();
 
-		if (request.isLogRequestDetails()) {
-			StringBuilder sb = new StringBuilder();
-
-			for (Entry<String, List<String>> header : getConnection().getHeaderFields().entrySet()) {
-				for (String value : header.getValue()) {
-					sb.append("\t").append(header.getKey()).append(": ").append(value).append(System.lineSeparator());
-				}
-			}
-
-			HttpEasy.LOGGER.trace("With Response Headers:{}{}", System.lineSeparator(), sb);
-			HttpEasy.LOGGER.trace("With Response:{}{}", System.lineSeparator(), asString());
-		}
+		logResponse(request.getEventManager());
 
 		if (resposeFamily != Family.SUCCESSFUL) {
 			if (listContains(request.ignoreResponseCodes, getResponseCode())) {
@@ -67,7 +55,23 @@ public class HttpEasyReader {
 
 	}
 
-	private <T> boolean listContains(List<T> array, T targetValue) {
+	private void logResponse(EventManager initiater) throws IOException {
+	    StringBuilder sb = new StringBuilder();
+
+        for (Entry<String, List<String>> header : getConnection().getHeaderFields().entrySet()) {
+            for (String value : header.getValue()) {
+                sb.append("\t").append(header.getKey()).append(": ").append(value).append(System.lineSeparator());
+            }
+        }
+
+        initiater.details("With Response Headers:{}{}", System.lineSeparator(), sb);
+
+        // TODO If log this on failure then HttpResponseException above will cause java.io.IOException: stream is closed.
+        // Might not want to log this because could be very large.
+        // initiater.details("With Response:{}{}", System.lineSeparator(), asString());
+    }
+
+    private <T> boolean listContains(List<T> array, T targetValue) {
 		for (T s : array) {
 			if (s.equals(targetValue)) {
 				return true;

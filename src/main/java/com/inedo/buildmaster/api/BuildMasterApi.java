@@ -20,12 +20,9 @@ import com.inedo.buildmaster.domain.ApiPackage;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.http.HttpEasy;
 import com.inedo.http.JsonReader;
-import com.inedo.http.LogWriter;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsHelper;
-import com.inedo.jenkins.JenkinsTaskLogWriter;
-
-import hudson.model.TaskListener;
+import com.inedo.jenkins.JenkinsLogWriter;
 
 /**
  * BuildMaster json api interface
@@ -34,24 +31,20 @@ import hudson.model.TaskListener;
  */
 public class BuildMasterApi {
     private final BuildMasterConfig config;
-    private final LogWriter logWriter;
+    private final JenkinsLogWriter logWriter;
     
 	private boolean recordResult = false;
 	private String result = "";
 
-	public BuildMasterApi(TaskListener listener) {
-        this(GlobalConfig.getBuildMasterConfig(), new JenkinsTaskLogWriter(listener));
-        
+	public BuildMasterApi(JenkinsLogWriter listener) {
+	    this(GlobalConfig.getBuildMasterConfig(), listener);
+	    
         if (!GlobalConfig.validateBuildMasterConfig()) {
             JenkinsHelper.fail("Please configure BuildMaster Plugin global settings");
         }
-    }
-
-	public BuildMasterApi(LogWriter listener) {
-	    this(GlobalConfig.getBuildMasterConfig(), listener);
 	}
 
-	public BuildMasterApi(BuildMasterConfig config, LogWriter logWriter) {
+	public BuildMasterApi(BuildMasterConfig config, JenkinsLogWriter logWriter) {
 		this.config = config;
 		this.logWriter = logWriter;
 
@@ -59,7 +52,7 @@ public class BuildMasterApi {
 			.allowAllHosts()
 			.trustAllCertificates()
 			.baseUrl(config.url)
-			.withLogWriter(logWriter);
+			.listeners(logWriter);
 		
 		if (config.user != null && !config.user.isEmpty() && config.password != null && !config.password.isEmpty()) {
 			HttpEasy.withDefaults().authorization(config.user, config.password);
