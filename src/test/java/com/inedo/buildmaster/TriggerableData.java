@@ -1,18 +1,18 @@
 package com.inedo.buildmaster;
 
+import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
+import com.inedo.buildmaster.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.buildOption.WaitTillCompleted;
+
 /**
  * Data to inject into TriggerBuildHelper for testing
  * 
  * @author Andrew Sumner
  */
 public class TriggerableData implements Triggerable {
-	public boolean waitTillBuildCompleted = false;
-	public boolean printLogOnFailure = false;
-	public boolean setBuildVariables = false;
-	public boolean preserveVariables = false;
-	public String variables = null;
-	public boolean enableReleaseDeployable = false;
-	public String deployableId = null;
+	public WaitTillCompleted waitTillBuildCompleted = null;
+	public SetBuildVariables setBuildVariables = null;
+	public EnableReleaseDeployable enableReleaseDeployable = null;
 	public String applicationId;
 	public String releaseNumber;
 	public String buildNumber;
@@ -24,32 +24,28 @@ public class TriggerableData implements Triggerable {
 	}
 	
 	// Getters
-	public boolean getWaitTillBuildCompleted() {
+	public boolean isWaitTillBuildCompleted() {
+		return waitTillBuildCompleted != null;
+	}
+	
+	public WaitTillCompleted getWaitTillBuildCompleted() {
 		return waitTillBuildCompleted;
 	}
 
-	public boolean getPrintLogOnFailure() {
-		return printLogOnFailure;
+	public boolean isSetBuildVariables() {
+		return setBuildVariables != null;
 	}
-	
-	public boolean getSetBuildVariables() {
+
+	public SetBuildVariables getSetBuildVariables() {
 		return setBuildVariables;
 	}
 	
-	public boolean getPreserveVariables() {
-		return preserveVariables;
-	}
-	
-	public String getVariables() {
-		return variables;
+	public boolean isEnableReleaseDeployable() {
+		return enableReleaseDeployable != null;
 	}
 
-	public boolean getEnableReleaseDeployable() {
+	public EnableReleaseDeployable getEnableReleaseDeployable() {
 		return enableReleaseDeployable;
-	}
-	
-	public String getDeployableId() {
-		return deployableId;
 	}
 	
 	public String getApplicationId() {
@@ -65,38 +61,18 @@ public class TriggerableData implements Triggerable {
 	}
 	
 	// Setters
-	public TriggerableData setWaitTillBuildCompleted(boolean value) {
+	public TriggerableData setWaitTillBuildCompleted(WaitTillCompleted value) {
 		waitTillBuildCompleted = value;
 		return this;
 	}
 
-	public TriggerableData setPrintLogOnFailure(boolean value) {
-		printLogOnFailure = value;
-		return this;
-	}
-	
-	public TriggerableData setSetBuildVariables(boolean value) {
+	public TriggerableData setSetBuildVariables(SetBuildVariables value) {
 		setBuildVariables = value;
 		return this;
 	}
 	
-	public TriggerableData setPreserveVariables(boolean value) {
-		preserveVariables = value;
-		return this;
-	}
-	
-	public TriggerableData setVariables(String value) {
-		variables = value;
-		return this;
-	}
-
-	public TriggerableData setEnableReleaseDeployable(boolean value) {
+	public TriggerableData setEnableReleaseDeployable(EnableReleaseDeployable value) {
 		enableReleaseDeployable = value;
-		return this;
-	}
-	
-	public TriggerableData setDeployableId(String value) {
-		deployableId = value;
 		return this;
 	}
 	

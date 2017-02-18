@@ -1,17 +1,27 @@
 package com.inedo.buildmaster;
 
 import hudson.Launcher;
+import hudson.AbortException;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.util.FormValidation;
+import jenkins.tasks.SimpleBuildStep;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.model.AbstractProject;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
-import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+
+import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
+import com.inedo.buildmaster.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.buildOption.WaitTillCompleted;
 
 import java.io.IOException;
 
@@ -21,78 +31,65 @@ import java.io.IOException;
  *
  * @author Andrew Sumner
  */
-public class TriggerBuildBuilder extends Builder implements Triggerable {
-	private final boolean waitTillBuildCompleted;
-	private final boolean printLogOnFailure;
-	private final boolean setBuildVariables;
-	private final boolean preserveVariables;
-	private final String variables;
-	private final boolean enableReleaseDeployable;
-	private final String deployableId;
-	private final String applicationId;
-	private final String releaseNumber;
-	private final String buildNumber;
-
-	// Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
-	@DataBoundConstructor
-	public TriggerBuildBuilder(JSONObject waitTillBuildCompleted, JSONObject setBuildVariables, JSONObject enableReleaseDeployable, String applicationId, String releaseNumber, String buildNumber) {
-		if (waitTillBuildCompleted != null) { 
-			this.waitTillBuildCompleted = true; 
-			this.printLogOnFailure = "true".equalsIgnoreCase(waitTillBuildCompleted.getString("printLogOnFailure"));
-		} else { 
-			this.waitTillBuildCompleted = false; 
-			this.printLogOnFailure = false;
-		}
+public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Triggerable {
+	private WaitTillCompleted waitTillBuildCompleted = null;
+	private SetBuildVariables setBuildVariables = null;
+	private EnableReleaseDeployable enableReleaseDeployable = null;
 		
-		if (setBuildVariables != null) {
-			this.setBuildVariables = true;
-			this.preserveVariables = "true".equalsIgnoreCase(setBuildVariables.getString("preserveVariables"));
-			this.variables = setBuildVariables.getString("variables");
-		} else {
-			this.setBuildVariables = false;
-			this.preserveVariables = false;
-			this.variables = null;
-		}
-
-		if (enableReleaseDeployable != null) { 
-			this.enableReleaseDeployable = true; 
-			this.deployableId = enableReleaseDeployable.getString("deployableId");
-		} else { 
-			this.enableReleaseDeployable = false; 
-			this.deployableId = null;
-		}
-		
-		this.applicationId = applicationId;
-		this.releaseNumber = releaseNumber;
-		this.buildNumber = buildNumber;
+	private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
+	private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
+	private String buildNumber = "${BUILDMASTER_BUILD_NUMBER}";
+	    
+    @DataBoundConstructor
+	public TriggerBuildBuilder() {
 	}
 
-	public boolean getWaitTillBuildCompleted() {
+	@DataBoundSetter public final void setWaitTillBuildCompleted(WaitTillCompleted waitTillBuildCompleted) {
+		this.waitTillBuildCompleted  = waitTillBuildCompleted;
+    }
+	
+	@DataBoundSetter public final void setSetBuildVariables(SetBuildVariables setBuildVariables) {
+		this.setBuildVariables = setBuildVariables;
+    }
+	
+	@DataBoundSetter public final void setEnableReleaseDeployable(EnableReleaseDeployable enableReleaseDeployable) {
+		this.enableReleaseDeployable = enableReleaseDeployable;
+    }
+	
+	@DataBoundSetter public final void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
+    }
+	
+	@DataBoundSetter public final void setReleaseNumber(String releaseNumber) {
+        this.releaseNumber = releaseNumber;
+    }
+			
+	@DataBoundSetter public final void setBuildNumber(String buildNumber) {
+        this.buildNumber = buildNumber;
+    }
+	
+	public boolean isWaitTillBuildCompleted() {
+		return waitTillBuildCompleted != null;
+	}
+
+	public WaitTillCompleted getWaitTillBuildCompleted() {
 		return waitTillBuildCompleted;
 	}
 
-	public boolean getPrintLogOnFailure() {
-		return printLogOnFailure;
+	public boolean isSetBuildVariables() {
+		return setBuildVariables != null;
 	}
 	
-	public boolean getSetBuildVariables() {
+	public SetBuildVariables getSetBuildVariables() {
 		return setBuildVariables;
 	}
 	
-	public boolean getPreserveVariables() {
-		return preserveVariables;
+	public boolean isEnableReleaseDeployable() {
+		return enableReleaseDeployable != null;
 	}
 	
-	public String getVariables() {
-		return variables;
-	}
-
-	public boolean getEnableReleaseDeployable() {
+	public EnableReleaseDeployable getEnableReleaseDeployable() {
 		return enableReleaseDeployable;
-	}
-	
-	public String getDeployableId() {
-		return deployableId;
 	}
 	
 	public String getApplicationId() {
@@ -106,12 +103,15 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 	public String getBuildNumber() {
 		return buildNumber;
 	}
-	
+		
 	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-		return BuildHelper.triggerBuild(build, listener, this);
+	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+		if (!BuildHelper.triggerBuild(run, listener, this)) {
+			throw new AbortException();
+		}
 	}
-
+	 
+	@Symbol("buildMasterTriggerBuild")
 	@Extension
 	// This indicates to Jenkins that this is an implementation of an extension
 	// point.
@@ -120,11 +120,6 @@ public class TriggerBuildBuilder extends Builder implements Triggerable {
 			super(TriggerBuildBuilder.class);
 		}
 
-//		@Override
-//		public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-//			return req.bindJSON(TriggerBuildBuildStep.class, formData);
-//		}
-		
 		@SuppressWarnings("rawtypes")
 		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
 			// Indicates that this builder can be used with all kinds of project types

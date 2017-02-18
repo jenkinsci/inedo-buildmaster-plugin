@@ -25,6 +25,9 @@ import hudson.model.AbstractProject;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
+import com.inedo.buildmaster.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.buildOption.WaitTillCompleted;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
@@ -103,8 +106,7 @@ public class TriggerBuildHelperTest {
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
 		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
-			.setWaitTillBuildCompleted(true)
-			.setPrintLogOnFailure(true);
+			.setWaitTillBuildCompleted(new WaitTillCompleted(true));
 		
 		restLog();
 		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
@@ -116,9 +118,7 @@ public class TriggerBuildHelperTest {
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
 		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
-			.setSetBuildVariables(true)
-			.setVariables("hello=performSetVariables")
-			.setPreserveVariables(false);
+			.setSetBuildVariables(new SetBuildVariables(false, "hello=performSetVariables"));
 		
 		restLog();
 		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
@@ -127,8 +127,7 @@ public class TriggerBuildHelperTest {
 		assertThat("Variable passed", log, containsString("performSetVariables"));
 		assertThat("Variable passed", log, not(containsString("trying")));
 		
-		data.setPreserveVariables(true);
-		data.setVariables("trying=again");
+		data.setSetBuildVariables(new SetBuildVariables(true, "trying=again"));
 		
 		restLog();
 		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
@@ -141,8 +140,7 @@ public class TriggerBuildHelperTest {
 	@Test
 	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
 		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
-			.setEnableReleaseDeployable(true)
-			.setDeployableId("2077");
+			.setEnableReleaseDeployable(new EnableReleaseDeployable("2077"));
 		
 		restLog();
 		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));

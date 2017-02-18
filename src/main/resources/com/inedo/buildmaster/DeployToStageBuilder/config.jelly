@@ -13,18 +13,14 @@
     <f:textbox />
   </f:entry>
 
-  <f:optionalBlock title="Wait Till Build Completed" field="waitTillBuildCompleted" >
-    <f:entry title="Show BuildMaster Log on Failure" field="printLogOnFailure" >
-      <f:checkbox default="false" />
-    </f:entry>
-  </f:optionalBlock>
-
+  <f:optionalProperty title="Wait Till Build Completed" field="waitTillBuildCompleted" />
+  
   <f:advanced title="Advanced Settings">
     <f:entry title="Application" field="applicationId" >
-      <f:textbox default="$${BUILDMASTER_APPLICATION_ID}" />
+      <f:textbox default="${descriptor.defaultApplicationId}" />
     </f:entry>
     <f:entry title="Release" field="releaseNumber" >
-      <f:textbox default="$${BUILDMASTER_RELEASE_NUMBER}" />
+      <f:textbox default="${descriptor.defaultReleaseNumber}" />
     </f:entry>
     <f:entry title="Build Number" field="buildNumber" >
       <f:textbox default="${descriptor.defaultBuildNumber}" />

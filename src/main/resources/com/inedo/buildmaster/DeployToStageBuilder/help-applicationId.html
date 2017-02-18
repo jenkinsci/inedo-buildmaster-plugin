@@ -1,3 +1,6 @@
 <div>
-  The Id of the BuildMaster application to trigger the build for.  Defaults to the BUILDMASTER_APPLICATION variable populated by the "Select BuildMaster Application" action.
+ The BuildMaster Application Id to trigger the build for.  If the field is empty then assumes the "Select BuildMaster Application" action has been used 
+ to provide the value and will look this up using the expression "${BUILDMASTER_APPLICATION_ID}". 
+     
+ <p>This setting would only be altered if not using the "Select BuildMaster Application" action.</p>
 </div>

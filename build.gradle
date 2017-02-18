@@ -11,14 +11,8 @@
  *
  */
 
-buildscript {
-    repositories {
-		maven { url 'http://repo1.maven.org/maven2' }
-	}
-}
-
 plugins {
-  id 'org.jenkins-ci.jpi' version '0.18.1'
+  id 'org.jenkins-ci.jpi' version '0.21.0'
 }
 
 apply plugin: 'java'
@@ -31,7 +25,7 @@ version = '1.7-SNAPSHOT'
 description = 'Inedo BuildMaster Plugin'
 
 ext {
-	jenkinsVersion='1.642.3'
+	jenkinsVersion='2.32.1'
 }
 
 jenkinsPlugin {
@@ -49,8 +43,7 @@ jenkinsPlugin {
 }
 
 repositories {
-    maven { url 'http://repo1.maven.org/maven2' }
-	// jcenter()
+    jcenter()
 }
 
 dependencies {

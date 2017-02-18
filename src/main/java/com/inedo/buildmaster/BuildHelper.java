@@ -2,6 +2,8 @@ package com.inedo.buildmaster;
 
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,8 +25,8 @@ import com.inedo.jenkins.VariableInjectionAction;
 public class BuildHelper {
 	public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}"; 
 		
-	public static boolean triggerBuild(AbstractBuild<?, ?> build, BuildListener listener, Triggerable trigger) throws IOException, InterruptedException {
-	    JenkinsHelper helper = new JenkinsHelper(build, listener);
+	public static boolean triggerBuild(Run<?, ?> run, TaskListener listener, Triggerable trigger) throws IOException, InterruptedException {
+		JenkinsHelper helper = new JenkinsHelper(run, listener);
                 
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 		
@@ -36,9 +38,11 @@ public class BuildHelper {
 		// one is being performed.
 		buildmaster.waitForExistingBuildStepToComplete(applicationId, releaseNumber);
 		
-		Map<String, String> variablesList = getVariablesListExpanded(build, listener, trigger.getVariables());
+		Map<String, String> variablesList = new HashMap<>();
 				
-		if (trigger.getPreserveVariables()) {
+		if (trigger.isSetBuildVariables() && trigger.getSetBuildVariables().isPreserveVariables()) {
+			variablesList = getVariablesListExpanded(run, listener, trigger.getSetBuildVariables().getVariables());
+			
 		    helper.getLogWriter().info("Gather previous builds build variables");
 			String prevBuildNumber = buildmaster.getPreviousPackageNumber(applicationId, releaseNumber);			
 			ApiVariable[] variables = buildmaster.getPackageVariables(applicationId, releaseNumber, prevBuildNumber);
@@ -50,8 +54,8 @@ public class BuildHelper {
 			}
 		}
 		
-		if (trigger.getEnableReleaseDeployable()) {
-			String deployableId = helper.expandVariable(trigger.getDeployableId());
+		if (trigger.isEnableReleaseDeployable()) {
+			String deployableId = helper.expandVariable(trigger.getEnableReleaseDeployable().getDeployableId());
 			helper.getLogWriter().info("Enable release deployable with id=" + deployableId);
 			
 			buildmaster.enableReleaseDeployable(applicationId, releaseNumber, Integer.valueOf(deployableId));			
@@ -71,12 +75,12 @@ public class BuildHelper {
 			apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList);
 			
 			helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.number);
-			build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.number));
+			run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.number));
 		}
 		
-		if (trigger.getWaitTillBuildCompleted()) {
+		if (trigger.isWaitTillBuildCompleted()) {
 			helper.getLogWriter().info("Wait till build completed");
-			return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, apiPackage.number, trigger.getPrintLogOnFailure());
+			return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, apiPackage.number, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure());
 		}
 
 		return true;
@@ -98,8 +102,8 @@ public class BuildHelper {
 //		return expanded;
 //	}
 
-	public static Map<String, String> getVariablesListExpanded(AbstractBuild<?, ?> build, BuildListener listener, String variables) throws IOException {
-	    JenkinsHelper helper = new JenkinsHelper(build, listener);
+	public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) throws IOException {
+	    JenkinsHelper helper = new JenkinsHelper(run, listener);
 		Map<String, String> variablesList = getVariablesList(variables);
 		
 		for (Map.Entry<String, String> variable : variablesList.entrySet())
@@ -135,8 +139,8 @@ public class BuildHelper {
 		return variablesList;
 	}
 
-    public static boolean deployToStage(AbstractBuild<?, ?> build, BuildListener listener, DeployToStageBuilder builder) throws IOException, InterruptedException {
-        JenkinsHelper helper = new JenkinsHelper(build, listener);
+    public static boolean deployToStage(Run<?, ?> run, TaskListener listener, DeployToStageBuilder builder) throws IOException, InterruptedException {
+        JenkinsHelper helper = new JenkinsHelper(run, listener);
         
         if (!GlobalConfig.validateBuildMasterConfig()) {
             helper.getLogWriter().error("Please configure BuildMaster Plugin global settings");
@@ -165,9 +169,9 @@ public class BuildHelper {
 //        helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.number);
 //        build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.number));
         
-        if (builder.getWaitTillBuildCompleted()) {
+        if (builder.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till build completed");
-            return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, buildNumber, builder.getPrintLogOnFailure());
+            return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, buildNumber, builder.getWaitTillBuildCompleted().isPrintLogOnFailure());
         }
 
         return true;

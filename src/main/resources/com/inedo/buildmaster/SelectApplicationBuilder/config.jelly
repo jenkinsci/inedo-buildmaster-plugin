@@ -28,7 +28,7 @@
     </j:choose>
   </f:entry>
   
-  <f:entry title="Build Number" field="buildNumberSource">
+  <f:entry title="Build Number Source" field="buildNumberSource">
     <f:select default="BUILDMASTER"/>
   </f:entry>
   

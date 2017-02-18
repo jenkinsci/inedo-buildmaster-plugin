@@ -1,58 +1,75 @@
 package com.inedo.buildmaster;
 
 import hudson.Launcher;
+import hudson.AbortException;
 import hudson.Extension;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.model.AbstractProject;
 import hudson.tasks.Builder;
+import jenkins.tasks.SimpleBuildStep;
 import hudson.tasks.BuildStepDescriptor;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
+import com.inedo.buildmaster.buildOption.WaitTillCompleted;
+
 import java.io.IOException;
 
 /**
  * Deploy a package to the requested stage in BuildMaster.
  *
+ * See https://github.com/jenkinsci/pipeline-plugin/blob/master/DEVGUIDE.md#user-content-build-wrappers-1 for tips on 
+ * Jenkins pipeline support 
+ * 
  * @author Andrew Sumner
  */
-public class DeployToStageBuilder extends Builder {
-	private final String toStage;
-	private final boolean waitTillBuildCompleted;
-    private final boolean printLogOnFailure;
-	private final String applicationId;
-	private final String releaseNumber;
-	private final String buildNumber;
+public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
+	private String toStage = "";
+	private WaitTillCompleted waitTillBuildCompleted = null;
+	private String applicationId = DescriptorImpl.defaultApplicationId;
+	private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
+	private String buildNumber = DescriptorImpl.defaultBuildNumber;
 
 	// Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
 	@DataBoundConstructor
-	public DeployToStageBuilder(String toStage, JSONObject waitTillBuildCompleted, String applicationId, String releaseNumber, String buildNumber) {
-		this.toStage = toStage;
-		
-		if (waitTillBuildCompleted != null) { 
-            this.waitTillBuildCompleted = true; 
-            this.printLogOnFailure = "true".equalsIgnoreCase(waitTillBuildCompleted.getString("printLogOnFailure"));
-        } else { 
-            this.waitTillBuildCompleted = false; 
-            this.printLogOnFailure = false;
-        }
-		
-		this.applicationId = applicationId;
-		this.releaseNumber = releaseNumber;
-		this.buildNumber = buildNumber;
+	public DeployToStageBuilder() {
 	}
 
+	@DataBoundSetter public final void setToStage(String toStage) {
+		this.toStage = toStage;
+    }
+	
+	@DataBoundSetter public final void setWaitTillBuildCompleted(WaitTillCompleted waitTillBuildCompleted) {
+		this.waitTillBuildCompleted  = waitTillBuildCompleted;
+    }
+	
+	@DataBoundSetter public final void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
+    }
+	
+	@DataBoundSetter public final void setReleaseNumber(String releaseNumber) {
+        this.releaseNumber = releaseNumber;
+    }
+		
+	@DataBoundSetter public final void setBuildNumber(String buildNumber) {
+        this.buildNumber = buildNumber;
+    }
+	
 	public String getToStage() {
 		return toStage;
 	}
 	
-	public boolean getWaitTillBuildCompleted() {
-        return waitTillBuildCompleted;
-    }
+	public boolean isWaitTillBuildCompleted() {
+		return waitTillBuildCompleted != null;
+	}
 
-    public boolean getPrintLogOnFailure() {
-        return printLogOnFailure;
+	public WaitTillCompleted getWaitTillBuildCompleted() {
+        return waitTillBuildCompleted;
     }
     
 	public String getApplicationId() {
@@ -68,14 +85,21 @@ public class DeployToStageBuilder extends Builder {
 	}
 	
 	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-		return BuildHelper.deployToStage(build, listener, this);
+	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+		if (!BuildHelper.deployToStage(run, listener, this)) {
+			throw new AbortException();
+		}
 	}
 
+	@Symbol("buildMasterDeployToStage")
 	@Extension
 	// This indicates to Jenkins that this is an implementation of an extension
 	// point.
 	public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+		public static final String defaultApplicationId = "${BUILDMASTER_APPLICATION_ID}";
+		public static final String defaultReleaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
+		public static final String defaultBuildNumber = BuildHelper.DEFAULT_BUILD_NUMBER;
+				
 		public DescriptorImpl() {
 			super(DeployToStageBuilder.class);
 		}
@@ -89,10 +113,6 @@ public class DeployToStageBuilder extends Builder {
 		@Override
 		public String getDisplayName() {
 			return "BuildMaster: Deploy To Stage";
-		}
-				
-		public String getDefaultBuildNumber() {
-			return BuildHelper.DEFAULT_BUILD_NUMBER;
 		}
 	}
 }

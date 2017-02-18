@@ -1,4 +1,7 @@
 <div>
-  The BuildMaster release number to trigger the build for.  Defaults to the BUILDMASTER_RELEASE_NUMBER variable populated by the 
-  "Select BuildMaster Application" action.  The job will fail if there is no active BuildMaster release.
+ The BuildMaster release number to trigger the build for.  If the field is empty then assumes the "Select BuildMaster Application" action has been used 
+ to provide the value and will look this up using the expression "${BUILDMASTER_RELEASE_NUMBER}".
+ 
+ <p>The job will fail if there is no active BuildMaster release.</p>
+ <p>This setting would only be altered if not using the "Select BuildMaster Application" action.</p>
 </div>
