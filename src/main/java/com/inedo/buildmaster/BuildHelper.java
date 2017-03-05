@@ -12,6 +12,7 @@ import java.util.Map;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiPackage;
 import com.inedo.buildmaster.domain.ApiVariable;
+import com.inedo.buildmaster.domain.Application;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsHelper;
 import com.inedo.jenkins.VariableInjectionAction;
@@ -33,6 +34,11 @@ public class BuildHelper {
 		String applicationId = helper.expandVariable(trigger.getApplicationId());
 		String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
 		String buildNumber = helper.expandVariable(trigger.getBuildNumber());
+		
+		if (buildmaster.getApplication(applicationId) == null) {
+			helper.fail("Unknown application id " +  applicationId);
+			return false;
+		}
 		
 		// This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing
 		// one is being performed.
@@ -154,6 +160,11 @@ public class BuildHelper {
         String buildNumber = helper.expandVariable(builder.getBuildNumber());
         String toStage = helper.expandVariable(builder.getToStage());
 
+        if (buildmaster.getApplication(applicationId) == null) {
+			helper.fail("Unknown application id " +  applicationId);
+			return false;
+		}
+        
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing
         // one is being performed.
         buildmaster.waitForExistingBuildStepToComplete(applicationId, releaseNumber);

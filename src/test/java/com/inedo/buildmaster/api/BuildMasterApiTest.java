@@ -17,6 +17,8 @@ import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
 
+import net.sf.json.test.JSONAssert;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -30,7 +32,8 @@ import org.junit.Test;
 /**
  * Tests for the BuildMasterClientApache class
  * 
- * TODO: There is timing issue when running all tests against a live server as tests randomly fail.  Running one at a time works fine.   
+ * TODO: There is timing issue when running all tests against a live server as tests randomly fail.  Running one at a time works fine.
+ * TODO: Checking json currently checking string rather than structure, should also check class properties has values in json   
  * 
  * @author Andrew Sumner
  */
@@ -89,8 +92,8 @@ public class BuildMasterApiTest {
 	@Test
 	public void getApplications() throws IOException  {
     	Application[] applications = buildmaster.getApplications();
-    	
-    	//assertThat("API Structure has not changed", Application.getExampleArray(), is(buildmaster.getLastResult()));
+
+    	assertThat("API Structure has not changed", Application.getExampleArray(), is(buildmaster.getLastResult()));
     	assertThat("Expect BuildMaster to have applications created", applications.length, is(greaterThan(0)));
 	}
 	
@@ -98,8 +101,8 @@ public class BuildMasterApiTest {
 	public void getApplication() throws IOException  {
     	Application application = buildmaster.getApplication(TestConfig.getApplicationid());
     	
-    	//assertThat("API Structure has not changed", Application.getExampleSingle(), is(buildmaster.getLastResult()));
-    	assertThat("Expect BuildMaster to have sample application", application.Application_Name, is("Sample"));
+    	assertThat("API Structure has not changed", Application.getExampleSingle(), is(buildmaster.getLastResult()));
+    	assertThat("Expect BuildMaster to have sample application", application.Application_Name, is("Example"));
 	}
 	
 	@Test
@@ -153,12 +156,18 @@ public class BuildMasterApiTest {
 	}
 	
 	@Test
+	public void getLatestActiveReleaseNumber() throws IOException {
+		String release = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
+		
+		assertThat("Expect Test Application to have an active release", release.length(), is(greaterThan(0)));
+	}
+	
+	@Test
 	public void getRelease() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		ReleaseDetails release = buildmaster.getRelease(TestConfig.getApplicationid(), releaseNumber);
 
-		//TODO Check structure of JSON rather than values: have some code in 
-		//assertThat("API Structure has not changed", Deployable.getExampleArray(), is(buildmaster.getLastResult()));
+		assertThat("API Structure has not changed", ReleaseDetails.getExampleSingle(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test Application to have active release", release.Releases_Extended.length, is(greaterThan(0)));
 
 		String status = release.Releases_Extended[0].ReleaseStatus_Name;
@@ -170,6 +179,7 @@ public class BuildMasterApiTest {
 	public void getActiveReleases() throws IOException {
 		Release[] releases = buildmaster.getActiveReleases(TestConfig.getApplicationid());
 		
+		assertThat("API Structure has not changed", Release.getExampleArray(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test Application to have active release(s)", releases.length, is(greaterThan(0)));
 	}
 
@@ -180,14 +190,8 @@ public class BuildMasterApiTest {
 		
 		ApiVariable[] variables = buildmaster.getPackageVariables(TestConfig.getApplicationid(), releaseNumber, testPackageNumber);
 		
+		assertThat("API Structure has not changed", ApiVariable.getExampleArray(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test previous build to have variables defined", variables.length, is(greaterThan(0)));
-	}
-	
-	@Test
-	public void getLatestActiveReleaseNumber() throws IOException {
-		String release = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		
-		assertThat("Expect Test Application to have an active release", release.length(), is(greaterThan(0)));
 	}
 	
 	@Test
@@ -195,9 +199,8 @@ public class BuildMasterApiTest {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		Integer nextPackageNumber = Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber));
 		
+		assertThat("API Structure has not changed", Build.getExampleArray(), is(buildmaster.getLastResult()));
 		assertThat("Expect nextPackageNumber to be greate than zero", nextPackageNumber , is(greaterThan(0)));
-		
-//		System.out.println("nextPackageNumber: " + nextPackageNumber);
 	}
 	
 	@Test
@@ -224,9 +227,8 @@ public class BuildMasterApiTest {
 		
 		Build build = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
+		assertThat("API Structure has not changed", Build.getExampleSingle(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test Application to have build number " + packageNumber, build.Build_Number.length() , is(greaterThan(0)));
-		
-//		System.out.println("Current_ExecutionStatus_Name for build " + packageNumber + " is " + build.Current_ExecutionStatus_Name);
 	}
 	
 	@Test
@@ -264,7 +266,7 @@ public class BuildMasterApiTest {
 		
 //		System.out.println(outContent.toString());
 	}
-	
+
 	/*
 	 * Checks what would happen if several Jenkins jobs trigger the same application at similar times
 	 * 

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Variable
 {
+	//TODO Should be in file
 	public static final String EXAMPLE =
 			"[" +
 			"  { \"Variable_Name\": \"cause\", \"Value_Text\": \"unit test\", \"Scope_Code\": \"B\", \"Sensitive_Indicator\": \"N\"}," +

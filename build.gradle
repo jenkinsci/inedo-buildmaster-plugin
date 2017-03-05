@@ -33,6 +33,7 @@ jenkinsPlugin {
     displayName = 'Inedo BuildMaster Plugin.'
     url = 'http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/inedo-buildmaster-plugin'
+    compatibleSinceVersion = '1.7'
     developers {
         developer {
             id 'andrew-sumner'

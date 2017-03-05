@@ -83,11 +83,11 @@ public class MockServer {
 				break;	
 				
 			case "Releases_GetReleases":
-				response.setEntity(new StringEntity(Release.EXAMPLE));
+				response.setEntity(new StringEntity(Release.getExampleArray()));
 				break;
 			
 			case "Releases_GetRelease": 
-				response.setEntity(new StringEntity(ReleaseDetails.EXAMPLE));
+				response.setEntity(new StringEntity(ReleaseDetails.getExampleSingle()));
 				break;
 				
 			case "Releases_CreateOrUpdateRelease":
@@ -95,11 +95,11 @@ public class MockServer {
 				break;
 				
 			case "Builds_GetBuilds": 
-				response.setEntity(new StringEntity(Build.EXAMPLE));
+				response.setEntity(new StringEntity(Build.getExampleArray()));
 				break;
 				
 			case "Builds_GetBuild":
-				response.setEntity(new StringEntity(Build.EXAMPLE));
+				response.setEntity(new StringEntity(Build.getExampleSingle()));
 				break;				
 				
 			case "Builds_CreateBuild":

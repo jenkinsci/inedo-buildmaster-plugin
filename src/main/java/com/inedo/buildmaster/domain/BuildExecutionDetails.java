@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class BuildExecutionDetails
 {
+	//TODO Should be in file
 	public static final String EXAMPLE = 
 			"{" +
 			"\"BuildExecutions_Extended\": " +

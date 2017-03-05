@@ -1,0 +1,31 @@
+[
+  {
+    "Release_Id": 1,
+    "Release_Number": "0.0.1",
+    "Build_Id": 6,
+    "Build_Number": "6",
+    "BuildStatus_Name": "Active",
+    "Release_Name": "0.0.1",
+    "Build_Sequence": 6,
+    "Pipeline_Id": 1,
+    "Pipeline_Name": "Example",
+    "ReleaseStatus_Name": "Active",
+    "Release_Sequence": 1,
+    "CreatedBy_User_Name": "SYSTEM",
+    "CreatedOn_Date": "2017-02-26T00:23:46.35",
+    "ModifiedBy_User_Name": "SYSTEM",
+    "ModifiedOn_Date": "2017-02-26T00:23:46.35",
+    "Application_Id": 1,
+    "Application_Name": "Example",
+    "Latest_Promotion_Id": 6,
+    "Latest_Promotion_Date": "2017-02-26T00:23:46.36",
+    "Latest_Promotion_Status": "Completed",
+    "Latest_PipelineStage_Name": "Integration",
+    "Furthest_PipelineStage_Name": "Integration",
+    "Latest_Execution_Id": 6,
+    "Latest_Execution_Environment_Id": 1,
+    "Latest_Execution_Environment_Name": "Integration",
+    "Latest_Execution_RunState_Code": "C",
+    "Latest_Execution_Status_Code": "S"
+  }
+]

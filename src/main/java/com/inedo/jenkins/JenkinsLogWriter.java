@@ -3,7 +3,7 @@ package com.inedo.jenkins;
 import com.inedo.http.HttpEasyListener;
 
 public abstract class JenkinsLogWriter implements HttpEasyListener {
-	static final String LOG_PREFIX = "[ProGet] ";
+	static final String LOG_PREFIX = "[BuildMaster] ";
 	
 	public abstract void info(String message);
 	
