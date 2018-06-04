@@ -1,10 +1,8 @@
 package com.inedo.buildmaster;
 
 import java.io.IOException;
-import javax.servlet.ServletException;
 
-import jenkins.model.GlobalConfiguration;
-import net.sf.json.JSONObject;
+import javax.servlet.ServletException;
 
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -17,6 +15,8 @@ import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import jenkins.model.GlobalConfiguration;
+import net.sf.json.JSONObject;
 
 /**
  * Has fields for global configuration
@@ -36,9 +36,10 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
          * If you don't want fields to be persisted, use <tt>transient</tt>.
          */
     	private String url;
-    	private String user;
-        private Secret password;
         private String apiKey;
+        private String user;
+        private Secret password;
+        private boolean trustAllCertificates;
         
         public DescriptorImpl() {
             super(BuildMasterConfiguration.class);
@@ -67,6 +68,10 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             url = value;
         }
 
+        public void setApiKey(String value) {
+            apiKey = value;
+        }
+
         public void setUser(String value) {
             user = value;
         }
@@ -75,8 +80,8 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             password = Secret.fromString(value);
         }
         
-        public void setApiKey(String value) {
-            apiKey = value;
+        public void setTrustAllCertificates(boolean value) {
+            trustAllCertificates = value;
         }
         
         /**
@@ -86,6 +91,10 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             return url;
         }
         
+        public String getApiKey() {
+            return apiKey;
+        }
+
         public String getUser() {
             return user;
         }
@@ -94,8 +103,8 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             return Secret.toString(password);
         }
         
-        public String getApiKey() {
-            return apiKey;
+        public boolean getTrustAllCertificates() {
+            return trustAllCertificates;
         }
         
         public boolean validatePluginConfiguration() {
@@ -147,24 +156,26 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
          *  BuildMaster connection test
          */
 		public FormValidation doTestConnection(
-			@QueryParameter("url") final String url,
-			@QueryParameter("user") final String user,
-			@QueryParameter("password") final String password,
-			@QueryParameter("apiKey") final String apiKey) throws IOException, ServletException {
+                @QueryParameter("url") final String url,
+                @QueryParameter("apiKey") final String apiKey,
+                @QueryParameter("user") final String user,
+                @QueryParameter("password") final String password,
+                @QueryParameter("trustAllCertificates") final boolean trustAllCertificates) throws IOException, ServletException {
 	
 			BuildMasterConfig config = new BuildMasterConfig();
 			
 			config.url = url;
+            config.apiKey = apiKey;
 			config.user = user;
 			config.password = password;
-			config.apiKey = apiKey;
+            config.trustAllCertificates = trustAllCertificates;
 			
 			BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
 			
 			try {
 				buildmaster.checkConnection();
 			} catch (Exception ex) {
-				return FormValidation.error(url + "." + apiKey + "." + user + password + "Failed. Please check the configuration. " + ex.getClass().getName() + ": " + ex.getMessage());
+                return FormValidation.error("Failed. Please check the configuration. " + ex.getClass().getName() + ": " + ex.getMessage());
 			}
 			
 			return FormValidation.ok("Success. Connection with BuildMaster verified.");			
@@ -174,9 +185,10 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 			BuildMasterConfig config = new BuildMasterConfig();
    		 
 			config.url = url;
+            config.apiKey = apiKey;
 			config.user = user;
 			config.password = Secret.toString(password);
-			config.apiKey = apiKey;
+            config.trustAllCertificates = trustAllCertificates;
 			
     		return config;
 		}

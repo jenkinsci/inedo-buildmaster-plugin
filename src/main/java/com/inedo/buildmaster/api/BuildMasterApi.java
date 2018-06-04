@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
+import com.inedo.buildmaster.domain.ApiDeployment;
+import com.inedo.buildmaster.domain.ApiPackage;
+import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ApplicationDetail;
 import com.inedo.buildmaster.domain.Build;
@@ -15,9 +18,6 @@ import com.inedo.buildmaster.domain.BuildExecution;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
-import com.inedo.buildmaster.domain.ApiDeployment;
-import com.inedo.buildmaster.domain.ApiPackage;
-import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.http.HttpEasy;
 import com.inedo.http.JsonReader;
 import com.inedo.jenkins.GlobalConfig;
@@ -49,10 +49,14 @@ public class BuildMasterApi {
 		this.logWriter = logWriter;
 
 		HttpEasy.withDefaults()
-			.allowAllHosts()
-			.trustAllCertificates()
-			.baseUrl(config.url)
-			.listeners(logWriter);
+                .baseUrl(config.url)
+                .listeners(logWriter);
+
+        if (config.trustAllCertificates) {
+            HttpEasy.withDefaults()
+                    .allowAllHosts()
+                    .trustAllCertificates();
+        }
 		
 		if (config.user != null && !config.user.isEmpty() && config.password != null && !config.password.isEmpty()) {
 			HttpEasy.withDefaults().authorization(config.user, config.password);
