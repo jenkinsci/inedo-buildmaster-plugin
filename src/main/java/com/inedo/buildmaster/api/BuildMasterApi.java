@@ -50,13 +50,8 @@ public class BuildMasterApi {
 
 		HttpEasy.withDefaults()
                 .baseUrl(config.url)
-                .listeners(logWriter);
-
-        if (config.trustAllCertificates) {
-            HttpEasy.withDefaults()
-                    .allowAllHosts()
-                    .trustAllCertificates();
-        }
+                .listeners(logWriter)
+                .trustAllCertificates(config.trustAllCertificates);
 		
 		if (config.user != null && !config.user.isEmpty() && config.password != null && !config.password.isEmpty()) {
 			HttpEasy.withDefaults().authorization(config.user, config.password);

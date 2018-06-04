@@ -23,6 +23,7 @@ public class TestConfig {
     private static String apiKey;
     private static String username;
     private static String password;
+    private static boolean trustAllCertificates;
     private static String applicationId;
 
     /** Ensure properties have been loaded before any property is used. */
@@ -44,6 +45,7 @@ public class TestConfig {
         apiKey = getOptionalProperty(prop, "apiKey");
         username = getOptionalProperty(prop, "username");
         password = getOptionalProperty(prop, "password");
+        trustAllCertificates = Boolean.parseBoolean(getOptionalProperty(prop, "trustAllCertificates"));
         applicationId = getOptionalProperty(prop, "applicationId");
     }
 
@@ -151,7 +153,7 @@ public class TestConfig {
         config.apiKey = apiKey;
         config.user = username;
         config.password = password;
-        //config.printStream = ?
+        config.trustAllCertificates = trustAllCertificates;
         
         return config;
     }
