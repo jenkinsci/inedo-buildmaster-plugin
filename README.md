@@ -34,7 +34,7 @@ On importing the project to your IDE, the required dependencies will be download
 
 ## Manual
 
-To spin up a Jenkins instance with this plugin installed for manual testing, run `gradlew clean server` (see "building the plugin" above). The Jenkins instance will be available at http://localhost:8080.  You may need to specify a path to your JDK, if so use `gradlew clean server -Dorg.gradle.java.home=/JDK_PATH`
+To spin up a Jenkins instance with this plugin installed for manual testing, run `gradlew clean server` (see "building the plugin" above). The Jenkins instance will be available at http://localhost:8080. You may need to specify a path to your JDK, if so use `gradlew clean server -Dorg.gradle.java.home=/JDK_PATH`
 
 To login the username will be admin and the password can be found in <project root>/work/secrets/initialAdminPassword
 
@@ -56,7 +56,7 @@ See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster
 1. In Jenkins create a Pipeline job called test-pipleline and configure as for the free style job
 
 
-# Automated
+## Automated
 
 Update <project root>/test.properties with the required details and run the tests.  If useMockServer is false then the tests will be run against the installed application, if true it will run against a mock server.  While the mock server is useful for unit testing, the real service is required to test the plugin against application upgrades.
 

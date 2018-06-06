@@ -1,10 +1,5 @@
 package com.inedo.buildmaster;
 
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,10 +7,12 @@ import java.util.Map;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiPackage;
 import com.inedo.buildmaster.domain.ApiVariable;
-import com.inedo.buildmaster.domain.Application;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsHelper;
 import com.inedo.jenkins.VariableInjectionAction;
+
+import hudson.model.Run;
+import hudson.model.TaskListener;
 
 /**
  * Does the real work of Trigger a BuildMaster build, has been seperated out from the Builder and Publisher actions
@@ -36,7 +33,7 @@ public class BuildHelper {
 		String buildNumber = helper.expandVariable(trigger.getBuildNumber());
 		
 		if (buildmaster.getApplication(applicationId) == null) {
-			helper.fail("Unknown application id " +  applicationId);
+            JenkinsHelper.fail("Unknown application id " + applicationId);
 			return false;
 		}
 		
@@ -161,7 +158,7 @@ public class BuildHelper {
         String toStage = helper.expandVariable(builder.getToStage());
 
         if (buildmaster.getApplication(applicationId) == null) {
-			helper.fail("Unknown application id " +  applicationId);
+            JenkinsHelper.fail("Unknown application id " + applicationId);
 			return false;
 		}
         

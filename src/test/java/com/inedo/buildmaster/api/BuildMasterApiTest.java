@@ -1,23 +1,8 @@
 package com.inedo.buildmaster.api;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-
-import com.inedo.buildmaster.api.BuildMasterApi;
-import com.inedo.buildmaster.domain.ApiPackage;
-import com.inedo.buildmaster.domain.ApiVariable;
-import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.domain.Build;
-import com.inedo.buildmaster.domain.Release;
-import com.inedo.buildmaster.domain.Deployable;
-import com.inedo.buildmaster.domain.ReleaseDetails;
-import com.inedo.http.HttpEasy;
-import com.inedo.jenkins.GlobalConfig;
-import com.inedo.jenkins.JenkinsConsoleLogWriter;
-import com.inedo.utils.MockServer;
-import com.inedo.utils.TestConfig;
-
-import net.sf.json.test.JSONAssert;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,9 +10,22 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.concordion.cubano.driver.http.HttpEasy;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.inedo.buildmaster.domain.ApiPackage;
+import com.inedo.buildmaster.domain.ApiVariable;
+import com.inedo.buildmaster.domain.Application;
+import com.inedo.buildmaster.domain.Build;
+import com.inedo.buildmaster.domain.Deployable;
+import com.inedo.buildmaster.domain.Release;
+import com.inedo.buildmaster.domain.ReleaseDetails;
+import com.inedo.jenkins.GlobalConfig;
+import com.inedo.jenkins.JenkinsConsoleLogWriter;
+import com.inedo.utils.MockServer;
+import com.inedo.utils.TestConfig;
 
 /**
  * Tests for the BuildMasterClientApache class

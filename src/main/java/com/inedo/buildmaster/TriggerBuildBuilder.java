@@ -1,18 +1,6 @@
 package com.inedo.buildmaster;
 
-import hudson.Launcher;
-import hudson.AbortException;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.util.FormValidation;
-import jenkins.tasks.SimpleBuildStep;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.model.AbstractProject;
-import hudson.tasks.Builder;
-import hudson.tasks.BuildStepDescriptor;
+import java.io.IOException;
 
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -23,7 +11,17 @@ import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.buildOption.SetBuildVariables;
 import com.inedo.buildmaster.buildOption.WaitTillCompleted;
 
-import java.io.IOException;
+import hudson.AbortException;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.AbstractProject;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
+import hudson.util.FormValidation;
+import jenkins.tasks.SimpleBuildStep;
 
 /**
  * The TriggerBuildPostBuildStep will trigger a build in BuildMaster for a selected application and release

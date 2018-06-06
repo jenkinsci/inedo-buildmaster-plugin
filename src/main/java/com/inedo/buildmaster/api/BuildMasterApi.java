@@ -7,6 +7,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.concordion.cubano.driver.http.HttpEasy;
+import org.concordion.cubano.driver.http.JsonReader;
+
 import com.google.gson.JsonElement;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiPackage;
@@ -18,8 +21,6 @@ import com.inedo.buildmaster.domain.BuildExecution;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
-import com.inedo.http.HttpEasy;
-import com.inedo.http.JsonReader;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsHelper;
 import com.inedo.jenkins.JenkinsLogWriter;
@@ -50,7 +51,7 @@ public class BuildMasterApi {
 
 		HttpEasy.withDefaults()
                 .baseUrl(config.url)
-                .listeners(logWriter)
+                .withLogWriter(logWriter)
                 .trustAllCertificates(config.trustAllCertificates);
 		
 		if (config.user != null && !config.user.isEmpty() && config.password != null && !config.password.isEmpty()) {
