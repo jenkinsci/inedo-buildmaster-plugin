@@ -1,22 +1,10 @@
 package com.inedo.buildmaster.domain;
 
-import java.io.IOException;
-
-import org.apache.commons.io.IOUtils;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Build
 {
-	public static String getExampleArray() throws IOException {
-		return IOUtils.toString(Application.class.getResourceAsStream("Builds.json")).replace(IOUtils.LINE_SEPARATOR_WINDOWS, IOUtils.LINE_SEPARATOR_UNIX);
-	}
-
-	public static String getExampleSingle() throws IOException {
-		return IOUtils.toString(Application.class.getResourceAsStream("Build.json")).replace(IOUtils.LINE_SEPARATOR_WINDOWS, IOUtils.LINE_SEPARATOR_UNIX);
-	}
-	
 	public Integer Release_Id;
 	public String Release_Number;
 	public String Build_Id;

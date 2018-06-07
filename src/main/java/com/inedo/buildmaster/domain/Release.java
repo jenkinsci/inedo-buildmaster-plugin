@@ -1,18 +1,10 @@
 package com.inedo.buildmaster.domain;
 
-import java.io.IOException;
-
-import org.apache.commons.io.IOUtils;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Release
 {
-	public static String getExampleArray() throws IOException {
-		return IOUtils.toString(Application.class.getResourceAsStream("Releases.json")).replace(IOUtils.LINE_SEPARATOR_WINDOWS, IOUtils.LINE_SEPARATOR_UNIX);
-	}
-
 	public int Release_Id;
 	public int Application_Id;
 	public String Release_Number;

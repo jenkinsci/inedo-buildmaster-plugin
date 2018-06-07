@@ -34,8 +34,8 @@ public class BuildMasterApi {
     private final BuildMasterConfig config;
     private final JenkinsLogWriter logWriter;
     
-	private boolean recordResult = false;
-	private String result = "";
+    private boolean recordResult = false;
+    private String jsonString;
 
 	public BuildMasterApi(JenkinsLogWriter listener) {
 	    this(GlobalConfig.getBuildMasterConfig(), listener);
@@ -59,13 +59,17 @@ public class BuildMasterApi {
 		}
 	}
 
+    public void setRecordJson(boolean record) {
+        this.recordResult = record;
+    }
+
+    public String getJsonString() {
+        return jsonString;
+    }
 
 	public BuildMasterApi setRecordResult() {
 		recordResult = true;
 		return this;
-	}
-	public String getLastResult() {
-		return result;
 	}
 
 	/**
@@ -96,7 +100,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		return reader.fromJson(Application[].class);
@@ -111,7 +115,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		ApplicationDetail applicaton = reader.fromJson(ApplicationDetail.class);
@@ -137,7 +141,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		return reader.fromJson(Deployable[].class);
@@ -157,7 +161,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		Deployable[] deployables = reader.fromJson(Deployable[].class);
@@ -184,7 +188,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}		
 				
 		return reader.fromJson(ReleaseDetails.class);
@@ -205,7 +209,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}		
 				
 		return reader.fromJson(Release[].class);
@@ -284,7 +288,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 						
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		Build[] builds = reader.fromJson(Build[].class);
@@ -307,7 +311,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		Build[] builds = reader.fromJson(Build[].class);
@@ -405,7 +409,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		return reader.fromJson(Build.class);
@@ -445,7 +449,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		BuildExecution[] executions = reader.fromJson(BuildExecution[].class); 
@@ -477,7 +481,7 @@ public class BuildMasterApi {
 				.getJsonReader();
 		
 		if (recordResult) {
-			result = reader.asPrettyString();
+            jsonString = reader.asPrettyString();
 		}
 		
 		List<ApiVariable> variables = new ArrayList<ApiVariable>();

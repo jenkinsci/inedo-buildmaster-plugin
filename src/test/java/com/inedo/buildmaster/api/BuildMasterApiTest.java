@@ -24,6 +24,8 @@ import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsConsoleLogWriter;
+import com.inedo.utils.JsonCompare;
+import com.inedo.utils.MockData;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
 
@@ -38,6 +40,7 @@ import com.inedo.utils.TestConfig;
 public class BuildMasterApiTest {
 	private static MockServer mockServer = null;
 	private static BuildMasterApi buildmaster;
+    private static boolean compareJson = false;
 	
 	@BeforeClass
     public static void beforeClass() throws IOException {
@@ -51,11 +54,13 @@ public class BuildMasterApiTest {
 			config = mockServer.getBuildMasterConfig();
 		} else {
 			config = TestConfig.getProGetConfig();
+            compareJson = true;
 		}
 
 		GlobalConfig.injectConfiguration(config);
 		
 		buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter()).setRecordResult();
+        buildmaster.setRecordJson(compareJson);
 	}
 		
 	@AfterClass
@@ -91,24 +96,36 @@ public class BuildMasterApiTest {
 	public void getApplications() throws IOException  {
     	Application[] applications = buildmaster.getApplications();
 
-    	assertThat("API Structure has not changed", Application.getExampleArray(), is(buildmaster.getLastResult()));
     	assertThat("Expect BuildMaster to have applications created", applications.length, is(greaterThan(0)));
+
+        if (compareJson) {
+            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+                    MockData.APPLICATIONS.getAsString(), buildmaster.getJsonString(), "Application_Name", "Example", Application.class);
+        }
 	}
 	
 	@Test
 	public void getApplication() throws IOException  {
     	Application application = buildmaster.getApplication(TestConfig.getApplicationid());
     	
-    	assertThat("API Structure has not changed", Application.getExampleSingle(), is(buildmaster.getLastResult()));
     	assertThat("Expect BuildMaster to have sample application", application.Application_Name, is("Example"));
+
+        if (compareJson) {
+            JsonCompare.assertFieldsIdentical("Checking getFeed API result against mocked value",
+                    MockData.APPLICATIONS.getAsString(), buildmaster.getJsonString(), Application.class);
+        }
 	}
 	
 	@Test
 	public void getDeployables() throws IOException  {
     	Deployable[] deployables = buildmaster.getDeployables(TestConfig.getApplicationid());
     	
-    	assertThat("API Structure has not changed", Deployable.getExampleArray(), is(buildmaster.getLastResult()));
         assertThat("Expect BuildMaster to have applications created", deployables.length, is(greaterThan(0)));
+
+        if (compareJson) {
+            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+                    MockData.DEPLOYABLES.getAsString(), buildmaster.getJsonString(), "Application_Name", "Example", Deployable.class);
+        }
 	}
 		
 	@Test
@@ -116,9 +133,13 @@ public class BuildMasterApiTest {
     	Deployable[] deployables = buildmaster.getDeployables(TestConfig.getApplicationid());
     	Deployable deployable = buildmaster.getDeployable(deployables[0].Deployable_Id);
     	
-    	// NOTE: returns array even though should only be a single value
-    	assertThat("API Structure has not changed", Deployable.getExampleArray(), is(buildmaster.getLastResult()));
         assertThat("Expect deployable", deployable.Deployable_Id, is(deployables[0].Deployable_Id));
+
+        if (compareJson) {
+            // NOTE: returns array even though should only be a single value
+            JsonCompare.assertFieldsIdentical("Checking getFeed API result against mocked value",
+                    MockData.DEPLOYABLE.getAsString(), buildmaster.getJsonString(), Deployable.class);
+        }
 	}
 	 
 	@Test
@@ -165,20 +186,29 @@ public class BuildMasterApiTest {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		ReleaseDetails release = buildmaster.getRelease(TestConfig.getApplicationid(), releaseNumber);
 
-		assertThat("API Structure has not changed", ReleaseDetails.getExampleSingle(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test Application to have active release", release.Releases_Extended.length, is(greaterThan(0)));
 
 		String status = release.Releases_Extended[0].ReleaseStatus_Name;
 		
 		assertThat("Expect Test Application to have active release " + releaseNumber, "Active", is(status));
+
+        if (compareJson) {
+            // NOTE: returns array even though should only be a single value
+            JsonCompare.assertFieldsIdentical("Checking getFeed API result against mocked value",
+                    MockData.RELEASE.getAsString(), buildmaster.getJsonString(), ReleaseDetails.class);
+        }
 	}
 	
 	@Test
 	public void getActiveReleases() throws IOException {
 		Release[] releases = buildmaster.getActiveReleases(TestConfig.getApplicationid());
 		
-		assertThat("API Structure has not changed", Release.getExampleArray(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test Application to have active release(s)", releases.length, is(greaterThan(0)));
+		
+		if (compareJson) {
+            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+                    MockData.RELEASES.getAsString(), buildmaster.getJsonString(), "Release_Id", "1", Release.class);
+        }
 	}
 
 	@Test
@@ -188,8 +218,13 @@ public class BuildMasterApiTest {
 		
 		ApiVariable[] variables = buildmaster.getPackageVariables(TestConfig.getApplicationid(), releaseNumber, testPackageNumber);
 		
-		assertThat("API Structure has not changed", ApiVariable.getExampleArray(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test previous build to have variables defined", variables.length, is(greaterThan(0)));
+		
+		// Might not be sensible as this is just a list of variables
+		if (compareJson) {
+            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+                    MockData.RELEASES.getAsString(), buildmaster.getJsonString(), "Release_Id", "1", ApiVariable.class);
+        }
 	}
 	
 	@Test
@@ -197,8 +232,15 @@ public class BuildMasterApiTest {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		Integer nextPackageNumber = Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber));
 		
-		assertThat("API Structure has not changed", Build.getExampleArray(), is(buildmaster.getLastResult()));
 		assertThat("Expect nextPackageNumber to be greate than zero", nextPackageNumber , is(greaterThan(0)));
+
+        // Might not be sensible as this is just a list of variables
+        if (compareJson) {
+            // assertThat("API Structure has not changed", Build.getExampleArray(), is(buildmaster.getLastResult()));
+
+            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+                    MockData.RELEASES.getAsString(), buildmaster.getJsonString(), "Release_Id", "1", ApiVariable.class);
+        }
 	}
 	
 	@Test
@@ -225,8 +267,13 @@ public class BuildMasterApiTest {
 		
 		Build build = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
-		assertThat("API Structure has not changed", Build.getExampleSingle(), is(buildmaster.getLastResult()));
 		assertThat("Expect Test Application to have build number " + packageNumber, build.Build_Number.length() , is(greaterThan(0)));
+
+        if (compareJson) {
+            // NOTE: returns array even though should only be a single value
+            JsonCompare.assertFieldsIdentical("Checking getFeed API result against mocked value",
+                    MockData.RELEASE.getAsString(), buildmaster.getJsonString(), Build.class);
+        }
 	}
 	
 	@Test

@@ -3,6 +3,7 @@ package com.inedo.utils;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
+
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -14,14 +15,6 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 
 import com.inedo.buildmaster.api.BuildMasterConfig;
-import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.domain.Build;
-import com.inedo.buildmaster.domain.BuildExecution;
-import com.inedo.buildmaster.domain.BuildExecutionDetails;
-import com.inedo.buildmaster.domain.Deployable;
-import com.inedo.buildmaster.domain.Release;
-import com.inedo.buildmaster.domain.ReleaseDetails;
-import com.inedo.buildmaster.domain.Variable;
 
 /**
  * A Mocked server that replaces a live BuildMaster installation
@@ -71,23 +64,23 @@ public class MockServer {
 			
 			switch (method) {
 			case "Applications_GetApplications":
-				response.setEntity(new StringEntity(Application.getExampleArray()));
+                response.setEntity(MockData.APPLICATION.getInputSteam());
 				break;
 				
 			case "Applications_GetDeployables":
-				response.setEntity(new StringEntity(Deployable.getExampleArray()));
+                response.setEntity(MockData.DEPLOYABLES.getInputSteam());
 				break;
 				
 			case "Applications_GetDeployable":
-				response.setEntity(new StringEntity(Deployable.getExampleSingle()));
+                response.setEntity(MockData.DEPLOYABLE.getInputSteam());
 				break;	
 				
 			case "Releases_GetReleases":
-				response.setEntity(new StringEntity(Release.getExampleArray()));
+                response.setEntity(MockData.RELEASES.getInputSteam());
 				break;
 			
 			case "Releases_GetRelease": 
-				response.setEntity(new StringEntity(ReleaseDetails.getExampleSingle()));
+                response.setEntity(MockData.RELEASE.getInputSteam());
 				break;
 				
 			case "Releases_CreateOrUpdateRelease":
@@ -95,11 +88,11 @@ public class MockServer {
 				break;
 				
 			case "Builds_GetBuilds": 
-				response.setEntity(new StringEntity(Build.getExampleArray()));
+                response.setEntity(MockData.BUILDS.getInputSteam());
 				break;
 				
 			case "Builds_GetBuild":
-				response.setEntity(new StringEntity(Build.getExampleSingle()));
+                response.setEntity(MockData.BUILD.getInputSteam());
 				break;				
 				
 			case "Builds_CreateBuild":
@@ -124,15 +117,15 @@ public class MockServer {
 				break;
 			
 			case "Builds_GetExecutionLog":
-				response.setEntity(new StringEntity(BuildExecutionDetails.EXAMPLE));
+                response.setEntity(MockData.BUILD_EXECUTION_DETAILS.getInputSteam());
 				break;
 			
 			case "Builds_GetExecutions":
-				response.setEntity(new StringEntity(BuildExecution.EXAMPLE));
+                response.setEntity(MockData.BUILD_EXECUTIONS.getInputSteam());
 				break;
 			
 			case "Variables_GetVariableValues":
-				response.setEntity(new StringEntity(Variable.EXAMPLE));
+                response.setEntity(MockData.VARIABLE.getInputSteam());
 				break;
 				
 			default:
