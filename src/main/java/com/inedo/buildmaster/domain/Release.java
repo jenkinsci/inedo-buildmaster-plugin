@@ -1,21 +1,18 @@
 package com.inedo.buildmaster.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown=true)
 public class Release
 {
 	public int Release_Id;
 	public int Application_Id;
 	public String Release_Number;
 	public String ReleaseStatus_Name;
-	public String Notes_Text; // Obsolete?
+    // public String Notes_Text; // Obsolete?
 
 	public String CreatedOn_Date;
 	public String ModifiedOn_Date;
-	public String CancelledReason_Text;	// Obsolete?
-	public String CancelledOn_Date;		// Obsolete?
-	public String Target_Date;			// Obsolete?
+    // public String CancelledReason_Text; // Obsolete?
+    // public String CancelledOn_Date; // Obsolete?
+    // public String Target_Date; // Obsolete?
 
 	public String Release_Name;
 	public int Release_Sequence;
@@ -35,6 +32,6 @@ public class Release
 	public String Latest_PromotionStatus_Name;
 	public String Latest_Promotion_PipelineStage_Name;
 		
-	public String ReleaseTemplate_Name;		// Obsolete?
+    // public String ReleaseTemplate_Name; // Obsolete?
 }
 

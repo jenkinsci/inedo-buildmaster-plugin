@@ -42,6 +42,9 @@ To login the username will be admin and the password can be found in <project ro
 * BuildMaster:
     * Installed and configured with an API key
     * Add an Application called TestApplication with the default pipleline stages
+    * Create an Application Group called TestAutomation and assign TestApplication to it, while not overly important this allows the plugins select application dropdown to display the group and the automated tests to not fail because get applications api has not returned the group fields.
+    * Create a Deployable call ExampleDeployable for the application TestApplication
+    * Create a new Plan step called Build, with auto promote set to true, and add a log task 
     * Create an active release
 * Jenkins System Configuration page updated with BuildMaster server details and the Test Connection button returning success
 

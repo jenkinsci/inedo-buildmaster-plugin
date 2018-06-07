@@ -1,8 +1,5 @@
 package com.inedo.buildmaster.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown=true)
 public class BuildExecutionDeploymentPlanActionGroups
 {
 	public int BuildExecution_DeploymentPlan_Id;

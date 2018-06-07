@@ -18,6 +18,8 @@ import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ApplicationDetail;
 import com.inedo.buildmaster.domain.Build;
 import com.inedo.buildmaster.domain.BuildExecution;
+import com.inedo.buildmaster.domain.BuildExecutionActionGroupActionLogEntries;
+import com.inedo.buildmaster.domain.BuildExecutionDetails;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
@@ -356,11 +358,23 @@ public class BuildMasterApi {
             request.field("$" + variable.getKey(), variable.getValue());
         }
         
-        ApiPackage apiPackage = request.put()
-                .getJsonReader()
-                .fromJson(ApiPackage.class);
-        
-        deployPackageToStage(applicationId, releaseNumber, apiPackage.number, null);
+        JsonReader reader = request.put()
+                .getJsonReader();
+
+        if (recordResult) {
+            jsonString = reader.asPrettyString();
+        }
+
+        ApiPackage apiPackage = reader.fromJson(ApiPackage.class);
+
+        boolean storeRecordResult = recordResult;
+        recordResult = false;
+
+        try {
+            deployPackageToStage(applicationId, releaseNumber, apiPackage.number, null);
+        } finally {
+            recordResult = storeRecordResult;
+        }
 
         return apiPackage;
     }
@@ -565,9 +579,6 @@ public class BuildMasterApi {
 
 		BuildExecution execution;
 		
-		//TODO ?
-		//this.logRequest = false;
-		
 		try {
 			execution = getLatestExecution(applicationId, releaseNumber, buildNumber);		
 			logWriter.info(String.format("\tExecution Status: %s, Execution Id: %s, Environment Name: %s, AutoPromote: %s", execution.ExecutionStatus_Name, execution.Execution_Id, execution.Environment_Name, execution.Build_AutoPromote_Indicator));
@@ -576,7 +587,8 @@ public class BuildMasterApi {
 			long startTime = new Date().getTime();		
 			
 			// Wait till both build step (if exists) and deployment to the first environment have completed (if has build step with AutoPromote flag set)
-			while (executing.contains(execution.ExecutionStatus_Name) || (execution.Environment_Id == null && execution.Build_AutoPromote_Indicator.equalsIgnoreCase("Y"))) {
+            while (executing.contains(execution.ExecutionStatus_Name)
+                    || (execution.Environment_Id == null && execution.Build_AutoPromote_Indicator != null && execution.Build_AutoPromote_Indicator.equalsIgnoreCase("Y"))) {
 				Thread.sleep(7000);
 				
 				execution = getLatestExecution(applicationId, releaseNumber, buildNumber);
@@ -618,22 +630,22 @@ public class BuildMasterApi {
 	 */
 	public void printExecutionLog(int executionId) throws IOException {
 //		TODO: This is no longer supported and is waiting on an update to the api
-//		BuildExecutionDetails log = HttpEasy.request()
-//				.path("/api/json/Builds_GetExecutionLog?API_Key={}&Execution_Id={}")
-//				.urlParameters(config.apiKey, executionId)
-//				.get()
-//				.getJsonReader()
-//				.fromJson(BuildExecutionDetails.class);
-//		
-//		logWriter.info("");
-//		logWriter.info("BuildMaster Execution Log:");
-//		logWriter.info("-------------------------");
-//
-//		for (BuildExecutionActionGroupActionLogEntries entry : log.BuildExecution_ActionGroupActionLogEntries) {
-//			logWriter.info(entry.LogEntry_Text);
-//		}
-//
-//		logWriter.info("");
+        BuildExecutionDetails log = HttpEasy.request()
+                .path("/api/json/Builds_GetExecutionLog?API_Key={}&Execution_Id={}")
+                .urlParameters(config.apiKey, executionId)
+                .get()
+                .getJsonReader()
+                .fromJson(BuildExecutionDetails.class);
+
+        logWriter.info("");
+        logWriter.info("BuildMaster Execution Log:");
+        logWriter.info("-------------------------");
+
+        for (BuildExecutionActionGroupActionLogEntries entry : log.BuildExecution_ActionGroupActionLogEntries) {
+            logWriter.info(entry.LogEntry_Text);
+        }
+
+        logWriter.info("");
 	}
 
 	/*

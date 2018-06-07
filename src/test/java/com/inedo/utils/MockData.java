@@ -6,12 +6,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.InputStreamEntity;
 
 public enum MockData {
-    VARIABLES("ApiVariables.json"), 
+    API_PACKAGE("ApiPackage.json"),
+    PACKAGE_VARIABLES("PackageVariables.json"), 
     APPLICATION("Application.json"),
     APPLICATIONS("Applications.json"),
     BUILD("Build.json"),
     BUILDS("Builds.json"),
-    BUILD_EXECUTIONS("BuildExecution.json"),
+    BUILD_EXECUTIONS("BuildExecutions.json"),
     BUILD_EXECUTION_DETAILS("BuildExecutionDetails.json"),
     DEPLOYABLE("Deployable.json"),
     DEPLOYABLES("Deployables.json"),
