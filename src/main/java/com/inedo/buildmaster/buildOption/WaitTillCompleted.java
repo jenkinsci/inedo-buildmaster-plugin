@@ -1,19 +1,20 @@
 package com.inedo.buildmaster.buildOption;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 public class WaitTillCompleted extends AbstractDescribableImpl<WaitTillCompleted> {
-	private final boolean printLogOnFailure;
+    private final boolean printLogOnFailure;
 
-	public boolean isPrintLogOnFailure() {
-		return printLogOnFailure;
-	}
+    public boolean isPrintLogOnFailure() {
+        return printLogOnFailure;
+    }
 
-	@DataBoundConstructor 
-	public WaitTillCompleted(boolean printLogOnFailure) {
+    @DataBoundConstructor
+    public WaitTillCompleted(boolean printLogOnFailure) {
         this.printLogOnFailure = printLogOnFailure;
     }
     

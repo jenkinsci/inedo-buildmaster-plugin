@@ -28,14 +28,14 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
     @Extension
     public static final class DescriptorImpl extends Descriptor<GlobalConfiguration> {
 
-    	/**
+        /**
          * To persist global configuration information,
          * simply store it in a field and call save().
          *
          * <p>
          * If you don't want fields to be persisted, use <tt>transient</tt>.
          */
-    	private String url;
+        private String url;
         private String apiKey;
         private String user;
         private Secret password;
@@ -48,10 +48,10 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-        	// To persist global configuration information,
+            // To persist global configuration information,
             // set that to properties and call save().
         
-        	req.bindJSON(this, formData);
+            req.bindJSON(this, formData);
             save();
             return super.configure(req,formData);
         }
@@ -108,12 +108,12 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
         }
         
         public boolean validatePluginConfiguration() {
-        	if( url == null || apiKey == null ||
-    			url.isEmpty() || apiKey.isEmpty() ) {
-    			return false;
-    		}
-        	
-    		return true;
+            if (url == null || apiKey == null ||
+                    url.isEmpty() || apiKey.isEmpty()) {
+                return false;
+            }
+
+            return true;
         }
         
         /**
@@ -139,7 +139,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
         }
 
         public FormValidation doCheckUser(@QueryParameter String value, @QueryParameter String password) throws IOException, ServletException {
-        	if (password != null && !password.isEmpty() && value.length() == 0)
+            if (password != null && !password.isEmpty() && value.length() == 0)
                 return FormValidation.error("User is required");
 
             return FormValidation.ok();
@@ -155,42 +155,42 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
         /**
          *  BuildMaster connection test
          */
-		public FormValidation doTestConnection(
+        public FormValidation doTestConnection(
                 @QueryParameter("url") final String url,
                 @QueryParameter("apiKey") final String apiKey,
                 @QueryParameter("user") final String user,
                 @QueryParameter("password") final String password,
                 @QueryParameter("trustAllCertificates") final boolean trustAllCertificates) throws IOException, ServletException {
-	
-			BuildMasterConfig config = new BuildMasterConfig();
-			
-			config.url = url;
-            config.apiKey = apiKey;
-			config.user = user;
-			config.password = password;
-            config.trustAllCertificates = trustAllCertificates;
-			
-			BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
-			
-			try {
-				buildmaster.checkConnection();
-			} catch (Exception ex) {
-                return FormValidation.error("Failed. Please check the configuration. " + ex.getClass().getName() + ": " + ex.getMessage());
-			}
-			
-			return FormValidation.ok("Success. Connection with BuildMaster verified.");			
-		}
 
-		public BuildMasterConfig getBuildMasterConfig() {
-			BuildMasterConfig config = new BuildMasterConfig();
-   		 
-			config.url = url;
+            BuildMasterConfig config = new BuildMasterConfig();
+
+            config.url = url;
             config.apiKey = apiKey;
-			config.user = user;
-			config.password = Secret.toString(password);
+            config.user = user;
+            config.password = password;
             config.trustAllCertificates = trustAllCertificates;
-			
-    		return config;
-		}
-	}
+
+            BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
+
+            try {
+                buildmaster.checkConnection();
+            } catch (Exception ex) {
+                return FormValidation.error("Failed. Please check the configuration. " + ex.getClass().getName() + ": " + ex.getMessage());
+            }
+
+            return FormValidation.ok("Success. Connection with BuildMaster verified.");
+        }
+
+        public BuildMasterConfig getBuildMasterConfig() {
+            BuildMasterConfig config = new BuildMasterConfig();
+
+            config.url = url;
+            config.apiKey = apiKey;
+            config.user = user;
+            config.password = Secret.toString(password);
+            config.trustAllCertificates = trustAllCertificates;
+
+            return config;
+        }
+    }
 }

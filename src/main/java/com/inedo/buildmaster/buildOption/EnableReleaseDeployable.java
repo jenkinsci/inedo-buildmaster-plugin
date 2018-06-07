@@ -1,19 +1,20 @@
 package com.inedo.buildmaster.buildOption;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 public class EnableReleaseDeployable extends AbstractDescribableImpl<EnableReleaseDeployable> {
-	private String deployableId = "";
+    private String deployableId = "";
 
-	public String getDeployableId() {
-		return deployableId;
-	}
-	
-	@DataBoundConstructor 
-	public EnableReleaseDeployable(String deployableId) {
+    public String getDeployableId() {
+        return deployableId;
+    }
+
+    @DataBoundConstructor
+    public EnableReleaseDeployable(String deployableId) {
         this.deployableId = deployableId;
     }
     

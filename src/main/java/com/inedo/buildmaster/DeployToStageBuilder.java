@@ -28,90 +28,95 @@ import jenkins.tasks.SimpleBuildStep;
  * @author Andrew Sumner
  */
 public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
-	private String toStage = "";
-	private WaitTillCompleted waitTillBuildCompleted = null;
-	private String applicationId = DescriptorImpl.defaultApplicationId;
-	private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
-	private String buildNumber = DescriptorImpl.defaultBuildNumber;
+    private String toStage = "";
+    private WaitTillCompleted waitTillBuildCompleted = null;
+    private String applicationId = DescriptorImpl.defaultApplicationId;
+    private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
+    private String buildNumber = DescriptorImpl.defaultBuildNumber;
 
-	// Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
-	@DataBoundConstructor
-	public DeployToStageBuilder() {
-	}
+    // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
+    @DataBoundConstructor
+    public DeployToStageBuilder() {
+    }
 
-	@DataBoundSetter public final void setToStage(String toStage) {
-		this.toStage = toStage;
+    @DataBoundSetter
+    public final void setToStage(String toStage) {
+        this.toStage = toStage;
     }
-	
-	@DataBoundSetter public final void setWaitTillBuildCompleted(WaitTillCompleted waitTillBuildCompleted) {
-		this.waitTillBuildCompleted  = waitTillBuildCompleted;
+
+    @DataBoundSetter
+    public final void setWaitTillBuildCompleted(WaitTillCompleted waitTillBuildCompleted) {
+        this.waitTillBuildCompleted = waitTillBuildCompleted;
     }
-	
-	@DataBoundSetter public final void setApplicationId(String applicationId) {
+
+    @DataBoundSetter
+    public final void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
     }
-	
-	@DataBoundSetter public final void setReleaseNumber(String releaseNumber) {
+
+    @DataBoundSetter
+    public final void setReleaseNumber(String releaseNumber) {
         this.releaseNumber = releaseNumber;
     }
-		
-	@DataBoundSetter public final void setBuildNumber(String buildNumber) {
+
+    @DataBoundSetter
+    public final void setBuildNumber(String buildNumber) {
         this.buildNumber = buildNumber;
     }
-	
-	public String getToStage() {
-		return toStage;
-	}
-	
-	public boolean isWaitTillBuildCompleted() {
-		return waitTillBuildCompleted != null;
-	}
 
-	public WaitTillCompleted getWaitTillBuildCompleted() {
+    public String getToStage() {
+        return toStage;
+    }
+
+    public boolean isWaitTillBuildCompleted() {
+        return waitTillBuildCompleted != null;
+    }
+
+    public WaitTillCompleted getWaitTillBuildCompleted() {
         return waitTillBuildCompleted;
     }
     
-	public String getApplicationId() {
-		return applicationId;
-	}
+    public String getApplicationId() {
+        return applicationId;
+    }
 
-	public String getReleaseNumber() {
-		return releaseNumber;
-	}
-	
-	public String getBuildNumber() {
-		return buildNumber;
-	}
-	
-	@Override
-	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-		if (!BuildHelper.deployToStage(run, listener, this)) {
-			throw new AbortException();
-		}
-	}
+    public String getReleaseNumber() {
+        return releaseNumber;
+    }
 
-	@Symbol("buildMasterDeployToStage")
-	@Extension
-	// This indicates to Jenkins that this is an implementation of an extension
-	// point.
-	public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-		public static final String defaultApplicationId = "${BUILDMASTER_APPLICATION_ID}";
-		public static final String defaultReleaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-		public static final String defaultBuildNumber = BuildHelper.DEFAULT_BUILD_NUMBER;
-				
-		public DescriptorImpl() {
-			super(DeployToStageBuilder.class);
-		}
-		
-		@SuppressWarnings("rawtypes")
-		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-			// Indicates that this builder can be used with all kinds of project types
-			return true;
-		}
+    public String getBuildNumber() {
+        return buildNumber;
+    }
 
-		@Override
-		public String getDisplayName() {
-			return "BuildMaster: Deploy To Stage";
-		}
-	}
+    @Override
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+        if (!BuildHelper.deployToStage(run, listener, this)) {
+            throw new AbortException();
+        }
+    }
+
+    @Symbol("buildMasterDeployToStage")
+    @Extension
+    // This indicates to Jenkins that this is an implementation of an extension
+    // point.
+    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+        public static final String defaultApplicationId = "${BUILDMASTER_APPLICATION_ID}";
+        public static final String defaultReleaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
+        public static final String defaultBuildNumber = BuildHelper.DEFAULT_BUILD_NUMBER;
+
+        public DescriptorImpl() {
+            super(DeployToStageBuilder.class);
+        }
+
+        @SuppressWarnings("rawtypes")
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            // Indicates that this builder can be used with all kinds of project types
+            return true;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "BuildMaster: Deploy To Stage";
+        }
+    }
 }
