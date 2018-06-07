@@ -1,5 +1,6 @@
-package com.inedo.buildmaster;
+package com.inedo.buildmaster.jenkins;
 
+import com.inedo.buildmaster.Triggerable;
 import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.buildOption.SetBuildVariables;
 import com.inedo.buildmaster.buildOption.WaitTillCompleted;

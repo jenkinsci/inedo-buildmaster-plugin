@@ -1,4 +1,4 @@
-package com.inedo.buildmaster;
+package com.inedo.buildmaster.jenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -23,6 +23,7 @@ import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 
+import com.inedo.buildmaster.BuildHelper;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
@@ -38,7 +39,7 @@ import com.inedo.utils.TestConfig;
  * 
  * @author Andrew Sumner
  */
-public class TriggerBuildHelperTest {
+public class PluginTests {
 	public MockServer mockServer;
 		
 	@SuppressWarnings("rawtypes")
