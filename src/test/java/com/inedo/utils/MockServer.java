@@ -63,10 +63,26 @@ public class MockServer {
 			String method = uri.getPath().replace("/api/json/", "");
 			
 			switch (method) {
+            case "/api/releases/packages/create":
+			    response.setEntity(MockData.API_PACKAGE.getInputSteam());
+                break;
+            
+            case "/api/releases/packages/deploy":
+                response.setEntity(MockData.API_DEPLOYMENT.getInputSteam());
+                break;
+
+            case "/api/variables/packages/TestApplication/0.0.0/16":
+                response.setEntity(MockData.PACKAGE_VARIABLES.getInputSteam());
+                break;
+
 			case "Applications_GetApplications":
-                response.setEntity(MockData.APPLICATION.getInputSteam());
+                response.setEntity(MockData.APPLICATIONS.getInputSteam());
 				break;
 				
+            case "Applications_GetApplication":
+                response.setEntity(MockData.APPLICATION.getInputSteam());
+                break;
+
 			case "Applications_GetDeployables":
                 response.setEntity(MockData.DEPLOYABLES.getInputSteam());
 				break;

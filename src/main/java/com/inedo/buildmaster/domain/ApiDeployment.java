@@ -1,5 +1,7 @@
 package com.inedo.buildmaster.domain;
 
+import com.inedo.buildmaster.Optional;
+
 public class ApiDeployment {
     /** An integer representing the system-unique identifier of the deployment. */
     public Integer id;
@@ -10,14 +12,17 @@ public class ApiDeployment {
     /** A string representing the UTC date when the deployment actually started, in ISO 8601 format (yyyy-MM-ddThh:mm:ss), or null if the execution hasn't started. */
     public String started;
     /** A string representing the UTC date when the deployment completed, in ISO 8601 format (yyyy-MM-ddThh:mm:ss), or null if the execution hasn't completed. */
+    @Optional
     public String ended;
     /** A string representing the user who initiated the deployment, or SYSTEM if initiated non-interactively. */
     public String createdBy;
     /** A string representing the UTC date when the deployment was initiated, in ISO 8601 format (yyyy-MM-ddThh:mm:ss). */
     public String createdOn;
     /** A string representing the user who canceled the deployment (SYSTEM if canceled non-interactively), or null if the deployment was not canceled. */
+    @Optional
     public String canceledBy;
     /** A string representing the UTC date when the deployment was canceled, in ISO 8601 format (yyyy-MM-ddThh:mm:ss), or null if the deployment was not canceled. */
+    @Optional
     public String canceledOn;
     /** An integer representing the system-unique identifier of the pipeline used by the deployment. */
     public Integer pipelineId;

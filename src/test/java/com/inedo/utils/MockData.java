@@ -6,6 +6,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.InputStreamEntity;
 
 public enum MockData {
+    API_DEPLOYMENT("ApiDeployment.json"),
     API_PACKAGE("ApiPackage.json"),
     PACKAGE_VARIABLES("PackageVariables.json"), 
     APPLICATION("Application.json"),

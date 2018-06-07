@@ -15,6 +15,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiPackage;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
@@ -32,8 +33,6 @@ import com.inedo.utils.TestConfig;
 
 /**
  * Tests for the BuildMasterClientApache class
- * 
- * TODO: There is timing issue when running all tests against a live server as tests randomly fail.  Running one at a time works fine.
  * 
  * @author Andrew Sumner
  */
@@ -275,6 +274,22 @@ public class BuildMasterApiTest {
         }
 	}
 	
+    @Test
+    public void deployPackageToStage() throws IOException, InterruptedException {
+        String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
+        String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
+
+        ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, packageNumber, "Testing");
+
+        assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
+        assertThat("Envrionment is what was asked for", deployments[0].environmentName, is("Testing"));
+
+        if (compareJson) {
+            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+                    MockData.API_DEPLOYMENT.getAsString(), buildmaster.getJsonString(), "[0]", ApiDeployment.class);
+        }
+    }
+
 	@Test
 	public void getPackage() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
@@ -305,7 +320,7 @@ public class BuildMasterApiTest {
                     MockData.BUILD_EXECUTIONS.getAsString(), buildmaster.getJsonString(), "[0]", BuildExecution.class);
         }
 	}
-	
+
 	@Test
 	public void printExecutionLog() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());

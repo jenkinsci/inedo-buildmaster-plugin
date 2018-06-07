@@ -400,9 +400,14 @@ public class BuildMasterApi {
             request.field("toStage", toStage);
         }
         
-        ApiDeployment[] deployments = request.put()
-                .getJsonReader()
-                .fromJson(ApiDeployment[].class);
+        JsonReader reader = request.put()
+                .getJsonReader();
+
+        if (recordResult) {
+            jsonString = reader.asPrettyString();
+        }
+
+        ApiDeployment[] deployments = reader.fromJson(ApiDeployment[].class);
 
         return deployments;
     }
