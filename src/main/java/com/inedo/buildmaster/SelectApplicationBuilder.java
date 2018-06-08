@@ -8,10 +8,10 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
+import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Deployable;
-import com.inedo.buildmaster.domain.Release;
-import com.inedo.buildmaster.domain.ReleaseDetails;
+import com.inedo.buildmaster.domain.ReleaseStatus;
 import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.jenkins.JenkinsHelper;
 import com.inedo.jenkins.VariableInjectionAction;
@@ -84,6 +84,10 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
         return applicationId;
     }
     
+    private int getApplicationIdAsInt() {
+        return Integer.valueOf(applicationId);
+    }
+
     public String getReleaseNumber() {
         return releaseNumber;
     }
@@ -111,7 +115,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
         String actualReleaseNumber = releaseNumber;
 
         if ("LATEST".equals(releaseNumber)) {
-            actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(applicationId);
+            actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(getApplicationIdAsInt());
 
             if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
                 helper.getLogWriter().error("No active releases found in BuildMaster for applicationId " + applicationId);
@@ -127,7 +131,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
 
         switch (buildNumberSource) {
         case "BUILDMASTER":
-            actualBuildNumber = buildmaster.getNextPackageNumber(applicationId, actualReleaseNumber);
+            actualBuildNumber = buildmaster.getReleaseNextPackageNumber(getApplicationIdAsInt(), actualReleaseNumber);
 
             helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
             run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
@@ -261,15 +265,15 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             // Validate release is still active
             if (!LATEST_RELEASE.equals(value) && applicationId != null && !applicationId.isEmpty()) {
                 try {
-                    ReleaseDetails releaseDetails = buildmaster.getRelease(applicationId, value);
+                    ApiRelease releaseDetails = buildmaster.getRelease(Integer.valueOf(applicationId), value);
 
-                    if (releaseDetails.Releases_Extended.length == 0) {
+                    if (releaseDetails == null) {
                         return FormValidation.error("The release " + value + " does not exist for this application");
                     }
 
-                    String status = releaseDetails.Releases_Extended[0].ReleaseStatus_Name;
+                    String status = releaseDetails.status;
 
-                    if (!"Active".equalsIgnoreCase(status)) {
+                    if (!ReleaseStatus.ACTIVE.getText().equalsIgnoreCase(status)) {
                         return FormValidation.error("The release status must be Active, the actual status is " + status);
                     }
                 } catch (Exception ex) {
@@ -291,10 +295,10 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             }
 
             if (applicationId != null && !applicationId.isEmpty()) {
-                Release[] releases = buildmaster.getActiveReleases(applicationId);
+                ApiRelease[] releases = buildmaster.getActiveReleases(Integer.valueOf(applicationId));
 
-                for (Release release : releases) {
-                    items.add(release.Release_Number);
+                for (ApiRelease release : releases) {
+                    items.add(release.number);
                 }
             }
 
@@ -312,7 +316,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             }
 
             if (applicationId != null && !applicationId.isEmpty()) {
-                Deployable[] deployables = buildmaster.getDeployables(applicationId);
+                Deployable[] deployables = buildmaster.getApplicationDeployables(Integer.valueOf(applicationId));
 
                 for (Deployable deployable : deployables) {
                     items.add(deployable.Deployable_Name, String.valueOf(deployable.Deployable_Id));

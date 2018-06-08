@@ -7,16 +7,15 @@ import org.apache.http.entity.InputStreamEntity;
 
 public enum MockData {
     API_DEPLOYMENT("ApiDeployment.json"),
-    API_PACKAGE("ApiPackage.json"),
+    API_RELEASE_PACKAGE("ApiReleasePackage.json"),
+    API_RELEASE_PACKAGES("ApiReleasePackages.json"),
+    API_RELEASE("ApiRelease.json"),
     PACKAGE_VARIABLES("PackageVariables.json"), 
     APPLICATION("Application.json"),
     APPLICATIONS("Applications.json"),
-    BUILD("Build.json"),
-    BUILDS("Builds.json"),
-    BUILD_EXECUTIONS("BuildExecutions.json"),
-    BUILD_EXECUTION_DETAILS("BuildExecutionDetails.json"),
     DEPLOYABLE("Deployable.json"),
     DEPLOYABLES("Deployables.json"),
+    // remove
     RELEASE("Release.json"),
     RELEASES("Releases.json"), 
     VARIABLE("Variable.json");

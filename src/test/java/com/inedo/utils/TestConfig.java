@@ -24,7 +24,7 @@ public class TestConfig {
     private static String username;
     private static String password;
     private static boolean trustAllCertificates;
-    private static String applicationId;
+    private static int applicationId;
 
     /** Ensure properties have been loaded before any property is used. */
     static {
@@ -46,7 +46,7 @@ public class TestConfig {
         username = getOptionalProperty(prop, "username");
         password = getOptionalProperty(prop, "password");
         trustAllCertificates = Boolean.parseBoolean(getOptionalProperty(prop, "trustAllCertificates"));
-        applicationId = getOptionalProperty(prop, "applicationId");
+        applicationId = Integer.parseInt(getOptionalProperty(prop, "applicationId"));
     }
 
     /**
@@ -158,7 +158,7 @@ public class TestConfig {
         return config;
     }
     
-    public static String getApplicationid() {
+    public static int getApplicationid() {
     	return applicationId;
     }
 }

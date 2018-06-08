@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
-import com.inedo.buildmaster.domain.ApiPackage;
+import com.inedo.buildmaster.domain.ApiDeployment;
+import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsHelper;
@@ -28,7 +29,7 @@ public class BuildHelper {
                 
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
-        String applicationId = helper.expandVariable(trigger.getApplicationId());
+        int applicationId = Integer.valueOf(helper.expandVariable(trigger.getApplicationId()));
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
         String buildNumber = helper.expandVariable(trigger.getBuildNumber());
 
@@ -39,7 +40,7 @@ public class BuildHelper {
 
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing
         // one is being performed.
-        buildmaster.waitForExistingBuildStepToComplete(applicationId, releaseNumber);
+        buildmaster.waitForExistingDeploymentsToComplete(applicationId, releaseNumber);
 
         Map<String, String> variablesList = new HashMap<>();
 
@@ -47,7 +48,7 @@ public class BuildHelper {
             variablesList = getVariablesListExpanded(run, listener, trigger.getSetBuildVariables().getVariables());
 
             helper.getLogWriter().info("Gather previous builds build variables");
-            String prevBuildNumber = buildmaster.getPreviousPackageNumber(applicationId, releaseNumber);
+            String prevBuildNumber = buildmaster.getReleaseCurrentPackageNumber(applicationId, releaseNumber);
             ApiVariable[] variables = buildmaster.getPackageVariables(applicationId, releaseNumber, prevBuildNumber);
 
             for (ApiVariable variable : variables) {
@@ -64,27 +65,28 @@ public class BuildHelper {
             buildmaster.enableReleaseDeployable(applicationId, releaseNumber, Integer.valueOf(deployableId));
         }
 
-        ApiPackage apiPackage;
+        ApiPackageDeployment apiPackage;
 
         if (buildNumber != null && !buildNumber.isEmpty() && !DEFAULT_BUILD_NUMBER.equals(buildNumber)) {
             helper.getLogWriter().info("Create BuildMaster build with BuildNumber=" + buildNumber);
             apiPackage = buildmaster.createPackage(applicationId, releaseNumber, buildNumber, variablesList);
 
-            if (!apiPackage.number.equals(buildNumber)) {
+            if (!apiPackage.releasePackage.number.equals(buildNumber)) {
                 helper.getLogWriter()
-                        .info(String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.", buildNumber, apiPackage.number));
+                        .info(String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.", buildNumber,
+                                apiPackage.releasePackage.number));
             }
         } else {
             helper.getLogWriter().info("Create BuildMaster build");
             apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList);
 
-            helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.number);
-            run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.number));
+            helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.releasePackage.number);
+            run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.releasePackage.number));
         }
 
         if (trigger.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till build completed");
-            return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, apiPackage.number, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure());
+            return buildmaster.waitForDeploymentsToComplete(apiPackage.deployments, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure());
         }
 
         return true;
@@ -153,7 +155,7 @@ public class BuildHelper {
         
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
         
-        String applicationId = helper.expandVariable(builder.getApplicationId());
+        int applicationId = Integer.valueOf(helper.expandVariable(builder.getApplicationId()));
         String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
         String buildNumber = helper.expandVariable(builder.getBuildNumber());
         String toStage = helper.expandVariable(builder.getToStage());
@@ -165,7 +167,7 @@ public class BuildHelper {
         
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing
         // one is being performed.
-        buildmaster.waitForExistingBuildStepToComplete(applicationId, releaseNumber);
+        buildmaster.waitForExistingDeploymentsToComplete(applicationId, releaseNumber);
 
         if (toStage == null || toStage.isEmpty()) {
             helper.getLogWriter().info("Deploy to next stage");
@@ -173,14 +175,14 @@ public class BuildHelper {
             helper.getLogWriter().info("Deploy to " + toStage + " stage");
         }
         
-        buildmaster.deployPackageToStage(applicationId, releaseNumber, buildNumber, toStage);
+        ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, buildNumber, toStage);
                     
 //        helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.number);
 //        build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.number));
         
         if (builder.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till build completed");
-            return buildmaster.waitForBuildCompletion(applicationId, releaseNumber, buildNumber, builder.getWaitTillBuildCompleted().isPrintLogOnFailure());
+            return buildmaster.waitForDeploymentsToComplete(deployments, builder.getWaitTillBuildCompleted().isPrintLogOnFailure());
         }
 
         return true;

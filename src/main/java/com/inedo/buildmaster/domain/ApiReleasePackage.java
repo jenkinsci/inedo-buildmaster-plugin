@@ -2,7 +2,12 @@ package com.inedo.buildmaster.domain;
 
 import com.inedo.buildmaster.Optional;
 
-public class ApiPackage {
+/**
+ * Package Object
+ * 
+ * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#data-specification">Data Specification</a>
+ */
+public class ApiReleasePackage {
     /** An integer representing the system-unique identifier of the package. */
     public Integer id;
     /** A string representing the release-unique identifier of the package. */

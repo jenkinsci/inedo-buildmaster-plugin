@@ -1,0 +1,16 @@
+[
+	{
+	  "id": 11,
+	  "number": "17",
+	  "status": "active",
+	  "createdBy": "SYSTEM",
+	  "createdOn": "2018-06-07T09:04:13.2100000Z",
+	  "applicationId": 1,
+	  "applicationName": "TestApplication",
+	  "pipelineId": 1,
+	  "pipelineName": "TestApplication",
+	  "releaseId": 1,
+	  "releaseNumber": "0.0.0",
+	  "releaseName": "0.0.0"
+	}
+]

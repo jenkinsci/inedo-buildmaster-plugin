@@ -2,6 +2,11 @@ package com.inedo.buildmaster.domain;
 
 import com.inedo.buildmaster.Optional;
 
+/**
+ * Deployment Object
+ * 
+ * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#data-specification">Data Specification</a>
+ */
 public class ApiDeployment {
     /** An integer representing the system-unique identifier of the deployment. */
     public Integer id;
@@ -31,8 +36,10 @@ public class ApiDeployment {
     /** A string representing the name the stage in the pipeline used by the deployment. */
     public String pipelineStageName;
     /** An integer representing the system-unique identifier of the environment used by the deployment, or null if no environment is in context. */
+    @Optional
     public Integer environmentId;
     /** A string representing the name of the environment used by the deployment, or null if no environment is in context. */
+    @Optional
     public String environmentName;
     /** An integer representing the system-unique identifier of the application for the deployment. */
     public Integer applicationId;

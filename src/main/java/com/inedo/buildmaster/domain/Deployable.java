@@ -8,14 +8,13 @@ public class Deployable
     public String Deployable_Name;
     public int Dependencies_Count;
     public int Dependants_Count;
+    public Integer Application_Id;
 
-    // TODO I use these to enable a deployable, but they don't seem to be provided by getDeployable API any more
-    // I have marked these as optional to get the tests working, need to come back to this...
     @Optional
     public String InclusionType_Code;
     @Optional
-    public String Referenced_Release_Number;
+    public String Release_Number;
     @Optional
-    public Integer Referenced_Application_Id;
+    public Integer Release_Id;
 }
 

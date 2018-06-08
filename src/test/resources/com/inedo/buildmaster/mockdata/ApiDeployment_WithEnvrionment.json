@@ -9,6 +9,8 @@
     "pipelineId": 1,
     "pipelineName": "TestApplication",
     "pipelineStageName": "Testing",
+    "environmentId": 2,
+    "environmentName": "Testing",
     "applicationId": 1,
     "applicationName": "TestApplication",
     "releaseId": 1,

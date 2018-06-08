@@ -63,12 +63,16 @@ public class MockServer {
 			String method = uri.getPath().replace("/api/json/", "");
 			
 			switch (method) {
-            case "/api/releases/packages/create":
-			    response.setEntity(MockData.API_PACKAGE.getInputSteam());
-                break;
-            
             case "/api/releases/packages/deploy":
                 response.setEntity(MockData.API_DEPLOYMENT.getInputSteam());
+                break;
+
+            case "/api/releases":
+                response.setEntity(MockData.API_RELEASE.getInputSteam());
+                break;
+
+            case "/api/releases/packages/create":
+                response.setEntity(MockData.API_RELEASE_PACKAGE.getInputSteam());
                 break;
 
             case "/api/variables/packages/TestApplication/0.0.0/16":
@@ -103,43 +107,31 @@ public class MockServer {
 				//response.setEntity(new StringEntity(""));
 				break;
 				
-			case "Builds_GetBuilds": 
-                response.setEntity(MockData.BUILDS.getInputSteam());
-				break;
-				
-			case "Builds_GetBuild":
-                response.setEntity(MockData.BUILD.getInputSteam());
-				break;				
-				
-			case "Builds_CreateBuild":
-				String buildNumber = "99";
-				String query = uri.getQuery();
-								
-				int pos = query.indexOf("Requested_Build_Number");
-				
-				if (pos > 0) {
-					query = query.substring(pos + "Requested_Build_Number".length() + 1);
-					
-					pos = query.indexOf("&");
-					if (pos > 0) {
-						buildNumber = query.substring(0, pos);
-					} else {
-						buildNumber = query;
-					}
-				}
-				
-				// Return the quested build number if passed, else new build number
-				response.setEntity(new StringEntity(buildNumber));
-				break;
+            // case "Builds_CreateBuild":
+            // String buildNumber = "99";
+            // String query = uri.getQuery();
+            //
+            // int pos = query.indexOf("Requested_Build_Number");
+            //
+            // if (pos > 0) {
+            // query = query.substring(pos + "Requested_Build_Number".length() + 1);
+            //
+            // pos = query.indexOf("&");
+            // if (pos > 0) {
+            // buildNumber = query.substring(0, pos);
+            // } else {
+            // buildNumber = query;
+            // }
+            // }
+            //
+            // // Return the quested build number if passed, else new build number
+            // response.setEntity(new StringEntity(buildNumber));
+            // break;
 			
-			case "Builds_GetExecutionLog":
-                response.setEntity(MockData.BUILD_EXECUTION_DETAILS.getInputSteam());
-				break;
-			
-			case "Builds_GetExecutions":
-                response.setEntity(MockData.BUILD_EXECUTIONS.getInputSteam());
-				break;
-			
+            // case "Builds_GetExecutionLog":
+            // response.setEntity(MockData.BUILD_EXECUTION_DETAILS.getInputSteam());
+            // break;
+
 			case "Variables_GetVariableValues":
                 response.setEntity(MockData.VARIABLE.getInputSteam());
 				break;

@@ -1,5 +1,12 @@
 package com.inedo.buildmaster.domain;
 
+import com.inedo.buildmaster.Optional;
+
+/**
+ * Release Object
+ * 
+ * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#data-specification">Data Specification</a>
+ */
 public class ApiRelease {
     /** An integer representing the system-unique identifier of the release. */
     public Integer id;
@@ -10,6 +17,7 @@ public class ApiRelease {
     /** An integer representing the sequence relative to other releases in the application. */
     public Integer sequence;
     /** A string of the template name used for this release, or null if no template is used. */
+    @Optional
     public String template;
     /** A string consisting of active, deployed, or canceled. */
     public String status;
@@ -18,10 +26,13 @@ public class ApiRelease {
     /** A string representing the UTC date when the release was created, in ISO 8601 format (yyyy-MM-ddThh:mm:ss). */
     public String createdOn;
     /** A string representing the user who canceled the release, or SYSTEM if created non-interactively. */
+    @Optional
     public String canceledBy;
     /** A string representing the UTC date when the release was created, in ISO 8601 format (yyyy-MM-ddThh:mm:ss). */
+    @Optional
     public String canceledOn;
     /** A string representing the UTC date of the target release date in ISO 8601 format (yyyy-MM-ddThh:mm:ss). */
+    @Optional
     public String targetDate;
     /** An integer representing the system-unique identifier of the application for the release. */
     public Integer applicationId;

@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "number": "0.0.0",
+    "name": "0.0.0",
+    "sequence": 1,
+    "status": "active",
+    "createdBy": "Admin",
+    "createdOn": "2018-06-04T01:22:01.6070000Z",
+    "applicationId": 1,
+    "applicationName": "TestApplication",
+    "pipelineId": 1,
+    "pipelineName": "TestApplication",
+    "furthestPackageId": 29,
+    "furthestPackageNumber": "29",
+    "latestPackageId": 29,
+    "latestPackageNumber": "29"
+  }
+]

@@ -1,13 +1,13 @@
 package com.inedo.buildmaster.jenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.AdditionalAnswers.*;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -18,10 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import hudson.EnvVars;
-import hudson.model.BuildListener;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.inedo.buildmaster.BuildHelper;
 import com.inedo.buildmaster.api.BuildMasterApi;
@@ -33,6 +32,11 @@ import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
+
+import hudson.EnvVars;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 
 /**
  * Tests for the TriggerBuildHelper class
@@ -82,7 +86,7 @@ public class PluginTests {
 		BuildMasterApi buildmaster = new BuildMasterApi(mockServer.getBuildMasterConfig(), new JenkinsConsoleLogWriter());
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		this.buildNumber = buildmaster.getNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+		this.buildNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 	}
 	
 	@After
@@ -94,7 +98,7 @@ public class PluginTests {
 	
 	@Test
 	public void perform() throws IOException, InterruptedException {
-		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber);
 	
 		restLog();
 		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
@@ -106,7 +110,7 @@ public class PluginTests {
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber)
 			.setWaitTillBuildCompleted(new WaitTillCompleted(true));
 		
 		restLog();
@@ -118,7 +122,7 @@ public class PluginTests {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber)
 			.setSetBuildVariables(new SetBuildVariables(false, "hello=performSetVariables"));
 		
 		restLog();
@@ -140,7 +144,7 @@ public class PluginTests {
 	
 	@Test
 	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
-		TriggerableData data = new TriggerableData(TestConfig.getApplicationid(), releaseNumber, buildNumber)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber)
 			.setEnableReleaseDeployable(new EnableReleaseDeployable("2077"));
 		
 		restLog();
