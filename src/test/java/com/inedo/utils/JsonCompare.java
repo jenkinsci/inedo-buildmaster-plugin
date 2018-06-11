@@ -16,7 +16,6 @@ import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
 
-// TODO update proget plugin so it's using the same technique and consider putting this api into cubano
 public class JsonCompare {
     static {
         Configuration.setDefaults(new Configuration.Defaults() {

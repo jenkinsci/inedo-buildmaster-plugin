@@ -287,10 +287,6 @@ public class BuildMasterApiTest {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
 
-        // TODO Didn't use to have to do this, what's changed with the new APIs?
-        ApiDeployment deployment = buildmaster.getLatestDeployment(TestConfig.getApplicationid(), releaseNumber, packageNumber, null);
-        buildmaster.waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false);
-
         ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, packageNumber, "Testing");
 
         assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
@@ -305,7 +301,7 @@ public class BuildMasterApiTest {
 	@Test
 	public void getPackage() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
+        String packageNumber = String.valueOf(buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber));
 		
         ApiReleasePackage releasePackage = buildmaster.getPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
@@ -323,7 +319,7 @@ public class BuildMasterApiTest {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 		
-        boolean result = buildmaster.waitForExistingDeploymentsToComplete(TestConfig.getApplicationid(), releaseNumber, packageNumber, false);
+        boolean result = buildmaster.waitForExistingDeploymentsToComplete(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
         assertThat("Expect Test package " + packageNumber + " to have built and deployed successfully", result);
 	}

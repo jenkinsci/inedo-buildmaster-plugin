@@ -40,7 +40,7 @@ public class BuildHelper {
 
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing
         // one is being performed.
-        buildmaster.waitForExistingDeploymentsToComplete(applicationId, releaseNumber);
+        // buildmaster.waitForExistingDeploymentsToComplete(applicationId, releaseNumber);
 
         Map<String, String> variablesList = new HashMap<>();
 
@@ -48,8 +48,8 @@ public class BuildHelper {
             variablesList = getVariablesListExpanded(run, listener, trigger.getSetBuildVariables().getVariables());
 
             helper.getLogWriter().info("Gather previous builds build variables");
-            String prevBuildNumber = buildmaster.getReleaseCurrentPackageNumber(applicationId, releaseNumber);
-            ApiVariable[] variables = buildmaster.getPackageVariables(applicationId, releaseNumber, prevBuildNumber);
+            String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(applicationId, releaseNumber);
+            ApiVariable[] variables = buildmaster.getPackageVariables(applicationId, releaseNumber, currentPackageNumber);
 
             for (ApiVariable variable : variables) {
                 if (!variablesList.containsKey(variable.name)) {
@@ -165,10 +165,6 @@ public class BuildHelper {
             return false;
         }
         
-        // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing
-        // one is being performed.
-        buildmaster.waitForExistingDeploymentsToComplete(applicationId, releaseNumber);
-
         if (toStage == null || toStage.isEmpty()) {
             helper.getLogWriter().info("Deploy to next stage");
         } else {

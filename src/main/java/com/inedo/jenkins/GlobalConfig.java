@@ -26,28 +26,6 @@ public class GlobalConfig {
         return getSharedDescriptor().validatePluginConfiguration();
     }
 
-    /*
-     * public static boolean isRequiredFieldsConfigured(boolean includeUsername) {
-     * if (config != null) {
-     * return true;
-     * }
-     * 
-     * //TODO ?
-     * return true;
-     * //return getSharedDescriptor().isRequiredFieldsConfigured(includeUsername);
-     * }
-     * 
-     * public static boolean isApiKeyFieldConfigured() {
-     * if (config != null) {
-     * return true;
-     * }
-     * 
-     * //TODO ?
-     * return true;
-     * //return getSharedDescriptor().isApiKeyConfigured();
-     * }
-     */
-
     public static BuildMasterConfig getBuildMasterConfig() {
         if (config != null) {
             return config;

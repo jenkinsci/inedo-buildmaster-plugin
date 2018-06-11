@@ -357,8 +357,9 @@ public class BuildMasterApi {
      * @return BuildNumber
      * 
      * @throws IOException
+     * @throws InterruptedException
      */
-    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, Map<String, String> variablesList) throws IOException {
+    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, Map<String, String> variablesList) throws IOException, InterruptedException {
         return createPackage(applicationId, releaseNumber, null, variablesList);
     }
 
@@ -370,10 +371,12 @@ public class BuildMasterApi {
      * @return BuildNumber
      * 
      * @throws IOException
+     * @throws InterruptedException
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#create-package">Endpoint Specification</a>
      */
-    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList) throws IOException {
+    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList)
+            throws IOException, InterruptedException {
         HttpEasy request = HttpEasy.request()
                 .path("/api/releases/packages/create")
                 .skipEmptyValues(true)
@@ -399,8 +402,7 @@ public class BuildMasterApi {
         recordResult = false;
 
         try {
-            // TODO should I be doing this - I would have thought buildmaster would do it. It would give me a deploymenId I could then pass to wait step
-            // Perhaps like buildmaster I should have an option on the task
+            // TODO Perhaps like BuildMaster I should have an option on the task
             ApiDeployment[] deployments = deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null);
 
             return new ApiPackageDeployment(releasePackage, deployments);
@@ -418,10 +420,14 @@ public class BuildMasterApi {
      * @return ApiDeployment[]
      * 
      * @throws IOException
+     * @throws InterruptedException
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
-    public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, String toStage) throws IOException {
+    public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, String toStage) throws IOException, InterruptedException {
+        // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
+        waitForExistingDeploymentsToComplete(applicationId, releaseNumber, packageNumber);
+
         JsonReader reader = HttpEasy.request()
                 .path("/api/releases/packages/deploy")
                 .skipEmptyValues(true)
@@ -469,6 +475,7 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
+    // TODO This seems badly names - isn't it get deployment?
     public ApiDeployment getLatestDeployment(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId) throws IOException {
         JsonReader reader = HttpEasy.request()
                 .path("/api/releases/packages/deployments")
@@ -478,9 +485,6 @@ public class BuildMasterApi {
                 .field("releaseNumber", releaseNumber)
                 .field("packageNumber", packageNumber)
                 .field("deploymentId", deploymentId)
-                // .queryParam("PipelineStage_Name", "")
-                // TODO Not supported and getting all deployments, latest at top so logic still works, although could use filter to confirm or pass in deploymentId
-                // .field("Execution_Count", 1)
                 .post()
                 .getJsonReader();
 
@@ -489,6 +493,9 @@ public class BuildMasterApi {
         }
 
         ApiDeployment[] deployments = reader.fromJson(ApiDeployment[].class);
+
+        // TODO Not supported and getting all deployments, latest at top so logic still works, although could use filter to confirm or pass in deploymentId
+        // .field("Execution_Count", 1)
 
         if (deployments.length > 0) {
             return deployments[0];
@@ -557,13 +564,13 @@ public class BuildMasterApi {
      * @throws IOException
      * @throws InterruptedException
      */
-    public boolean waitForExistingDeploymentsToComplete(int applicationId, String releaseNumber) throws IOException, InterruptedException {
-        return waitForDeploymentToComplete(applicationId, releaseNumber, null, null, false);
-    }
+    // public boolean waitForExistingDeploymentsToComplete(int applicationId, String releaseNumber) throws IOException, InterruptedException {
+    // return waitForDeploymentToComplete(applicationId, releaseNumber, null, null, false);
+    // }
 
-    public boolean waitForExistingDeploymentsToComplete(int applicationId, String releaseNumber, String packageNumber, boolean printLogOnFailure)
+    public boolean waitForExistingDeploymentsToComplete(int applicationId, String releaseNumber, String packageNumber)
             throws IOException, InterruptedException {
-        return waitForDeploymentToComplete(applicationId, releaseNumber, null, null, printLogOnFailure);
+        return waitForDeploymentToComplete(applicationId, releaseNumber, packageNumber, null, false);
     }
 
     /**
