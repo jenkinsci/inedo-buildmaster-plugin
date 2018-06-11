@@ -319,7 +319,7 @@ public class BuildMasterApiTest {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 		
-        boolean result = buildmaster.waitForExistingDeploymentsToComplete(TestConfig.getApplicationid(), releaseNumber, packageNumber);
+        boolean result = buildmaster.waitForActiveDeploymentsToComplete(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
         assertThat("Expect Test package " + packageNumber + " to have built and deployed successfully", result);
 	}
@@ -328,7 +328,7 @@ public class BuildMasterApiTest {
     public void printExecutionLog() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
-        ApiDeployment deployment = buildmaster.getLatestDeployment(TestConfig.getApplicationid(), releaseNumber, packageNumber, null);
+        ApiDeployment deployment = buildmaster.getLatestDeployment(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
         buildmaster.waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false);
         

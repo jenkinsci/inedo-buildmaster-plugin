@@ -426,7 +426,8 @@ public class BuildMasterApi {
      */
     public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, String toStage) throws IOException, InterruptedException {
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
-        waitForExistingDeploymentsToComplete(applicationId, releaseNumber, packageNumber);
+        // Don't pass in packageNumber - it's not building yet!
+        waitForActiveDeploymentsToComplete(applicationId, releaseNumber);
 
         JsonReader reader = HttpEasy.request()
                 .path("/api/releases/packages/deploy")
@@ -466,17 +467,7 @@ public class BuildMasterApi {
      * }
      */
 
-    /**
-     * Gets the latest build executions for the specified build
-     * 
-     * @return Latest execution or empty object if no executions have occurred yet
-     * 
-     * @throws IOException
-     * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
-     */
-    // TODO This seems badly names - isn't it get deployment?
-    public ApiDeployment getLatestDeployment(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId) throws IOException {
+    private ApiDeployment[] getDeployments(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId) throws IOException {
         JsonReader reader = HttpEasy.request()
                 .path("/api/releases/packages/deployments")
                 .skipEmptyValues(true)
@@ -488,20 +479,52 @@ public class BuildMasterApi {
                 .post()
                 .getJsonReader();
 
+        // TODO Not supported and getting all deployments, latest at top so logic still works, although could use filter to confirm or pass in deploymentId
+        // .field("Execution_Count", 1)
+
         if (recordResult) {
             jsonString = reader.asPrettyString();
         }
 
-        ApiDeployment[] deployments = reader.fromJson(ApiDeployment[].class);
+        return reader.fromJson(ApiDeployment[].class);
+    }
 
-        // TODO Not supported and getting all deployments, latest at top so logic still works, although could use filter to confirm or pass in deploymentId
-        // .field("Execution_Count", 1)
+    /**
+     * Gets the latest build executions for the specified build
+     * 
+     * @return Latest execution or empty object if no executions have occurred yet
+     * 
+     * @throws IOException
+     * 
+     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
+     */
+    public ApiDeployment getLatestDeployment(int applicationId, String releaseNumber, String packageNumber) throws IOException {
+        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, null);
 
         if (deployments.length > 0) {
             return deployments[0];
         }
 
         return new ApiDeployment();
+    }
+
+    public ApiDeployment getDeployment(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId) throws IOException {
+        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, deploymentId);
+
+        if (deployments.length > 0) {
+            return deployments[0];
+        }
+
+        return new ApiDeployment();
+    }
+
+    public ApiDeployment[] getActiveDeployments(int applicationId, String releaseNumber, String packageNumber) throws IOException {
+        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, null);
+
+        deployments = (ApiDeployment[]) Arrays.stream(deployments)
+                .filter(d -> d.status.equals(DeploymentStatus.PENDING.getText()) || d.status.equals(DeploymentStatus.EXECUTING.getText())).toArray(ApiDeployment[]::new);
+
+        return deployments;
     }
 
     /**
@@ -564,13 +587,15 @@ public class BuildMasterApi {
      * @throws IOException
      * @throws InterruptedException
      */
-    // public boolean waitForExistingDeploymentsToComplete(int applicationId, String releaseNumber) throws IOException, InterruptedException {
-    // return waitForDeploymentToComplete(applicationId, releaseNumber, null, null, false);
-    // }
+    public boolean waitForActiveDeploymentsToComplete(int applicationId, String releaseNumber) throws IOException, InterruptedException {
+        return waitForActiveDeploymentsToComplete(applicationId, releaseNumber, null);
+    }
 
-    public boolean waitForExistingDeploymentsToComplete(int applicationId, String releaseNumber, String packageNumber)
+    public boolean waitForActiveDeploymentsToComplete(int applicationId, String releaseNumber, String packageNumber)
             throws IOException, InterruptedException {
-        return waitForDeploymentToComplete(applicationId, releaseNumber, packageNumber, null, false);
+        ApiDeployment[] deployments = getActiveDeployments(applicationId, releaseNumber, packageNumber);
+
+        return waitForDeploymentsToComplete(deployments, false);
     }
 
     /**
@@ -598,7 +623,8 @@ public class BuildMasterApi {
         ApiDeployment deployment;
 
         try {
-            deployment = getLatestDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
+
+            deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
 
             // TODO pause logging httpeasy?
 
@@ -609,7 +635,7 @@ public class BuildMasterApi {
             while (executing.contains(deployment.status)) { // && deployment.environmentId == null
                 Thread.sleep(7000);
 
-                deployment = getLatestDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
+                deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
                 // TODO still missing deployment.Build_AutoPromote_Indicator));
                 logWriter.info(String.format("\tDeployment Status: %s, tDeployment Id: %s, Environment Name: %s, AutoPromote: %s", deployment.status, deployment.id,
                         deployment.environmentName, "?"));
