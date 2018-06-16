@@ -55,7 +55,8 @@ public class BuildMasterApi {
         HttpEasy.withDefaults()
                 .baseUrl(config.url)
                 .withLogWriter(logWriter)
-                .trustAllCertificates(config.trustAllCertificates);
+                .trustAllCertificates(config.trustAllCertificates)
+                .sensitiveParameters("key", "API_Key");
     }
 
     public void setRecordJson(boolean record) {
@@ -72,7 +73,7 @@ public class BuildMasterApi {
     }
 
     /**
-     * Ensure can call BuildMaster api. An exception will be thrown if cannot.
+     * Ensure can call the BuildMaster api. An exception will be thrown if cannot.
      * 
      * @throws IOException
      */
@@ -265,6 +266,7 @@ public class BuildMasterApi {
     public String getLatestActiveReleaseNumber(Integer applicationId) throws IOException {
         ApiRelease[] releases = getActiveReleases(applicationId);
 
+        // TODO Assumes that order will always be newest first
         if (releases.length > 0) {
             return releases[0].number;
         }
@@ -359,8 +361,9 @@ public class BuildMasterApi {
      * @throws IOException
      * @throws InterruptedException
      */
-    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, Map<String, String> variablesList) throws IOException, InterruptedException {
-        return createPackage(applicationId, releaseNumber, null, variablesList);
+    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, Map<String, String> variablesList, boolean deployToFirstStage)
+            throws IOException, InterruptedException {
+        return createPackage(applicationId, releaseNumber, null, variablesList, deployToFirstStage);
     }
 
     /**
@@ -375,11 +378,10 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#create-package">Endpoint Specification</a>
      */
-    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList)
+    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList, boolean deployToFirstStage)
             throws IOException, InterruptedException {
         HttpEasy request = HttpEasy.request()
                 .path("/api/releases/packages/create")
-                .skipEmptyValues(true)
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId) 
                 .field("releaseNumber", releaseNumber)
@@ -397,18 +399,21 @@ public class BuildMasterApi {
         }
 
         ApiReleasePackage releasePackage = reader.fromJson(ApiReleasePackage.class);
+        ApiDeployment[] deployments = null;
 
-        boolean storeRecordResult = recordResult;
-        recordResult = false;
+        if (deployToFirstStage) {
+            boolean storeRecordResult = recordResult;
+            recordResult = false;
 
-        try {
-            // TODO Perhaps like BuildMaster I should have an option on the task
-            ApiDeployment[] deployments = deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null);
-
-            return new ApiPackageDeployment(releasePackage, deployments);
-        } finally {
-            recordResult = storeRecordResult;
+            try {
+                // TODO Perhaps like BuildMaster I should have an option on the task
+                deployments = deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null);
+            } finally {
+                recordResult = storeRecordResult;
+            }
         }
+
+        return new ApiPackageDeployment(releasePackage, deployments);
     }
     
     /**
@@ -427,11 +432,11 @@ public class BuildMasterApi {
     public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, String toStage) throws IOException, InterruptedException {
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
         // Don't pass in packageNumber - it's not building yet!
+        // TODO This will cause get active deployments to bring back everything because we need Active and Executing status
         waitForActiveDeploymentsToComplete(applicationId, releaseNumber);
 
         JsonReader reader = HttpEasy.request()
                 .path("/api/releases/packages/deploy")
-                .skipEmptyValues(true)
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId) 
                 .field("releaseNumber", releaseNumber)
@@ -450,37 +455,23 @@ public class BuildMasterApi {
     }
     
     /**
-     * Gets all executions in the executing state.
+     * Gets all executions in the executing, optionally limiting to a particular state.
      * 
      * @throws IOException
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
-    /*
-     * public String getDeploymentsInProgress(int applicationId) throws IOException {
-     * return HttpEasy.request()
-     * .path("/api/releases/packages/deployments")
-     * .field("key", config.apiKey)
-     * .field("applicationId", applicationId)
-     * .post()
-     * .asString();
-     * }
-     */
-
-    private ApiDeployment[] getDeployments(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId) throws IOException {
+    private ApiDeployment[] getDeployments(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId, DeploymentStatus status) throws IOException {
         JsonReader reader = HttpEasy.request()
                 .path("/api/releases/packages/deployments")
-                .skipEmptyValues(true)
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId)
                 .field("releaseNumber", releaseNumber)
                 .field("packageNumber", packageNumber)
                 .field("deploymentId", deploymentId)
+                .field("status", status == null ? null : status.getText())
                 .post()
                 .getJsonReader();
-
-        // TODO Not supported and getting all deployments, latest at top so logic still works, although could use filter to confirm or pass in deploymentId
-        // .field("Execution_Count", 1)
 
         if (recordResult) {
             jsonString = reader.asPrettyString();
@@ -499,7 +490,7 @@ public class BuildMasterApi {
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
     public ApiDeployment getLatestDeployment(int applicationId, String releaseNumber, String packageNumber) throws IOException {
-        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, null);
+        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, null, null);
 
         if (deployments.length > 0) {
             return deployments[0];
@@ -509,22 +500,23 @@ public class BuildMasterApi {
     }
 
     public ApiDeployment getDeployment(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId) throws IOException {
-        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, deploymentId);
+        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, deploymentId, null);
 
         if (deployments.length > 0) {
             return deployments[0];
         }
 
+        // TODO Set this to null?
         return new ApiDeployment();
     }
 
     public ApiDeployment[] getActiveDeployments(int applicationId, String releaseNumber, String packageNumber) throws IOException {
-        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, null);
+        List<ApiDeployment> deployments = new ArrayList<>();
 
-        deployments = (ApiDeployment[]) Arrays.stream(deployments)
-                .filter(d -> d.status.equals(DeploymentStatus.PENDING.getText()) || d.status.equals(DeploymentStatus.EXECUTING.getText())).toArray(ApiDeployment[]::new);
+        deployments.addAll(Arrays.asList(getDeployments(applicationId, releaseNumber, packageNumber, null, DeploymentStatus.PENDING)));
+        deployments.addAll(Arrays.asList(getDeployments(applicationId, releaseNumber, packageNumber, null, DeploymentStatus.EXECUTING)));
 
-        return deployments;
+        return deployments.toArray(new ApiDeployment[0]);
     }
 
     /**
@@ -534,7 +526,7 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/variables">Variables Management</a>
      */
-    public ApiVariable[] getPackageVariables(int applicationId, String releaseNumber, String packageNumber) throws IOException {
+    public ApiVariable[] getPackageVariables(String applicationName, String releaseNumber, String packageNumber) throws IOException {
         // if (applicationId == null)
         // return new ApiVariable[0];
         if (releaseNumber == null || releaseNumber.isEmpty())
@@ -542,11 +534,9 @@ public class BuildMasterApi {
         if (packageNumber == null || packageNumber.isEmpty())
             return new ApiVariable[0];
 
-        Application application = getApplication(applicationId);
-
         JsonReader reader = HttpEasy.request()
                 .path("/api/variables/packages/{«application-name»}/{«release-number»}/{«package-number»}")
-                .urlParameters(application.Application_Name, releaseNumber, packageNumber)
+                .urlParameters(applicationName, releaseNumber, packageNumber)
                 .queryParam("key", config.apiKey)
                 .get()
                 .getJsonReader();
@@ -631,12 +621,15 @@ public class BuildMasterApi {
             long startTime = new Date().getTime();
             Integer envrionmentId = deployment.environmentId;
 
+            // TODO Originally waited for any automatic promotions to complete, should we? Would need to wait an extra few seconds to ensure that a new build had not started.
+            // Don't have Build_AutoPromote_Indicator anymore to help with this
+
             // Wait till both build step has completed
             while (executing.contains(deployment.status)) { // && deployment.environmentId == null
                 Thread.sleep(7000);
 
                 deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
-                // TODO still missing deployment.Build_AutoPromote_Indicator));
+
                 logWriter.info(String.format("\tDeployment Status: %s, tDeployment Id: %s, Environment Name: %s, AutoPromote: %s", deployment.status, deployment.id,
                         deployment.environmentName, "?"));
 

@@ -57,7 +57,9 @@ configurations.all {
 }
 
 dependencies {
-	compile 'com.github.concordion.cubano:cubano-httpeasy:HttpEasySecurity-SNAPSHOT'
+	compile ('com.github.concordion.cubano:cubano-httpeasy:HttpEasySecurity-SNAPSHOT') {
+		exclude group: 'com.github.markusbernhardt', module: 'proxy-vole' 
+	}
 	
 	testCompile 'com.jayway.jsonpath:json-path:2.3.0'
 	testCompile 'junit:junit:4.8.2'

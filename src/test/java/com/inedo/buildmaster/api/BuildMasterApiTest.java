@@ -228,10 +228,11 @@ public class BuildMasterApiTest {
 
 	@Test
 	public void getPackageVariables() throws IOException {
+        Application application = buildmaster.getApplication(TestConfig.getApplicationid());
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		String testPackageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 		
-		ApiVariable[] variables = buildmaster.getPackageVariables(TestConfig.getApplicationid(), releaseNumber, testPackageNumber);
+        ApiVariable[] variables = buildmaster.getPackageVariables(application.Application_Name, releaseNumber, testPackageNumber);
 		
         assertThat("Expect Test previous package to have variables defined", variables.length, is(greaterThan(0)));
 
@@ -263,7 +264,7 @@ public class BuildMasterApiTest {
 		variablesList.put("hello", "world");
         // variablesList.put("cause", "unit test");
 		
-        ApiPackageDeployment packageDeployment = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber, variablesList);
+        ApiPackageDeployment packageDeployment = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber, variablesList, true);
 
         if (compareJson) {
             JsonCompare.assertFieldsIdentical("API Structure has not changed",
@@ -361,13 +362,13 @@ public class BuildMasterApiTest {
 			System.out.println("Test Run: " + testrun);
 						
 			variablesList.put("hello", "world" + testrun);			
-            ApiPackageDeployment packageDeployment = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, variablesList);
+            ApiPackageDeployment packageDeployment = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, variablesList, true);
             System.out.println("PackageNumber=" + packageDeployment.releasePackage.number);
 
-			String prevPackageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
-			System.out.println("PreviousPackageNumber=" + prevPackageNumber);
+			String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+            System.out.println("CurrentPackageNumber=" + currentPackageNumber);
 
-            ApiVariable[] variables = buildmaster.getPackageVariables(TestConfig.getApplicationid(), releaseNumber, packageDeployment.releasePackage.number);
+            ApiVariable[] variables = buildmaster.getPackageVariables(packageDeployment.releasePackage.applicationName, releaseNumber, packageDeployment.releasePackage.number);
 			String value = "not found";
 			
 			for (ApiVariable variable : variables) {

@@ -8,6 +8,7 @@ import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.domain.ApiVariable;
+import com.inedo.buildmaster.domain.Application;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsHelper;
 import com.inedo.jenkins.VariableInjectionAction;
@@ -33,7 +34,9 @@ public class BuildHelper {
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
         String buildNumber = helper.expandVariable(trigger.getBuildNumber());
 
-        if (buildmaster.getApplication(applicationId) == null) {
+        Application application = buildmaster.getApplication(applicationId);
+
+        if (application == null) {
             JenkinsHelper.fail("Unknown application id " + applicationId);
             return false;
         }
@@ -49,7 +52,7 @@ public class BuildHelper {
 
             helper.getLogWriter().info("Gather previous builds build variables");
             String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(applicationId, releaseNumber);
-            ApiVariable[] variables = buildmaster.getPackageVariables(applicationId, releaseNumber, currentPackageNumber);
+            ApiVariable[] variables = buildmaster.getPackageVariables(application.Application_Name, releaseNumber, currentPackageNumber);
 
             for (ApiVariable variable : variables) {
                 if (!variablesList.containsKey(variable.name)) {
@@ -69,7 +72,8 @@ public class BuildHelper {
 
         if (buildNumber != null && !buildNumber.isEmpty() && !DEFAULT_BUILD_NUMBER.equals(buildNumber)) {
             helper.getLogWriter().info("Create BuildMaster build with BuildNumber=" + buildNumber);
-            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, buildNumber, variablesList);
+            // TODO Need a configuration setting
+            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, buildNumber, variablesList, true);
 
             if (!apiPackage.releasePackage.number.equals(buildNumber)) {
                 helper.getLogWriter()
@@ -78,7 +82,8 @@ public class BuildHelper {
             }
         } else {
             helper.getLogWriter().info("Create BuildMaster build");
-            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList);
+            // TODO Need a configuration setting
+            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList, true);
 
             helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.releasePackage.number);
             run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.releasePackage.number));
