@@ -3,7 +3,7 @@ package com.inedo.jenkins;
 import org.concordion.cubano.driver.http.LogWriter;
 
 public abstract class JenkinsLogWriter extends LogWriter {
-    static final String LOG_PREFIX = "[ProGet] ";
+    static final String LOG_PREFIX = "[BuildMaster] ";
 
     public abstract void info(String message);
 

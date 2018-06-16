@@ -65,6 +65,6 @@ public class JenkinsHelper {
     }
 
     public static void fail(String value) {
-        throw new RuntimeException(JenkinsLogWriter.LOG_PREFIX + value);
+        throw new RuntimeException(value);
     }
 }

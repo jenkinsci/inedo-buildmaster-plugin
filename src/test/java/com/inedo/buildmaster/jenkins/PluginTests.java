@@ -22,12 +22,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.inedo.buildmaster.BuildHelper;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
-import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.buildOption.SetBuildVariables;
-import com.inedo.buildmaster.buildOption.WaitTillCompleted;
+import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
+import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 import com.inedo.jenkins.GlobalConfig;
 import com.inedo.jenkins.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
@@ -58,6 +57,7 @@ public class PluginTests {
 	
 	public String releaseNumber;
 	public String buildNumber;
+    public boolean deployToFirstStage;
 			
 	@Before
 	public void before() throws IOException, InterruptedException {
@@ -87,6 +87,7 @@ public class PluginTests {
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		this.buildNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+        this.deployToFirstStage = true;
 	}
 	
 	@After
@@ -98,7 +99,7 @@ public class PluginTests {
 	
 	@Test
 	public void perform() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber, deployToFirstStage);
 	
 		restLog();
 		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
@@ -110,7 +111,7 @@ public class PluginTests {
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber, deployToFirstStage)
 			.setWaitTillBuildCompleted(new WaitTillCompleted(true));
 		
 		restLog();
@@ -122,7 +123,7 @@ public class PluginTests {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber, deployToFirstStage)
 			.setSetBuildVariables(new SetBuildVariables(false, "hello=performSetVariables"));
 		
 		restLog();
@@ -144,7 +145,7 @@ public class PluginTests {
 	
 	@Test
 	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber, deployToFirstStage)
 			.setEnableReleaseDeployable(new EnableReleaseDeployable("2077"));
 		
 		restLog();

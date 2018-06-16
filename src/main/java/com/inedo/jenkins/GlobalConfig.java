@@ -1,7 +1,7 @@
 package com.inedo.jenkins;
 
-import com.inedo.buildmaster.BuildMasterConfiguration;
 import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.buildmaster.jenkins.BuildMasterConfiguration;
 
 import jenkins.model.Jenkins;
 

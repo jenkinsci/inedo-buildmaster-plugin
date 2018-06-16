@@ -1,4 +1,4 @@
-package com.inedo.buildmaster.buildOption;
+package com.inedo.buildmaster.jenkins.buildOption;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 

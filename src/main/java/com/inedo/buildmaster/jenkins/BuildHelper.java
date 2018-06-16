@@ -1,4 +1,4 @@
-package com.inedo.buildmaster;
+package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -41,10 +41,6 @@ public class BuildHelper {
             return false;
         }
 
-        // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing
-        // one is being performed.
-        // buildmaster.waitForExistingDeploymentsToComplete(applicationId, releaseNumber);
-
         Map<String, String> variablesList = new HashMap<>();
 
         if (trigger.isSetBuildVariables() && trigger.getSetBuildVariables().isPreserveVariables()) {
@@ -72,18 +68,16 @@ public class BuildHelper {
 
         if (buildNumber != null && !buildNumber.isEmpty() && !DEFAULT_BUILD_NUMBER.equals(buildNumber)) {
             helper.getLogWriter().info("Create BuildMaster build with BuildNumber=" + buildNumber);
-            // TODO Need a configuration setting
-            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, buildNumber, variablesList, true);
+            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, buildNumber, variablesList, trigger.getDeployToFirstStage());
 
             if (!apiPackage.releasePackage.number.equals(buildNumber)) {
-                helper.getLogWriter()
-                        .info(String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.", buildNumber,
-                                apiPackage.releasePackage.number));
+                helper.getLogWriter().info(String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.",
+                        buildNumber,
+                        apiPackage.releasePackage.number));
             }
         } else {
             helper.getLogWriter().info("Create BuildMaster build");
-            // TODO Need a configuration setting
-            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList, true);
+            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList, trigger.getDeployToFirstStage());
 
             helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.releasePackage.number);
             run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.releasePackage.number));

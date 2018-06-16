@@ -1,4 +1,4 @@
-package com.inedo.buildmaster;
+package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 

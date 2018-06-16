@@ -1,4 +1,4 @@
-package com.inedo.buildmaster;
+package com.inedo.buildmaster.domain;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

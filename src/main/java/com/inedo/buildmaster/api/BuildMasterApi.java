@@ -1,14 +1,23 @@
 package com.inedo.buildmaster.api;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+
+import org.apache.xml.dtm.ref.DTMNodeList;
 import org.concordion.cubano.driver.http.HttpEasy;
 import org.concordion.cubano.driver.http.JsonReader;
+import org.concordion.cubano.driver.http.XmlReader;
+import org.w3c.dom.Attr;
+import org.xml.sax.SAXException;
 
 import com.google.gson.JsonElement;
 import com.inedo.buildmaster.domain.ApiDeployment;
@@ -145,6 +154,45 @@ public class BuildMasterApi {
         }
 
         return reader.fromJson(Deployable[].class);
+    }
+
+    /**
+     * Gets the applications pipelines
+     * 
+     * @throws IOException
+     */
+    public List<String> getPipelinesStages(int pipelineId) throws IOException {
+        JsonReader reader = HttpEasy.request()
+                .path("/api/json/Pipelines_GetPipeline")
+                .queryParam("API_Key", config.apiKey)
+                .queryParam("Pipeline_Id", pipelineId)
+                .get()
+                .getJsonReader();
+
+        if (recordResult) {
+            jsonString = reader.asPrettyString();
+        }
+
+        String xml = reader.getAsString("Pipeline_Configuration");
+        xml = URLDecoder.decode(xml, "UTF-8");
+
+        List<String> stages = new ArrayList<>();
+
+        try {
+            XmlReader xmlReader = new XmlReader(xml);
+            DTMNodeList nodes = (DTMNodeList) xmlReader.evaluate("//*/Stages/*/Properties/@Name", XPathConstants.NODESET);
+
+            int length = nodes.getLength();
+            for (int i = 0; i < length; i++) {
+                Attr attr = (Attr) nodes.item(i);
+                stages.add(attr.getValue());
+            }
+
+        } catch (ParserConfigurationException | SAXException | XPathExpressionException e) {
+            logWriter.error("Unable to parse XML for pipleline stages", e);
+        }
+
+        return stages;
     }
 
     /**

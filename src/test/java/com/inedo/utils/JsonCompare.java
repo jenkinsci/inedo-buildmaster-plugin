@@ -7,7 +7,7 @@ import java.util.Set;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.inedo.buildmaster.Optional;
+import com.inedo.buildmaster.domain.Optional;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;

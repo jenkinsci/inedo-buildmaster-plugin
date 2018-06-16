@@ -1,45 +1,44 @@
-package com.inedo.buildmaster;
+package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.buildOption.SetBuildVariables;
-import com.inedo.buildmaster.buildOption.WaitTillCompleted;
+import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
+import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
-import hudson.AbortException;
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Builder;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-import jenkins.tasks.SimpleBuildStep;
 
 /**
+ * 
  * The TriggerBuildPostBuildStep will trigger a build in BuildMaster for a selected application and release
- * as a build step.
- *
- * @author Andrew Sumner
+ * as a post-build action, after the build has completed.
+ * 
+ * @author Andrew Sumner 
  */
-public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Triggerable {
+public class TriggerBuildPublisher extends Recorder implements Triggerable {
     private WaitTillCompleted waitTillBuildCompleted = null;
     private SetBuildVariables setBuildVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
-
+    private boolean deployToFirstStage = true;
     private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
     private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
     private String buildNumber = "${BUILDMASTER_BUILD_NUMBER}";
 
     @DataBoundConstructor
-    public TriggerBuildBuilder() {
+    public TriggerBuildPublisher() {
     }
 
     @DataBoundSetter
@@ -70,6 +69,11 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
     @DataBoundSetter
     public final void setBuildNumber(String buildNumber) {
         this.buildNumber = buildNumber;
+    }
+
+    @DataBoundSetter
+    public final void setDeployToFirstStage(boolean deployToFirstStage) {
+        this.deployToFirstStage = deployToFirstStage;
     }
 
     public boolean isWaitTillBuildCompleted() {
@@ -108,20 +112,24 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
         return buildNumber;
     }
 
-    @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        if (!BuildHelper.triggerBuild(run, listener, this)) {
-            throw new AbortException();
-        }
+    public boolean getDeployToFirstStage() {
+        return deployToFirstStage;
     }
 
-    @Symbol("buildMasterTriggerBuild")
-    @Extension
-    // This indicates to Jenkins that this is an implementation of an extension
-    // point.
-    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+    @Override
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        return BuildHelper.triggerBuild(build, listener, this);
+    }
+
+    @Override
+    public BuildStepMonitor getRequiredMonitorService() {
+        return BuildStepMonitor.NONE;
+    }
+
+    @Extension // This indicates to Jenkins that this is an implementation of an extension point.
+    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         public DescriptorImpl() {
-            super(TriggerBuildBuilder.class);
+            super(TriggerBuildPublisher.class);
         }
 
         @SuppressWarnings("rawtypes")

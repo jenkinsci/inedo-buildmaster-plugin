@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.concordion.cubano.driver.http.HttpEasy;
@@ -144,6 +145,15 @@ public class BuildMasterApiTest {
                     MockData.DEPLOYABLE.getAsString(), buildmaster.getJsonString(), "[0]", Deployable.class);
         }
 	}
+
+    @Test
+    public void getPipelineStages() throws IOException {
+        ApiRelease[] releases = buildmaster.getActiveReleases(TestConfig.getApplicationid());
+
+        List<String> stages = buildmaster.getPipelinesStages(releases[0].pipelineId);
+
+        assertThat("Expect pipeline stages", stages.size(), is(greaterThan(0)));
+    }
 
     @Test
     public void getReleaseDeployables() throws IOException {

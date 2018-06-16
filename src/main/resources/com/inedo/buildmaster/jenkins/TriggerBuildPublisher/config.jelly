@@ -5,10 +5,12 @@
     See global.jelly for a general discussion about jelly script.
   -->
 
+  <f:entry field="deployToFirstStage" title="Automatically deploy to first stage" >
+    <f:checkbox default="true" />
+  </f:entry>
   <f:optionalProperty title="Wait Till Build Completed" field="waitTillBuildCompleted" />
   <f:optionalProperty title="Set Build Variables in BuildMaster" field="setBuildVariables" />
-  <f:optionalProperty title="Enable Deployable in BuildMaster" field="enableReleaseDeployable" />
-   
+  
   <f:advanced title="Advanced Settings">
     <f:entry title="Application" field="applicationId" >
       <f:textbox default="$${BUILDMASTER_APPLICATION_ID}" />
@@ -19,5 +21,6 @@
     <f:entry title="Build Number" field="buildNumber" >
       <f:textbox default="${descriptor.defaultBuildNumber}" />
     </f:entry>
+    <f:optionalProperty title="Enable Deployable in BuildMaster" field="enableReleaseDeployable" />
   </f:advanced>
 </j:jelly>

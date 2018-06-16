@@ -1,4 +1,4 @@
-package com.inedo.buildmaster;
+package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
@@ -6,7 +6,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import com.inedo.buildmaster.buildOption.WaitTillCompleted;
+import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 import hudson.AbortException;
 import hudson.Extension;

@@ -1,9 +1,8 @@
 package com.inedo.buildmaster.jenkins;
 
-import com.inedo.buildmaster.Triggerable;
-import com.inedo.buildmaster.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.buildOption.SetBuildVariables;
-import com.inedo.buildmaster.buildOption.WaitTillCompleted;
+import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
+import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 /**
  * Data to inject into TriggerBuildHelper for testing
@@ -16,12 +15,14 @@ public class TriggerableData implements Triggerable {
 	public EnableReleaseDeployable enableReleaseDeployable = null;
 	public String applicationId;
 	public String releaseNumber;
-	public String buildNumber;
+    public String buildNumber;
+    public boolean deployToFirstStage;
 
-	public TriggerableData(String applicationId, String releaseNumber, String buildNumber) {
+    public TriggerableData(String applicationId, String releaseNumber, String buildNumber, boolean deployToFirstStage) {
 		this.applicationId = applicationId;
 		this.releaseNumber = releaseNumber;
 		this.buildNumber = buildNumber;
+        this.deployToFirstStage = deployToFirstStage;
 	}
 	
 	// Getters
@@ -61,6 +62,10 @@ public class TriggerableData implements Triggerable {
 		return buildNumber;
 	}
 	
+    public boolean getDeployToFirstStage() {
+        return deployToFirstStage;
+    }
+
 	// Setters
 	public TriggerableData setWaitTillBuildCompleted(WaitTillCompleted value) {
 		waitTillBuildCompleted = value;
@@ -91,4 +96,10 @@ public class TriggerableData implements Triggerable {
 		buildNumber = value;
 		return this;
 	}
+
+    public TriggerableData setDeployToFirstStage(boolean value) {
+        deployToFirstStage = value;
+        return this;
+    }
+
 }

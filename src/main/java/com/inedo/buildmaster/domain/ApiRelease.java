@@ -1,7 +1,5 @@
 package com.inedo.buildmaster.domain;
 
-import com.inedo.buildmaster.Optional;
-
 /**
  * Release Object
  * 
