@@ -19,6 +19,7 @@ import org.concordion.cubano.driver.http.XmlReader;
 import org.w3c.dom.Attr;
 import org.xml.sax.SAXException;
 
+import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiPackageDeployment;
@@ -31,9 +32,9 @@ import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.DeploymentStatus;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.domain.ReleaseStatus;
-import com.inedo.jenkins.GlobalConfig;
-import com.inedo.jenkins.JenkinsHelper;
-import com.inedo.jenkins.JenkinsLogWriter;
+import com.inedo.buildmaster.jenkins.GlobalConfig;
+import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
+import com.inedo.buildmaster.jenkins.utils.JenkinsLogWriter;
 
 /**
  * BuildMaster json api interface
@@ -52,7 +53,7 @@ public class BuildMasterApi {
     public BuildMasterApi(JenkinsLogWriter listener) {
         this(GlobalConfig.getBuildMasterConfig(), listener);
 
-        if (!GlobalConfig.validateBuildMasterConfig()) {
+        if (!GlobalConfig.isRequiredFieldsConfigured()) {
             JenkinsHelper.fail("Please configure BuildMaster Plugin global settings");
         }
     }
@@ -64,6 +65,7 @@ public class BuildMasterApi {
         HttpEasy.withDefaults()
                 .baseUrl(config.url)
                 .withLogWriter(logWriter)
+                .logRequest(config.logApiRequests)
                 .trustAllCertificates(config.trustAllCertificates)
                 .sensitiveParameters("key", "API_Key");
     }
@@ -481,7 +483,14 @@ public class BuildMasterApi {
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
         // Don't pass in packageNumber - it's not building yet!
         // TODO This will cause get active deployments to bring back everything because we need Active and Executing status
+        logWriter.info("Wait for any active deployments to complete");
         waitForActiveDeploymentsToComplete(applicationId, releaseNumber);
+
+        if (Strings.isNullOrEmpty(toStage)) {
+            logWriter.info("Deploy package to next stage");
+        } else {
+            logWriter.info("Deploy package to " + toStage + " stage");
+        }
 
         JsonReader reader = HttpEasy.request()
                 .path("/api/releases/packages/deploy")
@@ -677,9 +686,6 @@ public class BuildMasterApi {
                 Thread.sleep(7000);
 
                 deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
-
-                logWriter.info(String.format("\tDeployment Status: %s, tDeployment Id: %s, Environment Name: %s, AutoPromote: %s", deployment.status, deployment.id,
-                        deployment.environmentName, "?"));
 
                 // Restart counter if now deploying to new environment
                 if (envrionmentId != deployment.environmentId) {

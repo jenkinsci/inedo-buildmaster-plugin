@@ -9,7 +9,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
-import com.inedo.jenkins.JenkinsConsoleLogWriter;
+import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -39,6 +39,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
         private String apiKey;
         private String user;
         private Secret password;
+        private boolean logApiRequests;
         private boolean trustAllCertificates;
         
         public DescriptorImpl() {
@@ -80,6 +81,10 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             password = Secret.fromString(value);
         }
         
+        public void setLogApiRequests(boolean logApiRequests) {
+            this.logApiRequests = logApiRequests;
+        }
+
         public void setTrustAllCertificates(boolean value) {
             trustAllCertificates = value;
         }
@@ -103,11 +108,15 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             return Secret.toString(password);
         }
         
+        public boolean getLogApiRequests() {
+            return logApiRequests;
+        }
+
         public boolean getTrustAllCertificates() {
             return trustAllCertificates;
         }
         
-        public boolean validatePluginConfiguration() {
+        public boolean isRequiredFieldsConfigured() {
             if (url == null || apiKey == null ||
                     url.isEmpty() || apiKey.isEmpty()) {
                 return false;
@@ -188,6 +197,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             config.apiKey = apiKey;
             config.user = user;
             config.password = Secret.toString(password);
+            config.logApiRequests = logApiRequests;
             config.trustAllCertificates = trustAllCertificates;
 
             return config;

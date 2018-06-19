@@ -12,9 +12,8 @@ import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.ReleaseStatus;
-import com.inedo.jenkins.JenkinsConsoleLogWriter;
-import com.inedo.jenkins.JenkinsHelper;
-import com.inedo.jenkins.VariableInjectionAction;
+import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
+import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -58,7 +57,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
     private static final String NOT_REQUIRED = "NOT_REQUIRED";
 
     private final String applicationId;
-    private String releaseNumber = "LATEST";
+    private String releaseNumber = LATEST_RELEASE;
     private String buildNumberSource = "BUILDMASTER";
     private String deployableId = NOT_REQUIRED;
 
@@ -108,13 +107,13 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
         // Pouplate BUILDMASTER_APPLICATION_ID variable
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + applicationId);
 
-        run.getEnvironment(listener).put("BUILDMASTER_APPLICATION_ID", applicationId);
-        run.addAction(new VariableInjectionAction("BUILDMASTER_APPLICATION_ID", applicationId));
+        // run.getEnvironment(listener).put("BUILDMASTER_APPLICATION_ID", applicationId);
+        helper.injectEnvrionmentVariable("BUILDMASTER_APPLICATION_ID", applicationId);
 
         // Populate BUILDMASTER_RELEASE_NUMBER variable
         String actualReleaseNumber = releaseNumber;
 
-        if ("LATEST".equals(releaseNumber)) {
+        if (LATEST_RELEASE.equals(releaseNumber)) {
             actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(getApplicationIdAsInt());
 
             if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
@@ -124,7 +123,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
         }
 
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + actualReleaseNumber);
-        run.addAction(new VariableInjectionAction("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber));
+        helper.injectEnvrionmentVariable("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
 
         // Populate BUILDMASTER_BUILD_NUMBER variable
         String actualBuildNumber;
@@ -134,7 +133,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             actualBuildNumber = buildmaster.getReleaseNextPackageNumber(getApplicationIdAsInt(), actualReleaseNumber);
 
             helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
-            run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
+            helper.injectEnvrionmentVariable("BUILDMASTER_BUILD_NUMBER", actualBuildNumber);
 
             break;
 
@@ -150,7 +149,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             actualBuildNumber = envVars.get("BUILD_NUMBER");
 
             helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number=" + actualBuildNumber);
-            run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", actualBuildNumber));
+            helper.injectEnvrionmentVariable("BUILDMASTER_BUILD_NUMBER", actualBuildNumber);
 
             break;
 
@@ -166,7 +165,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
         // Populate BUILDMASTER_DEPLOYABLE_ID variable
         if (!NOT_REQUIRED.equals(deployableId)) {
             helper.getLogWriter().info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + deployableId);
-            run.addAction(new VariableInjectionAction("BUILDMASTER_DEPLOYABLE_ID", deployableId));
+            helper.injectEnvrionmentVariable("BUILDMASTER_DEPLOYABLE_ID", deployableId);
         }
     }
   

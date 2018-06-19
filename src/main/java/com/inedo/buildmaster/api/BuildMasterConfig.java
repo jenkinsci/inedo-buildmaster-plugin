@@ -1,30 +1,21 @@
 package com.inedo.buildmaster.api;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.Serializable;
 
 /**
  * Configuration settings required to can the BuildMaster json api
  * 
  * @author Andrew Sumner
  */
-public class BuildMasterConfig {
+public class BuildMasterConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     // Global Configuration Items
     public String url;
     public String apiKey;
     public String user;
     public String password;
+    public boolean logApiRequests;
     public boolean trustAllCertificates;
-    
-    /**
-     * Get the name of the host the service is running on.
-     */
-    public String getHost() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            System.err.println(e.getMessage());
-            return "Unknown";
-        }
-    }
+
 }

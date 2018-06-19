@@ -27,8 +27,7 @@ import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
-import com.inedo.jenkins.GlobalConfig;
-import com.inedo.jenkins.JenkinsConsoleLogWriter;
+import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
 

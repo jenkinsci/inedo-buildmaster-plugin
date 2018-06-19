@@ -1,4 +1,4 @@
-package com.inedo.jenkins;
+package com.inedo.buildmaster.jenkins.utils;
 
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;

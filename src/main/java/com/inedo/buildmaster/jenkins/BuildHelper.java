@@ -9,10 +9,9 @@ import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
-import com.inedo.jenkins.GlobalConfig;
-import com.inedo.jenkins.JenkinsHelper;
-import com.inedo.jenkins.VariableInjectionAction;
+import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
+import hudson.AbortException;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 
@@ -27,7 +26,12 @@ public class BuildHelper {
 
     public static boolean triggerBuild(Run<?, ?> run, TaskListener listener, Triggerable trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
-                
+
+        if (!GlobalConfig.isRequiredFieldsConfigured()) {
+            helper.getLogWriter().error("Please configure BuildMaster Plugin global settings");
+            throw new AbortException();
+        }
+
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
         int applicationId = Integer.valueOf(helper.expandVariable(trigger.getApplicationId()));
@@ -76,36 +80,20 @@ public class BuildHelper {
                         apiPackage.releasePackage.number));
             }
         } else {
-            helper.getLogWriter().info("Create BuildMaster build");
+            helper.getLogWriter().info("Create BuildMaster package");
             apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList, trigger.getDeployToFirstStage());
 
             helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.releasePackage.number);
-            run.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.releasePackage.number));
+            helper.injectEnvrionmentVariable("BUILDMASTER_BUILD_NUMBER", apiPackage.releasePackage.number);
         }
 
         if (trigger.isWaitTillBuildCompleted()) {
-            helper.getLogWriter().info("Wait till build completed");
+            helper.getLogWriter().info("Wait till deployment completed");
             return buildmaster.waitForDeploymentsToComplete(apiPackage.deployments, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure());
         }
 
         return true;
     }
-
-    // private static String expandVariable(AbstractBuild<?, ?> build, BuildListener listener, String variable) {
-    // if (variable == null || variable.isEmpty()) {
-    // return variable;
-    // }
-    //
-    // String expanded = variable;
-    //
-    // try {
-    // expanded = build.getEnvironment(listener).expand(variable);
-    // } catch (Exception e) {
-    // helper.getLogWriter().info("Exception thrown expanding '" + variable + "' : " + e.getClass().getName() + " " + e.getMessage());
-    // }
-    //
-    // return expanded;
-    // }
 
     public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) throws IOException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
@@ -147,7 +135,7 @@ public class BuildHelper {
     public static boolean deployToStage(Run<?, ?> run, TaskListener listener, DeployToStageBuilder builder) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
         
-        if (!GlobalConfig.validateBuildMasterConfig()) {
+        if (!GlobalConfig.isRequiredFieldsConfigured()) {
             helper.getLogWriter().error("Please configure BuildMaster Plugin global settings");
             return false;
         }
@@ -164,19 +152,10 @@ public class BuildHelper {
             return false;
         }
         
-        if (toStage == null || toStage.isEmpty()) {
-            helper.getLogWriter().info("Deploy to next stage");
-        } else {
-            helper.getLogWriter().info("Deploy to " + toStage + " stage");
-        }
-        
         ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, buildNumber, toStage);
-                    
-//        helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.number);
-//        build.addAction(new VariableInjectionAction("BUILDMASTER_BUILD_NUMBER", apiPackage.number));
-        
+
         if (builder.isWaitTillBuildCompleted()) {
-            helper.getLogWriter().info("Wait till build completed");
+            helper.getLogWriter().info("Wait till deployment completed");
             return buildmaster.waitForDeploymentsToComplete(deployments, builder.getWaitTillBuildCompleted().isPrintLogOnFailure());
         }
 

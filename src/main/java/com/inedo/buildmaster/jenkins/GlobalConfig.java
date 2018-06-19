@@ -1,7 +1,6 @@
-package com.inedo.jenkins;
+package com.inedo.buildmaster.jenkins;
 
 import com.inedo.buildmaster.api.BuildMasterConfig;
-import com.inedo.buildmaster.jenkins.BuildMasterConfiguration;
 
 import jenkins.model.Jenkins;
 
@@ -18,12 +17,12 @@ public class GlobalConfig {
         config = value;
     }
 
-    public static boolean validateBuildMasterConfig() {
+    public static boolean isRequiredFieldsConfigured() {
         if (config != null) {
             return true;
         }
 
-        return getSharedDescriptor().validatePluginConfiguration();
+        return getSharedDescriptor().isRequiredFieldsConfigured();
     }
 
     public static BuildMasterConfig getBuildMasterConfig() {
