@@ -28,8 +28,7 @@ public class BuildHelper {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
 
         if (!GlobalConfig.isRequiredFieldsConfigured()) {
-            helper.getLogWriter().error("Please configure BuildMaster Plugin global settings");
-            throw new AbortException();
+            throw new AbortException("Please configure BuildMaster Plugin global settings");
         }
 
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
@@ -136,8 +135,7 @@ public class BuildHelper {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
         
         if (!GlobalConfig.isRequiredFieldsConfigured()) {
-            helper.getLogWriter().error("Please configure BuildMaster Plugin global settings");
-            return false;
+            throw new AbortException("Please configure BuildMaster Plugin global settings");
         }
         
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
@@ -148,8 +146,7 @@ public class BuildHelper {
         String toStage = helper.expandVariable(builder.getToStage());
 
         if (buildmaster.getApplication(applicationId) == null) {
-            JenkinsHelper.fail("Unknown application id " + applicationId);
-            return false;
+            throw new AbortException("Unknown application id " + applicationId);
         }
         
         ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, buildNumber, toStage);

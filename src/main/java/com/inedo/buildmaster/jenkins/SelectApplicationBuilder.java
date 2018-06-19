@@ -117,8 +117,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(getApplicationIdAsInt());
 
             if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
-                helper.getLogWriter().error("No active releases found in BuildMaster for applicationId " + applicationId);
-                throw new AbortException();
+                throw new AbortException("No active releases found in BuildMaster for applicationId " + applicationId);
             }
         }
 
@@ -142,8 +141,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             try {
                 envVars = run.getEnvironment(listener);
             } catch (Exception e) {
-                helper.getLogWriter().error(e.getMessage());
-                throw new AbortException();
+                throw new AbortException(e.getMessage());
             }
 
             actualBuildNumber = envVars.get("BUILD_NUMBER");
@@ -158,8 +156,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             break;
 
         default:
-            helper.getLogWriter().error("Unknown buildNumberSource " + buildNumberSource);
-            throw new AbortException();
+            throw new AbortException("Unknown buildNumberSource " + buildNumberSource);
         }
 
         // Populate BUILDMASTER_DEPLOYABLE_ID variable
@@ -273,7 +270,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
                     String status = releaseDetails.status;
 
                     if (!ReleaseStatus.ACTIVE.getText().equalsIgnoreCase(status)) {
-                        return FormValidation.error("The release status must be Active, the actual status is " + status);
+                        return FormValidation.error(String.format("The release status for release %s must be Active, the actual status is %s", value, status));
                     }
                 } catch (Exception ex) {
                     return FormValidation.error(ex.getClass().getName() + ": " + ex.getMessage());

@@ -120,7 +120,7 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         if (!BuildHelper.triggerBuild(run, listener, this)) {
-            throw new AbortException();
+            throw new AbortException("Deployment failed");
         }
     }
 
