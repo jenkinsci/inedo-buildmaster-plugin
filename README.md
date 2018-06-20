@@ -4,6 +4,9 @@ This plugin allows Jenkins to request version information and trigger a build on
 
 See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin) for more details.
 
+https://jenkins.io/doc/developer/plugin-development/pipeline-integration/
+
+
 # Building The Plugin
 
 The plugin is built using <a href="http://www.gradle.org/">Gradle</a> and the <a href="https://wiki.jenkins-ci.org/display/JENKINS/Gradle+JPI+Plugin">Gradle Jenkins JPI Plugin</a>.  The code base includes the Gradle Wrapper, which will automatically download the correct version of Gradle. 

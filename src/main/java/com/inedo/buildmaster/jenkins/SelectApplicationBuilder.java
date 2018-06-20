@@ -7,6 +7,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import com.inedo.buildmaster.BuildMasterSelectApplication;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.Application;
@@ -15,8 +16,6 @@ import com.inedo.buildmaster.domain.ReleaseStatus;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
-import hudson.AbortException;
-import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -52,30 +51,36 @@ import jenkins.tasks.SimpleBuildStep;
  * branch name.
  */
  
-public class SelectApplicationBuilder extends Builder implements SimpleBuildStep, ResourceActivity {
-    private static final String LATEST_RELEASE = "LATEST";
-    private static final String NOT_REQUIRED = "NOT_REQUIRED";
+public class SelectApplicationBuilder extends Builder implements SimpleBuildStep, ResourceActivity, BuildMasterSelectApplication {
 
-    private final String applicationId;
-    private String releaseNumber = LATEST_RELEASE;
+
+    private String applicationId;
+    private String releaseNumber = SelectApplicationHelper.LATEST_RELEASE;
     private String buildNumberSource = "BUILDMASTER";
-    private String deployableId = NOT_REQUIRED;
+    private String deployableId = SelectApplicationHelper.NOT_REQUIRED;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public SelectApplicationBuilder(String applicationId) {
+    public SelectApplicationBuilder() {
+    }
+
+    @DataBoundSetter 
+    public final void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
     }
     
-    @DataBoundSetter public final void setReleaseNumber(String releaseNumber) {
+    @DataBoundSetter
+    public final void setReleaseNumber(String releaseNumber) {
         this.releaseNumber = releaseNumber;
     }
     
-    @DataBoundSetter public final void setBuildNumberSource(String buildNumberSource) {
+    @DataBoundSetter
+    public final void setBuildNumberSource(String buildNumberSource) {
         this.buildNumberSource = buildNumberSource;
     }
     
-    @DataBoundSetter public final void setDeployableId(String deployableId) {
+    @DataBoundSetter
+    public final void setDeployableId(String deployableId) {
         this.deployableId = deployableId;
     }
 
@@ -83,10 +88,6 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
         return applicationId;
     }
     
-    private int getApplicationIdAsInt() {
-        return Integer.valueOf(applicationId);
-    }
-
     public String getReleaseNumber() {
         return releaseNumber;
     }
@@ -101,68 +102,27 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
     
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        JenkinsHelper helper = new JenkinsHelper(run, listener);
-        BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
+        SelectApplicationHelper execute = new SelectApplicationHelper(run, listener);
 
-        // Pouplate BUILDMASTER_APPLICATION_ID variable
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + applicationId);
+        BuildMasterApplication application = execute.selectApplication(this);
 
-        // run.getEnvironment(listener).put("BUILDMASTER_APPLICATION_ID", applicationId);
-        helper.injectEnvrionmentVariable("BUILDMASTER_APPLICATION_ID", applicationId);
+        JenkinsHelper helper = execute.getJenkinsHelper();
 
-        // Populate BUILDMASTER_RELEASE_NUMBER variable
-        String actualReleaseNumber = releaseNumber;
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + application.applicationId);
+        helper.injectEnvrionmentVariable("BUILDMASTER_APPLICATION_ID", String.valueOf(application.applicationId));
 
-        if (LATEST_RELEASE.equals(releaseNumber)) {
-            actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(getApplicationIdAsInt());
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + application.releaseNumber);
+        helper.injectEnvrionmentVariable("BUILDMASTER_RELEASE_NUMBER", application.releaseNumber);
 
-            if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
-                throw new AbortException("No active releases found in BuildMaster for applicationId " + applicationId);
-            }
+        if (application.buildNumber != null) {
+            helper.getLogWriter()
+                    .info(String.format("Inject environment variable BUILDMASTER_BUILD_NUMBER with %s build number = %s", application.buildNumberSource, application.buildNumber));
+            helper.injectEnvrionmentVariable("BUILDMASTER_BUILD_NUMBER", application.buildNumber);
         }
 
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + actualReleaseNumber);
-        helper.injectEnvrionmentVariable("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
-
-        // Populate BUILDMASTER_BUILD_NUMBER variable
-        String actualBuildNumber;
-
-        switch (buildNumberSource) {
-        case "BUILDMASTER":
-            actualBuildNumber = buildmaster.getReleaseNextPackageNumber(getApplicationIdAsInt(), actualReleaseNumber);
-
-            helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER with next BuildMaster build number=" + actualBuildNumber);
-            helper.injectEnvrionmentVariable("BUILDMASTER_BUILD_NUMBER", actualBuildNumber);
-
-            break;
-
-        case "JENKINS":
-            EnvVars envVars;
-            try {
-                envVars = run.getEnvironment(listener);
-            } catch (Exception e) {
-                throw new AbortException(e.getMessage());
-            }
-
-            actualBuildNumber = envVars.get("BUILD_NUMBER");
-
-            helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER with Jenkins build number=" + actualBuildNumber);
-            helper.injectEnvrionmentVariable("BUILDMASTER_BUILD_NUMBER", actualBuildNumber);
-
-            break;
-
-        case "NOT_REQUIRED":
-            // Do nothing
-            break;
-
-        default:
-            throw new AbortException("Unknown buildNumberSource " + buildNumberSource);
-        }
-
-        // Populate BUILDMASTER_DEPLOYABLE_ID variable
-        if (!NOT_REQUIRED.equals(deployableId)) {
-            helper.getLogWriter().info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + deployableId);
-            helper.injectEnvrionmentVariable("BUILDMASTER_DEPLOYABLE_ID", deployableId);
+        if (application.deployableId != null) {
+            helper.getLogWriter().info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + application.deployableId);
+            helper.injectEnvrionmentVariable("BUILDMASTER_DEPLOYABLE_ID", String.valueOf(application.deployableId));
         }
     }
   
@@ -259,7 +219,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             }
                         
             // Validate release is still active
-            if (!LATEST_RELEASE.equals(value) && applicationId != null && !applicationId.isEmpty()) {
+            if (!SelectApplicationHelper.LATEST_RELEASE.equals(value) && applicationId != null && !applicationId.isEmpty()) {
                 try {
                     ApiRelease releaseDetails = buildmaster.getRelease(Integer.valueOf(applicationId), value);
 
@@ -284,7 +244,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             ListBoxModel items = new ListBoxModel();
 
             // items.add("", "");
-            items.add("Latest Active Release", LATEST_RELEASE);
+            items.add("Latest Active Release", SelectApplicationHelper.LATEST_RELEASE);
 
             if (!getIsBuildMasterAvailable()) {
                 return items;
@@ -305,7 +265,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             ListBoxModel items = new ListBoxModel();
 
             // items.add("", "");
-            items.add("Not Required", NOT_REQUIRED);
+            items.add("Not Required", SelectApplicationHelper.NOT_REQUIRED);
 
             if (!getIsBuildMasterAvailable()) {
                 return items;
@@ -331,7 +291,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             }
                         
             // Validate release is still active
-            if (!NOT_REQUIRED.equals(value)) {
+            if (!SelectApplicationHelper.NOT_REQUIRED.equals(value)) {
                 try {
                     Deployable deployable = buildmaster.getDeployable(Integer.valueOf(value));
 

@@ -1,5 +1,7 @@
 package com.inedo.buildmaster.jenkins.utils;
 
+import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -10,7 +12,7 @@ import hudson.model.TaskListener;
  * @author Andrew Sumner
  */
 public class JenkinsHelper {
-    private final Run<?, ?> build;
+    private final Run<?, ?> run;
     private final TaskListener listener;
     private JenkinsLogWriter logWriter = null;
 
@@ -18,19 +20,19 @@ public class JenkinsHelper {
      * For unit tests as they don't have access to the build or listener
      */
     public JenkinsHelper() {
-        this.build = null;
+        this.run = null;
         this.listener = null;
         this.logWriter = new JenkinsConsoleLogWriter();
     }
 
-    public JenkinsHelper(Run<?, ?> build, TaskListener listener) {
-        this.build = build;
+    public JenkinsHelper(Run<?, ?> run, TaskListener listener) {
+        this.run = run;
         this.listener = listener;
         this.logWriter = new JenkinsTaskLogWriter(listener);
     }
 
     public String expandVariable(String variable) {
-        if (build == null) {
+        if (run == null) {
             return variable;
         }
 
@@ -42,8 +44,8 @@ public class JenkinsHelper {
 
         try {
             // Pipeline script doesn't support getting environment variables
-            if (build instanceof AbstractBuild) {
-                expanded = build.getEnvironment(listener).expand(variable);
+            if (run instanceof AbstractBuild) {
+                expanded = run.getEnvironment(listener).expand(variable);
             }
         } catch (Exception e) {
             getLogWriter().info("Exception thrown expanding '" + variable + "' : " + e.getClass().getName() + " " + e.getMessage());
@@ -53,11 +55,11 @@ public class JenkinsHelper {
     }
 
     public void injectEnvrionmentVariable(String key, String value) {
-        if (build == null) {
+        if (run == null) {
             return;
         }
 
-        build.addAction(new VariableInjectionAction(key, value));
+        run.addAction(new VariableInjectionAction(key, value));
     }
 
     public JenkinsLogWriter getLogWriter() {
@@ -66,5 +68,17 @@ public class JenkinsHelper {
 
     public static void fail(String value) {
         throw new RuntimeException(value);
+    }
+
+    public String getEnvrionmentVariable(String variable) throws AbortException {
+        EnvVars envVars;
+
+        try {
+            envVars = run.getEnvironment(listener);
+        } catch (Exception e) {
+            throw new AbortException(e.getMessage());
+        }
+
+        return envVars.get(variable);
     }
 }
