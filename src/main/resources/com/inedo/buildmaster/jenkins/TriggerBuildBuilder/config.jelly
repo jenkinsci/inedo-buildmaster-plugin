@@ -18,8 +18,8 @@
     <f:entry title="Release" field="releaseNumber" >
       <f:textbox default="$${BUILDMASTER_RELEASE_NUMBER}" />
     </f:entry>
-    <f:entry title="Build Number" field="buildNumber" >
-      <f:textbox default="${descriptor.defaultBuildNumber}" />
+    <f:entry title="Package Number" field="packageNumber" >
+      <f:textbox default="${descriptor.defaultPackageNumber}" />
     </f:entry>
     <f:optionalProperty title="Enable Deployable in BuildMaster" field="enableReleaseDeployable" />
   </f:advanced>

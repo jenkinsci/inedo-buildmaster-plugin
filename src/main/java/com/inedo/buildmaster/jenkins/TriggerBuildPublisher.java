@@ -35,7 +35,7 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
     private boolean deployToFirstStage = true;
     private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
     private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-    private String buildNumber = "${BUILDMASTER_BUILD_NUMBER}";
+    private String packageNumber = "${BUILDMASTER_PACKAGE_NUMBER}";
 
     @DataBoundConstructor
     public TriggerBuildPublisher() {
@@ -67,8 +67,8 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
     }
 
     @DataBoundSetter
-    public final void setBuildNumber(String buildNumber) {
-        this.buildNumber = buildNumber;
+    public final void setPackageNumber(String packageNumber) {
+        this.packageNumber = packageNumber;
     }
 
     @DataBoundSetter
@@ -108,8 +108,8 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
         return releaseNumber;
     }
 
-    public String getBuildNumber() {
-        return buildNumber;
+    public String getPackageNumber() {
+        return packageNumber;
     }
 
     public boolean getDeployToFirstStage() {
@@ -155,8 +155,8 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
             return FormValidation.ok();
         }
 
-        public String getDefaultBuildNumber() {
-            return BuildHelper.DEFAULT_BUILD_NUMBER;
+        public String getDefaultPackageNumber() {
+            return BuildHelper.DEFAULT_PACKAGE_NUMBER;
         }
     }
 }

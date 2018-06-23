@@ -36,7 +36,7 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
     private boolean deployToFirstStage = true;
     private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
     private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-    private String buildNumber = "${BUILDMASTER_BUILD_NUMBER}";
+    private String packageNumber = "${BUILDMASTER_PACKAGE_NUMBER}";
 
     @DataBoundConstructor
     public TriggerBuildBuilder() {
@@ -68,8 +68,8 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
     }
 
     @DataBoundSetter
-    public final void setBuildNumber(String buildNumber) {
-        this.buildNumber = buildNumber;
+    public final void setPackageNumber(String packageNumber) {
+        this.packageNumber = packageNumber;
     }
 
     @DataBoundSetter
@@ -109,8 +109,8 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
         return releaseNumber;
     }
 
-    public String getBuildNumber() {
-        return buildNumber;
+    public String getPackageNumber() {
+        return packageNumber;
     }
 
     public boolean getDeployToFirstStage() {
@@ -124,7 +124,7 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
         }
     }
 
-    @Symbol("buildMasterTriggerBuild")
+    @Symbol("buildMasterTriggerDeployment")
     @Extension
     // This indicates to Jenkins that this is an implementation of an extension
     // point.
@@ -141,7 +141,7 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
 
         @Override
         public String getDisplayName() {
-            return "BuildMaster: Trigger Build";
+            return "Trigger BuildMaster Deployment";
         }
 
         // TODO jelly expandableTextbox does not support form validation currently so this does nothing:
@@ -156,8 +156,8 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
             return FormValidation.ok();
         }
 
-        public String getDefaultBuildNumber() {
-            return BuildHelper.DEFAULT_BUILD_NUMBER;
+        public String getDefaultPackageNumber() {
+            return BuildHelper.DEFAULT_PACKAGE_NUMBER;
         }
     }
 }

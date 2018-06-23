@@ -21,7 +21,7 @@ public interface Triggerable {
 
     public String getReleaseNumber();
 
-    public String getBuildNumber();
+    public String getPackageNumber();
 
     public boolean getDeployToFirstStage();
 }

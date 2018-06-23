@@ -406,7 +406,7 @@ public class BuildMasterApi {
      * Creates a new build of an application and promote it to the
      * first environment. Error thrown on failure.
      * 
-     * @return BuildNumber
+     * @return ApiPackageDeployment
      * 
      * @throws IOException
      * @throws InterruptedException
@@ -421,7 +421,7 @@ public class BuildMasterApi {
      * number and returns the build number of the new build. Error thrown on
      * failure.
      * 
-     * @return BuildNumber
+     * @return ApiPackageDeployment
      * 
      * @throws IOException
      * @throws InterruptedException
@@ -592,7 +592,7 @@ public class BuildMasterApi {
             return new ApiVariable[0];
 
         JsonReader reader = HttpEasy.request()
-                .path("/api/variables/packages/{«application-name»}/{«release-number»}/{«package-number»}")
+                .path("/api/variables/packages/{application-name}/{release-number}/{package-numberx1}")
                 .urlParameters(applicationName, releaseNumber, packageNumber)
                 .queryParam("key", config.apiKey)
                 .get()

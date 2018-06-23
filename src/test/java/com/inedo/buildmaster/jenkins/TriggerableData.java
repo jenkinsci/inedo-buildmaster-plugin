@@ -15,13 +15,13 @@ public class TriggerableData implements Triggerable {
 	public EnableReleaseDeployable enableReleaseDeployable = null;
 	public String applicationId;
 	public String releaseNumber;
-    public String buildNumber;
+    public String packageNumber;
     public boolean deployToFirstStage;
 
-    public TriggerableData(String applicationId, String releaseNumber, String buildNumber, boolean deployToFirstStage) {
+    public TriggerableData(String applicationId, String releaseNumber, String packageNumber, boolean deployToFirstStage) {
 		this.applicationId = applicationId;
 		this.releaseNumber = releaseNumber;
-		this.buildNumber = buildNumber;
+		this.packageNumber = packageNumber;
         this.deployToFirstStage = deployToFirstStage;
 	}
 	
@@ -58,8 +58,8 @@ public class TriggerableData implements Triggerable {
 		return releaseNumber;
 	}
 	
-	public String getBuildNumber() {
-		return buildNumber;
+	public String getPackageNumber() {
+		return packageNumber;
 	}
 	
     public boolean getDeployToFirstStage() {
@@ -92,8 +92,8 @@ public class TriggerableData implements Triggerable {
 		return this;
 	}
 	
-	public TriggerableData setBuildNumber(String value) {
-		buildNumber = value;
+	public TriggerableData setPackageNumber(String value) {
+		packageNumber = value;
 		return this;
 	}
 

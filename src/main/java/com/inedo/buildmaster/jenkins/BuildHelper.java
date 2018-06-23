@@ -22,7 +22,7 @@ import hudson.model.TaskListener;
  * @author Andrew Sumner
  */
 public class BuildHelper {
-    public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}";
+    public static final String DEFAULT_PACKAGE_NUMBER = "${BUILDMASTER_PACKAGE_NUMBER}";
 
     public static boolean triggerBuild(Run<?, ?> run, TaskListener listener, Triggerable trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
@@ -35,7 +35,7 @@ public class BuildHelper {
 
         int applicationId = Integer.valueOf(helper.expandVariable(trigger.getApplicationId()));
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
-        String buildNumber = helper.expandVariable(trigger.getBuildNumber());
+        String packageNumber = helper.expandVariable(trigger.getPackageNumber());
 
         Application application = buildmaster.getApplication(applicationId);
 
@@ -69,21 +69,21 @@ public class BuildHelper {
 
         ApiPackageDeployment apiPackage;
 
-        if (buildNumber != null && !buildNumber.isEmpty() && !DEFAULT_BUILD_NUMBER.equals(buildNumber)) {
-            helper.getLogWriter().info("Create BuildMaster build with BuildNumber=" + buildNumber);
-            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, buildNumber, variablesList, trigger.getDeployToFirstStage());
+        if (packageNumber != null && !packageNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(packageNumber)) {
+            helper.getLogWriter().info("Create BuildMaster build with PackageNumber=" + packageNumber);
+            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, packageNumber, variablesList, trigger.getDeployToFirstStage());
 
-            if (!apiPackage.releasePackage.number.equals(buildNumber)) {
+            if (!apiPackage.releasePackage.number.equals(packageNumber)) {
                 helper.getLogWriter().info(String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.",
-                        buildNumber,
+                        packageNumber,
                         apiPackage.releasePackage.number));
             }
         } else {
             helper.getLogWriter().info("Create BuildMaster package");
             apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList, trigger.getDeployToFirstStage());
 
-            helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + apiPackage.releasePackage.number);
-            helper.injectEnvrionmentVariable("BUILDMASTER_BUILD_NUMBER", apiPackage.releasePackage.number);
+            helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + apiPackage.releasePackage.number);
+            helper.injectEnvrionmentVariable("BUILDMASTER_PACKAGE_NUMBER", apiPackage.releasePackage.number);
         }
 
         if (trigger.isWaitTillBuildCompleted()) {
@@ -142,14 +142,14 @@ public class BuildHelper {
         
         int applicationId = Integer.valueOf(helper.expandVariable(builder.getApplicationId()));
         String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
-        String buildNumber = helper.expandVariable(builder.getBuildNumber());
+        String packageNumber = helper.expandVariable(builder.getPackageNumber());
         String toStage = helper.expandVariable(builder.getToStage());
 
         if (buildmaster.getApplication(applicationId) == null) {
             throw new AbortException("Unknown application id " + applicationId);
         }
         
-        ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, buildNumber, toStage);
+        ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, packageNumber, toStage);
 
         if (builder.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till deployment completed");

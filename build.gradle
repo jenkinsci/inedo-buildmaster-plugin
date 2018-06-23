@@ -57,10 +57,7 @@ configurations.all {
 }
 
 dependencies {
-	//jenkinsPlugins 'org.jenkinsci.plugins:git:1.1.15@jar'
-	// Pipeline: Step API v2.7 is older than required. To fix, install v2.15 or later.
-	jenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.15@jar'
-	//compile 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.7@jar'
+	//jenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.15@jar'
     	
 	compile ('com.github.concordion.cubano:cubano-httpeasy:HttpEasySecurity-SNAPSHOT') {
 		exclude group: 'com.github.markusbernhardt', module: 'proxy-vole' 

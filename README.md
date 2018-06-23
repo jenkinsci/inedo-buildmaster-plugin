@@ -5,6 +5,7 @@ This plugin allows Jenkins to request version information and trigger a build on
 See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin) for more details.
 
 https://jenkins.io/doc/developer/plugin-development/pipeline-integration/
+https://jenkins.io/doc/book/pipeline/syntax/
 
 
 # Building The Plugin

@@ -28,15 +28,17 @@
     </j:choose>
   </f:entry>
   
-  <f:entry title="Build Number Source" field="buildNumberSource">
+  <f:entry title="Package Number Source" field="packageNumberSource">
     <f:select default="BUILDMASTER"/>
   </f:entry>
   
-  <f:entry title="Deployable" field="deployableId">
- 	<j:choose>
-   	  <j:when test="${descriptor.isBuildMasterAvailable}"><f:select default="NOT_REQUIRED"/></j:when>
-      <j:otherwise><f:textbox default="NOT_REQUIRED" /></j:otherwise>
-    </j:choose>
-  </f:entry>
-    
+  <f:advanced title="Advanced Settings">
+    <f:entry title="Deployable" field="deployableId">
+ 	  <j:choose>
+   	    <j:when test="${descriptor.isBuildMasterAvailable}"><f:select default="NOT_REQUIRED"/></j:when>
+        <j:otherwise><f:textbox default="NOT_REQUIRED" /></j:otherwise>
+      </j:choose>
+    </f:entry>
+  </f:advanced>
+  
 </j:jelly>

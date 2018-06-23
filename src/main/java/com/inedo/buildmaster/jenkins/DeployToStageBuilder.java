@@ -32,7 +32,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     private WaitTillCompleted waitTillBuildCompleted = null;
     private String applicationId = DescriptorImpl.defaultApplicationId;
     private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
-    private String buildNumber = DescriptorImpl.defaultBuildNumber;
+    private String packageNumber = DescriptorImpl.defaultPackageNumber;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
@@ -60,8 +60,8 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     }
 
     @DataBoundSetter
-    public final void setBuildNumber(String buildNumber) {
-        this.buildNumber = buildNumber;
+    public final void setPackageNumber(String packageNumber) {
+        this.packageNumber = packageNumber;
     }
 
     public String getToStage() {
@@ -84,8 +84,8 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         return releaseNumber;
     }
 
-    public String getBuildNumber() {
-        return buildNumber;
+    public String getPackageNumber() {
+        return packageNumber;
     }
 
     @Override
@@ -95,14 +95,14 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         }
     }
 
-    @Symbol("buildMasterDeployToStage")
+    @Symbol("buildMasterDeployPackageToStage")
     @Extension
     // This indicates to Jenkins that this is an implementation of an extension
     // point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         public static final String defaultApplicationId = "${BUILDMASTER_APPLICATION_ID}";
         public static final String defaultReleaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-        public static final String defaultBuildNumber = BuildHelper.DEFAULT_BUILD_NUMBER;
+        public static final String defaultPackageNumber = BuildHelper.DEFAULT_PACKAGE_NUMBER;
 
         public DescriptorImpl() {
             super(DeployToStageBuilder.class);
@@ -116,7 +116,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
 
         @Override
         public String getDisplayName() {
-            return "BuildMaster: Deploy To Stage";
+            return "Deploy BuildMaster Package To Stage";
         }
     }
 }

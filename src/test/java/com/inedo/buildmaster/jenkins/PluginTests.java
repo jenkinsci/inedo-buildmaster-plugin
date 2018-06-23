@@ -55,7 +55,7 @@ public class PluginTests {
 	public PrintStream logger = new PrintStream(outContent);
 	
 	public String releaseNumber;
-	public String buildNumber;
+	public String packageNumber;
     public boolean deployToFirstStage;
 			
 	@Before
@@ -85,7 +85,7 @@ public class PluginTests {
 		BuildMasterApi buildmaster = new BuildMasterApi(mockServer.getBuildMasterConfig(), new JenkinsConsoleLogWriter());
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		this.buildNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+		this.packageNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
         this.deployToFirstStage = true;
 	}
 	
@@ -98,19 +98,19 @@ public class PluginTests {
 	
 	@Test
 	public void perform() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber, deployToFirstStage);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage);
 	
 		restLog();
 		assertThat("Result should be successful", BuildHelper.triggerBuild(build, listener, data), is(true));
 		
 		String log[] = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
-		assertThat("Create Build step should be the last actioned performed.", log[log.length - 1], containsString("Create BuildMaster build with BuildNumber="));
+        assertThat("Create Build step should be the last actioned performed.", log[log.length - 1], containsString("Create BuildMaster build with PackageNumber="));
 	}
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber, deployToFirstStage)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
 			.setWaitTillBuildCompleted(new WaitTillCompleted(true));
 		
 		restLog();
@@ -122,7 +122,7 @@ public class PluginTests {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber, deployToFirstStage)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
 			.setSetBuildVariables(new SetBuildVariables(false, "hello=performSetVariables"));
 		
 		restLog();
@@ -144,7 +144,7 @@ public class PluginTests {
 	
 	@Test
 	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, buildNumber, deployToFirstStage)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
 			.setEnableReleaseDeployable(new EnableReleaseDeployable("2077"));
 		
 		restLog();

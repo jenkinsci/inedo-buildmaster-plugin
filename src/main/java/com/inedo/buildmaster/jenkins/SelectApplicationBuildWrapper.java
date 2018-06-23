@@ -16,6 +16,7 @@ import com.inedo.buildmaster.domain.ReleaseStatus;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -25,60 +26,33 @@ import hudson.model.ResourceActivity;
 import hudson.model.ResourceList;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Builder;
+import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import jenkins.tasks.SimpleBuildStep;
+import jenkins.tasks.SimpleBuildWrapper;
 
-/**
- * The SelectApplicationBuildStep will populate environment variables for the BuildMaster application, release and build numbers 
- * as a build step.
- * 
- * This Action also locks any other Jenkins jobs from running FOR THE SAME BUILDMASTER APPLICATION until this job has completed.  
- *
- * See https://github.com/jenkinsci/pipeline-plugin/blob/master/DEVGUIDE.md#user-content-build-wrappers-1 for tips on 
- * Jenkins pipeline support 
- * 
- * @author Andrew Sumner
- *
- * TODO: Now that I am locking resources this possibly should be a JobConfiguration item and not a build step, although it
- * doesn't seem to matter for resource locking purposes.
- * 
- * TODO: Release Number selection: 
- * If a specific release number is selected (for example an emergency patch might want to go on an earlier release than the latest one) this will 
- * become invalid once the release is finalised in BuildMaster.  There may be scope for an enhancement here to provide alternative forms of matching on release number - eg by
- * branch name.
- */
- 
-public class SelectApplicationBuilder extends Builder implements SimpleBuildStep, ResourceActivity, BuildMasterSelectApplication {
-
-
+public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements ResourceActivity, BuildMasterSelectApplication
+{
     private String applicationId;
     private String releaseNumber = SelectApplicationHelper.LATEST_RELEASE;
-    private String buildNumberSource = "BUILDMASTER";
+    private String packageNumberSource = "BUILDMASTER";
     private String deployableId = SelectApplicationHelper.NOT_REQUIRED;
 
-    // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public SelectApplicationBuilder() {
-    }
-
-    @DataBoundSetter 
-    public final void setApplicationId(String applicationId) {
+    public SelectApplicationBuildWrapper(String applicationId) {
         this.applicationId = applicationId;
     }
-    
+
     @DataBoundSetter
     public final void setReleaseNumber(String releaseNumber) {
         this.releaseNumber = releaseNumber;
     }
-    
+
     @DataBoundSetter
-    public final void setBuildNumberSource(String buildNumberSource) {
-        this.buildNumberSource = buildNumberSource;
+    public final void setPackageNumberSource(String packageNumberSource) {
+        this.packageNumberSource = packageNumberSource;
     }
-    
+
     @DataBoundSetter
     public final void setDeployableId(String deployableId) {
         this.deployableId = deployableId;
@@ -87,75 +61,65 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
     public String getApplicationId() {
         return applicationId;
     }
-    
+
     public String getReleaseNumber() {
         return releaseNumber;
     }
-    
-    public String getBuildNumberSource() {
-        return buildNumberSource;
+
+    public String getPackageNumberSource() {
+        return packageNumberSource;
     }
-    
+
     public String getDeployableId() {
         return deployableId;
     }
-    
+
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        SelectApplicationHelper execute = new SelectApplicationHelper(run, listener);
+    public void setUp(Context context, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars initialEnvironment) throws IOException, InterruptedException {
+        SelectApplicationHelper execute = new SelectApplicationHelper(build, listener);
 
         BuildMasterApplication application = execute.selectApplication(this);
 
         JenkinsHelper helper = execute.getJenkinsHelper();
 
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + application.applicationId);
-        helper.injectEnvrionmentVariable("BUILDMASTER_APPLICATION_ID", String.valueOf(application.applicationId));
+        context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(application.applicationId));
 
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + application.releaseNumber);
-        helper.injectEnvrionmentVariable("BUILDMASTER_RELEASE_NUMBER", application.releaseNumber);
+        context.env("BUILDMASTER_RELEASE_NUMBER", application.releaseNumber);
 
-        if (application.buildNumber != null) {
+        if (application.packageNumber != null) {
             helper.getLogWriter()
-                    .info(String.format("Inject environment variable BUILDMASTER_BUILD_NUMBER with %s build number = %s", application.buildNumberSource, application.buildNumber));
-            helper.injectEnvrionmentVariable("BUILDMASTER_BUILD_NUMBER", application.buildNumber);
+                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER with %s build number = %s", application.packageNumberSource,
+                            application.packageNumber));
+            context.env("BUILDMASTER_PACKAGE_NUMBER", application.packageNumber);
         }
 
         if (application.deployableId != null) {
             helper.getLogWriter().info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + application.deployableId);
-            helper.injectEnvrionmentVariable("BUILDMASTER_DEPLOYABLE_ID", String.valueOf(application.deployableId));
+            context.env("BUILDMASTER_DEPLOYABLE_ID", String.valueOf(application.deployableId));
         }
     }
-  
-    @Override
-    public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
-    }
-    
-    @Symbol("buildMasterSelectApplication")
-    @Extension // This indicates to Jenkins that this is an implementation of an extension point.
-    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+
+    @Extension
+    @Symbol("buildMasterWithApplicationRelease")
+    public static final class DescriptorImpl extends BuildWrapperDescriptor {
         private BuildMasterApi buildmaster = null;
         private Boolean isBuildMasterAvailable = null;
         private String connectionError = "";
 
         public DescriptorImpl() {
-            super(SelectApplicationBuilder.class);
         }
-        
-        // @Override
-        // public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        // return req.bindJSON(SelectApplicationBuilder.class, formData);
-        // }
 
-        @SuppressWarnings("rawtypes")
-        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            // Indicates that this builder can be used with all kinds of project types 
-            return true;
-        }
-        
         @Override
         public String getDisplayName() {
-            return "BuildMaster: Select Application";
+            return "Select BuildMaster Application";
+        }
+
+        @Override
+        public boolean isApplicable(AbstractProject<?, ?> item) {
+            return true;
         }
 
         /**
@@ -164,7 +128,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
         public boolean getIsBuildMasterAvailable() {
             if (isBuildMasterAvailable == null) {
                 isBuildMasterAvailable = true;
-                
+
                 try {
                     buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());
                     buildmaster.checkConnection();
@@ -173,7 +137,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
                     connectionError = ex.getClass().getName() + ": " + ex.getMessage();
 
                     System.err.println(connectionError);
-                }    
+                }
             }
 
             return isBuildMasterAvailable;
@@ -198,26 +162,25 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
                 items.add((application.ApplicationGroup_Name != null ? application.ApplicationGroup_Name + " > " : "") + application.Application_Name,
                         String.valueOf(application.Application_Id));
             }
-            
+
             return items;
         }
-        
+
         public FormValidation doCheckApplicationId(@QueryParameter String value) {
             if (value.length() == 0)
                 return FormValidation.error("Please set an application id");
-            
+
             return FormValidation.ok();
         }
-        
-        
+
         public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
             if (value.length() == 0)
                 return FormValidation.error("Please set a release");
-            
+
             if (!getIsBuildMasterAvailable()) {
                 return FormValidation.ok();
             }
-                        
+
             // Validate release is still active
             if (!SelectApplicationHelper.LATEST_RELEASE.equals(value) && applicationId != null && !applicationId.isEmpty()) {
                 try {
@@ -236,10 +199,10 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
                     return FormValidation.error(ex.getClass().getName() + ": " + ex.getMessage());
                 }
             }
-            
+
             return FormValidation.ok();
         }
-        
+
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
             ListBoxModel items = new ListBoxModel();
 
@@ -260,7 +223,7 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
 
             return items;
         }
-        
+
         public ListBoxModel doFillDeployableIdItems(@QueryParameter String applicationId) throws IOException {
             ListBoxModel items = new ListBoxModel();
 
@@ -281,15 +244,15 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
 
             return items;
         }
-        
+
         public FormValidation doCheckDeployableId(@QueryParameter String value) {
             if (value.length() == 0)
                 return FormValidation.error("Please set a deployable");
-            
+
             if (!getIsBuildMasterAvailable()) {
                 return FormValidation.ok();
             }
-                        
+
             // Validate release is still active
             if (!SelectApplicationHelper.NOT_REQUIRED.equals(value)) {
                 try {
@@ -302,11 +265,11 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
                     return FormValidation.error(ex.getClass().getName() + ": " + ex.getMessage());
                 }
             }
-            
+
             return FormValidation.ok();
         }
-        
-        public ListBoxModel doFillBuildNumberSourceItems() {
+
+        public ListBoxModel doFillPackageNumberSourceItems() {
             ListBoxModel items = new ListBoxModel();
 
             items.add("BuildMaster", "BUILDMASTER");
@@ -316,8 +279,8 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
             return items;
         }
     }
-    
- // ResourceActivity
+
+    // ResourceActivity
     @Override
     public ResourceList getResourceList() {
         ResourceList list = new ResourceList();
@@ -333,4 +296,3 @@ public class SelectApplicationBuilder extends Builder implements SimpleBuildStep
         return "BuildMaster Application Resource";
     }
 }
-

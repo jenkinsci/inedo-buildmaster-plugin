@@ -5,7 +5,7 @@ public interface BuildMasterSelectApplication {
 
     public String getReleaseNumber();
 
-    public String getBuildNumberSource();
+    public String getPackageNumberSource();
 
     public String getDeployableId();
 }

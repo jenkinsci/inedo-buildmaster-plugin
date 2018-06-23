@@ -45,29 +45,29 @@ public class SelectApplicationHelper {
             }
         }
 
-        // Populate BUILDMASTER_BUILD_NUMBER variable
-        switch (source.getBuildNumberSource()) {
+        // Populate BUILDMASTER_PACKAGE_NUMBER variable
+        switch (source.getPackageNumberSource()) {
         case "BUILDMASTER":
-            application.buildNumber = buildmaster.getReleaseNextPackageNumber(application.applicationId, application.releaseNumber);
-            application.buildNumberSource = "BuildMaster";
+            application.packageNumber = buildmaster.getReleaseNextPackageNumber(application.applicationId, application.releaseNumber);
+            application.packageNumberSource = "BuildMaster";
 
             break;
 
         case "JENKINS":
-            application.buildNumber = helper.getEnvrionmentVariable("BUILD_NUMBER");
+            application.packageNumber = helper.getEnvrionmentVariable("BUILD_NUMBER");
 
             break;
 
         case "NOT_REQUIRED":
-            application.buildNumber = null;
+            application.packageNumber = null;
 
             break;
 
         default:
-            if (source.getBuildNumberSource() == null || source.getBuildNumberSource().isEmpty()) {
-                application.buildNumber = null;
+            if (source.getPackageNumberSource() == null || source.getPackageNumberSource().isEmpty()) {
+                application.packageNumber = null;
             } else {
-                throw new AbortException("Unknown buildNumberSource " + source.getBuildNumberSource());
+                throw new AbortException("Unknown packageNumberSource " + source.getPackageNumberSource());
             }
         }
 
