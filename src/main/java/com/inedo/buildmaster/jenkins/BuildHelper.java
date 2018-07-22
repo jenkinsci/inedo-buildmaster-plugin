@@ -24,7 +24,7 @@ import hudson.model.TaskListener;
 public class BuildHelper {
     public static final String DEFAULT_PACKAGE_NUMBER = "${BUILDMASTER_PACKAGE_NUMBER}";
 
-    public static boolean triggerBuild(Run<?, ?> run, TaskListener listener, Triggerable trigger) throws IOException, InterruptedException {
+    public static ApiPackageDeployment createPackage(Run<?, ?> run, TaskListener listener, ICreatePackage trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
 
         if (!GlobalConfig.isRequiredFieldsConfigured()) {
@@ -41,7 +41,7 @@ public class BuildHelper {
 
         if (application == null) {
             JenkinsHelper.fail("Unknown application id " + applicationId);
-            return false;
+            return null;
         }
 
         Map<String, String> variablesList = new HashMap<>();
@@ -69,7 +69,7 @@ public class BuildHelper {
 
         ApiPackageDeployment apiPackage;
 
-        if (packageNumber != null && !packageNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(packageNumber)) {
+        if (packageNumber != null && !packageNumber.equalsIgnoreCase("null") && !packageNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(packageNumber)) {
             helper.getLogWriter().info("Create BuildMaster build with PackageNumber=" + packageNumber);
             apiPackage = buildmaster.createPackage(applicationId, releaseNumber, packageNumber, variablesList, trigger.getDeployToFirstStage());
 
@@ -81,17 +81,16 @@ public class BuildHelper {
         } else {
             helper.getLogWriter().info("Create BuildMaster package");
             apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList, trigger.getDeployToFirstStage());
-
-            helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + apiPackage.releasePackage.number);
-            helper.injectEnvrionmentVariable("BUILDMASTER_PACKAGE_NUMBER", apiPackage.releasePackage.number);
         }
 
         if (trigger.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till deployment completed");
-            return buildmaster.waitForDeploymentsToComplete(apiPackage.deployments, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure());
+            if (!buildmaster.waitForDeploymentsToComplete(apiPackage.deployments, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure())) {
+                return null;
+            }
         }
 
-        return true;
+        return apiPackage;
     }
 
     public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) throws IOException {

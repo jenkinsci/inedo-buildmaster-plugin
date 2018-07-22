@@ -28,7 +28,7 @@ import hudson.util.FormValidation;
  * 
  * @author Andrew Sumner 
  */
-public class TriggerBuildPublisher extends Recorder implements Triggerable {
+public class TriggerBuildPublisher extends Recorder implements ICreatePackage {
     private WaitTillCompleted waitTillBuildCompleted = null;
     private SetBuildVariables setBuildVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
@@ -118,7 +118,9 @@ public class TriggerBuildPublisher extends Recorder implements Triggerable {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        return BuildHelper.triggerBuild(build, listener, this);
+        BuildHelper.createPackage(build, listener, this);
+
+        return true;
     }
 
     @Override

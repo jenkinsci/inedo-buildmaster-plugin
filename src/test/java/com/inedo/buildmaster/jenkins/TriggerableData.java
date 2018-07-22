@@ -9,7 +9,7 @@ import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
  * 
  * @author Andrew Sumner
  */
-public class TriggerableData implements Triggerable {
+public class TriggerableData implements ICreatePackage {
 	public WaitTillCompleted waitTillBuildCompleted = null;
 	public SetBuildVariables setBuildVariables = null;
 	public EnableReleaseDeployable enableReleaseDeployable = null;

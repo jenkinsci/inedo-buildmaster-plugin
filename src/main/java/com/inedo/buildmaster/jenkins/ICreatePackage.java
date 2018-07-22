@@ -4,7 +4,7 @@ import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
-public interface Triggerable {
+public interface ICreatePackage {
     public boolean isWaitTillBuildCompleted();
 
     public boolean isSetBuildVariables();

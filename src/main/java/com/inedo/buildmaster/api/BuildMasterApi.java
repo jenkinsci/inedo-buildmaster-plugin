@@ -653,9 +653,11 @@ public class BuildMasterApi {
      * @throws InterruptedException
      */
     public boolean waitForDeploymentsToComplete(ApiDeployment[] deployments, boolean printLogOnFailure) throws IOException, InterruptedException {
-        for (ApiDeployment deployment : deployments) {
-            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure)) {
-                return false;
+        if (deployments != null) {
+            for (ApiDeployment deployment : deployments) {
+                if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure)) {
+                    return false;
+                }
             }
         }
 

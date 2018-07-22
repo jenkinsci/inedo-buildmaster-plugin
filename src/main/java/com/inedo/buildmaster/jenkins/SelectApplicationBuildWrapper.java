@@ -35,7 +35,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 {
     private String applicationId;
     private String releaseNumber = SelectApplicationHelper.LATEST_RELEASE;
-    private String packageNumberSource = "BUILDMASTER";
+    private String packageNumberSource = SelectApplicationHelper.NOT_REQUIRED;
     private String deployableId = SelectApplicationHelper.NOT_REQUIRED;
 
     @DataBoundConstructor
@@ -90,8 +90,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 
         if (application.packageNumber != null) {
             helper.getLogWriter()
-                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER with %s build number = %s", application.packageNumberSource,
-                            application.packageNumber));
+                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=%s, sourced from %s" + application.packageNumber, application.packageNumberSource));
             context.env("BUILDMASTER_PACKAGE_NUMBER", application.packageNumber);
         }
 

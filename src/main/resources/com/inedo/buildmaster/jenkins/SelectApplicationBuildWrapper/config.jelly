@@ -29,7 +29,7 @@
   </f:entry>
   
   <f:entry title="Package Number Source" field="packageNumberSource">
-    <f:select default="BUILDMASTER"/>
+    <f:select default="NOT_REQUIRED"/>
   </f:entry>
   
   <f:advanced title="Advanced Settings">

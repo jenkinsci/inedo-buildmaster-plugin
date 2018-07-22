@@ -2,14 +2,15 @@ package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
+import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
 import hudson.AbortException;
 import hudson.Extension;
@@ -24,12 +25,15 @@ import hudson.util.FormValidation;
 import jenkins.tasks.SimpleBuildStep;
 
 /**
- * The TriggerBuildPostBuildStep will trigger a build in BuildMaster for a selected application and release
- * as a build step.
+ * Create a package in BuildMaster for the specified application and release and optionally deploy it to the first stage.
  *
+ * <p>
+ * <i>This has been duplicated by {@link CreatePackageStep} to support Jenkins pipeline script.</i>
+ * </p>
+ * 
  * @author Andrew Sumner
  */
-public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Triggerable {
+public class CreatePackageBuilder extends Builder implements SimpleBuildStep, ICreatePackage {
     private WaitTillCompleted waitTillBuildCompleted = null;
     private SetBuildVariables setBuildVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
@@ -39,7 +43,7 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
     private String packageNumber = "${BUILDMASTER_PACKAGE_NUMBER}";
 
     @DataBoundConstructor
-    public TriggerBuildBuilder() {
+    public CreatePackageBuilder() {
     }
 
     @DataBoundSetter
@@ -119,29 +123,31 @@ public class TriggerBuildBuilder extends Builder implements SimpleBuildStep, Tri
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        if (!BuildHelper.triggerBuild(run, listener, this)) {
+        ApiPackageDeployment apiPackage = BuildHelper.createPackage(run, listener, this);
+
+        if (apiPackage == null) {
             throw new AbortException("Deployment failed");
         }
+
+        JenkinsHelper helper = new JenkinsHelper(run, listener);
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + apiPackage.releasePackage.number);
+        helper.injectEnvrionmentVariable("BUILDMASTER_PACKAGE_NUMBER", apiPackage.releasePackage.number);
     }
 
-    @Symbol("buildMasterTriggerDeployment")
     @Extension
-    // This indicates to Jenkins that this is an implementation of an extension
-    // point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         public DescriptorImpl() {
-            super(TriggerBuildBuilder.class);
+            super(CreatePackageBuilder.class);
         }
 
         @SuppressWarnings("rawtypes")
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            // Indicates that this builder can be used with all kinds of project types
             return true;
         }
 
         @Override
         public String getDisplayName() {
-            return "Trigger BuildMaster Deployment";
+            return "Create BuildMaster Package";
         }
 
         // TODO jelly expandableTextbox does not support form validation currently so this does nothing:
