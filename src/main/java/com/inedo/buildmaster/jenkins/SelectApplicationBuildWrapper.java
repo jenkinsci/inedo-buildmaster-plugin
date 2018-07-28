@@ -148,9 +148,9 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         public ListBoxModel doFillApplicationIdItems() throws IOException {
             ListBoxModel items = new ListBoxModel();
 
-            if (!getIsBuildMasterAvailable()) {
-                items.add("", "");
+            items.add("", "");
 
+            if (!getIsBuildMasterAvailable()) {
                 return items;
             }
 
