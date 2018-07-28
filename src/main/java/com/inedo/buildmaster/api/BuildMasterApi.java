@@ -39,7 +39,7 @@ import com.inedo.buildmaster.jenkins.utils.JenkinsLogWriter;
 /**
  * BuildMaster json api interface
  * 
- * Unless otherwise specified the api calls are specified in http://<buildmaster>/reference/api
+ * Unless otherwise specified the api calls are specified in {@literal http://<buildmaster>/reference/api}
  * 
  * @author Andrew Sumner
  */
