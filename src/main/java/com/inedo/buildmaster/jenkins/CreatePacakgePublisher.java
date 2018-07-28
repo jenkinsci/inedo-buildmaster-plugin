@@ -28,7 +28,7 @@ import hudson.util.FormValidation;
  * 
  * @author Andrew Sumner 
  */
-public class TriggerBuildPublisher extends Recorder implements ICreatePackage {
+public class CreatePacakgePublisher extends Recorder implements ICreatePackage {
     private WaitTillCompleted waitTillBuildCompleted = null;
     private SetBuildVariables setBuildVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
@@ -38,7 +38,7 @@ public class TriggerBuildPublisher extends Recorder implements ICreatePackage {
     private String packageNumber = "${BUILDMASTER_PACKAGE_NUMBER}";
 
     @DataBoundConstructor
-    public TriggerBuildPublisher() {
+    public CreatePacakgePublisher() {
     }
 
     @DataBoundSetter
@@ -131,7 +131,7 @@ public class TriggerBuildPublisher extends Recorder implements ICreatePackage {
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         public DescriptorImpl() {
-            super(TriggerBuildPublisher.class);
+            super(CreatePacakgePublisher.class);
         }
 
         @SuppressWarnings("rawtypes")

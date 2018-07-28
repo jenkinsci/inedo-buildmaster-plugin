@@ -1,4 +1,4 @@
-package com.inedo.buildmaster;
+package com.inedo.buildmaster.jenkins;
 
 public interface BuildMasterSelectApplication {
     public String getApplicationId();

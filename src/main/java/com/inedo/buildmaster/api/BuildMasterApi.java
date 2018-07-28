@@ -456,7 +456,6 @@ public class BuildMasterApi {
             recordResult = false;
 
             try {
-                // TODO Perhaps like BuildMaster I should have an option on the task
                 deployments = deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null);
             } finally {
                 recordResult = storeRecordResult;
@@ -471,7 +470,7 @@ public class BuildMasterApi {
      * @param applicationId Required
      * @param releaseNumber Required
      * @param packageNumber Required
-     * @param toStage Optional. If not supplied, the next stage in the pipeline will be used.
+     * @param stage Optional. If not supplied, the next stage in the pipeline will be used.
      * @return ApiDeployment[]
      * 
      * @throws IOException
@@ -479,17 +478,17 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
-    public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, String toStage) throws IOException, InterruptedException {
+    public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, String stage) throws IOException, InterruptedException {
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
         // Don't pass in packageNumber - it's not building yet!
         // TODO This will cause get active deployments to bring back everything because we need Active and Executing status
         logWriter.info("Wait for any active deployments to complete");
         waitForActiveDeploymentsToComplete(applicationId, releaseNumber);
 
-        if (Strings.isNullOrEmpty(toStage)) {
+        if (Strings.isNullOrEmpty(stage)) {
             logWriter.info("Deploy package to next stage");
         } else {
-            logWriter.info("Deploy package to " + toStage + " stage");
+            logWriter.info("Deploy package to " + stage + " stage");
         }
 
         JsonReader reader = HttpEasy.request()
@@ -498,7 +497,7 @@ public class BuildMasterApi {
                 .field("applicationId", applicationId) 
                 .field("releaseNumber", releaseNumber)
                 .field("packageNumber", packageNumber)
-                .field("toStage", toStage)
+                .field("toStage", stage)
                 .put()
                 .getJsonReader();
 

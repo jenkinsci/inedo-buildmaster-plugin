@@ -70,7 +70,7 @@ public class BuildHelper {
         ApiPackageDeployment apiPackage;
 
         if (packageNumber != null && !packageNumber.equalsIgnoreCase("null") && !packageNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(packageNumber)) {
-            helper.getLogWriter().info("Create BuildMaster build with PackageNumber=" + packageNumber);
+            helper.getLogWriter().info("Create BuildMaster package with PackageNumber=" + packageNumber);
             apiPackage = buildmaster.createPackage(applicationId, releaseNumber, packageNumber, variablesList, trigger.getDeployToFirstStage());
 
             if (!apiPackage.releasePackage.number.equals(packageNumber)) {
@@ -142,13 +142,13 @@ public class BuildHelper {
         int applicationId = Integer.valueOf(helper.expandVariable(builder.getApplicationId()));
         String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
         String packageNumber = helper.expandVariable(builder.getPackageNumber());
-        String toStage = helper.expandVariable(builder.getToStage());
+        String stage = helper.expandVariable(builder.getStage());
 
         if (buildmaster.getApplication(applicationId) == null) {
             throw new AbortException("Unknown application id " + applicationId);
         }
         
-        ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, packageNumber, toStage);
+        ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, packageNumber, stage);
 
         if (builder.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till deployment completed");

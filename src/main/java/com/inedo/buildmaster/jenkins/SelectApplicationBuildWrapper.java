@@ -7,7 +7,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.BuildMasterSelectApplication;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.Application;
@@ -90,7 +89,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 
         if (application.packageNumber != null) {
             helper.getLogWriter()
-                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=%s, sourced from %s" + application.packageNumber, application.packageNumberSource));
+                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=%s, sourced from %s", application.packageNumber, application.packageNumberSource));
             context.env("BUILDMASTER_PACKAGE_NUMBER", application.packageNumber);
         }
 

@@ -28,7 +28,7 @@ import jenkins.tasks.SimpleBuildStep;
  * @author Andrew Sumner
  */
 public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
-    private String toStage = "";
+    private String stage = "";
     private WaitTillCompleted waitTillBuildCompleted = null;
     private String applicationId = DescriptorImpl.defaultApplicationId;
     private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
@@ -40,8 +40,8 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     }
 
     @DataBoundSetter
-    public final void setToStage(String toStage) {
-        this.toStage = toStage;
+    public final void setStage(String stage) {
+        this.stage = stage;
     }
 
     @DataBoundSetter
@@ -64,8 +64,8 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         this.packageNumber = packageNumber;
     }
 
-    public String getToStage() {
-        return toStage;
+    public String getStage() {
+        return stage;
     }
 
     public boolean isWaitTillBuildCompleted() {

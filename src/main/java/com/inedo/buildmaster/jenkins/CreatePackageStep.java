@@ -40,10 +40,10 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
     private WaitTillCompleted waitTillBuildCompleted = null;
     private SetBuildVariables setBuildVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
-    private boolean deployToFirstStage = true;
-    private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
-    private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-    private String packageNumber = "${BUILDMASTER_PACKAGE_NUMBER}";
+    private boolean deployToFirstStage = false;
+    private String applicationId;
+    private String releaseNumber;
+    private String packageNumber;
 
     @DataBoundConstructor
     public CreatePackageStep() {

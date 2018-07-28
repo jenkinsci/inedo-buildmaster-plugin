@@ -66,8 +66,9 @@ See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster
 	pipeline {
 	  agent any
 	  environment {
-		// Prevents echo statement from breaking if packageNumberSource not supplied leaving
-		// BUILDMASTER_PACKAGE_NUMBER variable undefined
+		// Prevents echo statement from breaking if packageNumberSource not supplied in 
+		// buildMasterWithApplicationRelease step below leaving BUILDMASTER_PACKAGE_NUMBER 
+		// variable undefined
 	    BUILDMASTER_PACKAGE_NUMBER = null
 	  }
 	  
@@ -81,15 +82,19 @@ See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster
 	    			Package Number = $BUILDMASTER_PACKAGE_NUMBER
 	            """
 	
-	            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return package number you need to wrap this in a script block
+	            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return package 
+	            // number you need to wrap this in a script block
 	            // See: https://jenkins.io/doc/book/pipeline/syntax/#script
 	            script {
-	                BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER)
+	                BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])
 	            }
 	            
 	            echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
 	
-	            buildMasterDeployPackageToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+	            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+	            
+	            echo "Redeploy to Integration"
+	            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
 	        }
 	      }
 	    }

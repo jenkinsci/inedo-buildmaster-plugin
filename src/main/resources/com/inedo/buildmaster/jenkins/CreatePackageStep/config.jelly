@@ -6,13 +6,13 @@
   -->
 
 	<f:entry title="Application Id" field="applicationId" >
-	  <f:textbox />
+	  <f:textbox default="BUILDMASTER_APPLICATION_ID" />
 	</f:entry>
 	<f:entry title="Release Number" field="releaseNumber" >
-	  <f:textbox />
+	  <f:textbox default="BUILDMASTER_RELEASE_NUMBER" />
 	</f:entry>
 	<f:entry title="Package Number" field="packageNumber" >
-	  <f:textbox />
+	  <f:textbox default="BUILDMASTER_PACKAGE_NUMBER" />
 	</f:entry>
   
   <f:entry field="deployToFirstStage" title="Automatically deploy to first stage" >

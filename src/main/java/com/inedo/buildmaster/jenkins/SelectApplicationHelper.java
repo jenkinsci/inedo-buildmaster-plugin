@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
-import com.inedo.buildmaster.BuildMasterSelectApplication;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
