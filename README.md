@@ -61,65 +61,66 @@ See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster
     1.	Add build step "BuildMaster: Trigger Build"
     1.	Add build step "BuildMaster: Deploy To Stage"
 1. In Jenkins create a Pipeline job called test-pipleline and configure as for the free style job
+```
+// Declarative pipeline example
+pipeline {
+  agent any
+  environment {
+	// Prevents echo statement from breaking if packageNumberSource not supplied in 
+	// buildMasterWithApplicationRelease step below leaving BUILDMASTER_PACKAGE_NUMBER 
+	// variable undefined
+    BUILDMASTER_PACKAGE_NUMBER = null
+  }
+  
+  stages {
+    stage('Main') {
+      steps {
+        buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
+            echo """
+    			Application id = $BUILDMASTER_APPLICATION_ID
+    			Release Number = $BUILDMASTER_RELEASE_NUMBER
+    			Package Number = $BUILDMASTER_PACKAGE_NUMBER
+            """
 
-	// Declarative pipeline example
-	pipeline {
-	  agent any
-	  environment {
-		// Prevents echo statement from breaking if packageNumberSource not supplied in 
-		// buildMasterWithApplicationRelease step below leaving BUILDMASTER_PACKAGE_NUMBER 
-		// variable undefined
-	    BUILDMASTER_PACKAGE_NUMBER = null
-	  }
-	  
-	  stages {
-	    stage('Main') {
-	      steps {
-	        buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
-	            echo """
-	    			Application id = $BUILDMASTER_APPLICATION_ID
-	    			Release Number = $BUILDMASTER_RELEASE_NUMBER
-	    			Package Number = $BUILDMASTER_PACKAGE_NUMBER
-	            """
-	
-	            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return package 
-	            // number you need to wrap this in a script block
-	            // See: https://jenkins.io/doc/book/pipeline/syntax/#script
-	            script {
-	                BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])
-	            }
-	            
-	            echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
-	
-	            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
-	            
-	            echo "Redeploy to Integration"
-	            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
-	        }
-	      }
-	    }
-	  }
-	}
-	
-	/*
-	// Scripted pipeline example
-	node {
-	    buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
-			echo """
-			Application id = $BUILDMASTER_APPLICATION_ID
-			Release Number = $BUILDMASTER_RELEASE_NUMBER
-			Package Number = $BUILDMASTER_PACKAGE_NUMBER
-			"""
-			
-			BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER)
-			
-			echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
-			
-			buildMasterDeployPackageToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
-			
-	    }
-	}
-	*/
+            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return package 
+            // number you need to wrap this in a script block
+            // See: https://jenkins.io/doc/book/pipeline/syntax/#script
+            script {
+                BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])
+            }
+            
+            echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
+
+            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+            
+            echo "Redeploy to Integration"
+            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+        }
+      }
+    }
+  }
+}
+
+/*
+// Scripted pipeline example
+node {
+    buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
+		echo """
+		Application id = $BUILDMASTER_APPLICATION_ID
+		Release Number = $BUILDMASTER_RELEASE_NUMBER
+		Package Number = $BUILDMASTER_PACKAGE_NUMBER
+		"""
+		
+		BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER)
+		
+		echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
+		
+		buildMasterDeployPackageToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+		
+    }
+}
+*/
+```
 
 ## Automated
 
