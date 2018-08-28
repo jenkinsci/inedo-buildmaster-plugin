@@ -59,7 +59,7 @@ configurations.all {
 dependencies {
 	jenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.15@jar'
     	
-	compile ('com.github.concordion.cubano:cubano-httpeasy:HttpEasySecurity-SNAPSHOT') {
+	compile ('com.github.concordion.cubano:cubano-httpeasy:HttpEasyTrustMethods-SNAPSHOT') {
 		exclude group: 'com.github.markusbernhardt', module: 'proxy-vole' 
 	}
 	

@@ -1,12 +1,16 @@
 package com.inedo.buildmaster.jenkins.buildOption;
 
+import java.io.Serializable;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
-public class SetBuildVariables extends AbstractDescribableImpl<SetBuildVariables> {
+public class SetBuildVariables extends AbstractDescribableImpl<SetBuildVariables> implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private final boolean preserveVariables;
     private final String variables;
 

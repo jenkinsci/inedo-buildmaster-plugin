@@ -67,6 +67,7 @@ public class BuildMasterApi {
                 .withLogWriter(logWriter)
                 .logRequest(config.logApiRequests)
                 .trustAllCertificates(config.trustAllCertificates)
+                .trustAllHosts(config.trustAllCertificates)
                 .sensitiveParameters("key", "API_Key");
     }
 

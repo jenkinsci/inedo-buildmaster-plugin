@@ -272,7 +272,7 @@ public class BuildMasterApiTest {
 		String packageNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 		Map<String, String> variablesList = new HashMap<>();
 		variablesList.put("hello", "world");
-        // variablesList.put("cause", "unit test");
+        variablesList.put("cause", "unit test");
 		
         ApiPackageDeployment packageDeployment = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber, variablesList, true);
 

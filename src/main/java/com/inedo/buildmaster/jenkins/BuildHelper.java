@@ -46,16 +46,18 @@ public class BuildHelper {
 
         Map<String, String> variablesList = new HashMap<>();
 
-        if (trigger.isSetBuildVariables() && trigger.getSetBuildVariables().isPreserveVariables()) {
+        if (trigger.isSetBuildVariables()) {
             variablesList = getVariablesListExpanded(run, listener, trigger.getSetBuildVariables().getVariables());
 
-            helper.getLogWriter().info("Gather previous builds build variables");
-            String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(applicationId, releaseNumber);
-            ApiVariable[] variables = buildmaster.getPackageVariables(application.Application_Name, releaseNumber, currentPackageNumber);
+            if (trigger.getSetBuildVariables().isPreserveVariables()) {
+                helper.getLogWriter().info("Gather previous builds build variables");
+                String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(applicationId, releaseNumber);
+                ApiVariable[] variables = buildmaster.getPackageVariables(application.Application_Name, releaseNumber, currentPackageNumber);
 
-            for (ApiVariable variable : variables) {
-                if (!variablesList.containsKey(variable.name)) {
-                    variablesList.put(variable.name, variable.value);
+                for (ApiVariable variable : variables) {
+                    if (!variablesList.containsKey(variable.name)) {
+                        variablesList.put(variable.name, variable.value);
+                    }
                 }
             }
         }
