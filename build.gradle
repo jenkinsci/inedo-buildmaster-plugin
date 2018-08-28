@@ -21,7 +21,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 group = 'com.inedo.buildmaster'
-version = '2.0'
+version = '2.0.1'
 description = 'Inedo BuildMaster Plugin'
 
 ext {
