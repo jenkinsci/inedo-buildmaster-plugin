@@ -21,7 +21,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 group = 'com.inedo.buildmaster'
-version = '2.0.1'
+version = '2.0.2'
 description = 'Inedo BuildMaster Plugin'
 
 ext {
@@ -59,7 +59,7 @@ configurations.all {
 dependencies {
 	jenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.15@jar'
     	
-	compile ('com.github.concordion.cubano:cubano-httpeasy:HttpEasyTrustMethods-SNAPSHOT') {
+	compile ('com.github.concordion.cubano:cubano-httpeasy:master-SNAPSHOT') {
 		exclude group: 'com.github.markusbernhardt', module: 'proxy-vole' 
 	}
 	

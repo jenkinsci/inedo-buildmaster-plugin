@@ -713,11 +713,13 @@ public class BuildMasterApi {
             // this.logRequest = true;
         }
 
-        if (!DeploymentStatus.SUCCEEDED.getText().equals(deployment.status) && printLogOnFailure) {
+        boolean successful = DeploymentStatus.SUCCEEDED.getText().equalsIgnoreCase(deployment.status) || DeploymentStatus.WARNED.getText().equalsIgnoreCase(deployment.status);
+
+        if (!successful && printLogOnFailure) {
             printExecutionLog(deployment.id);
         }
 
-        return DeploymentStatus.SUCCEEDED.getText().equals(deployment.status);
+        return successful;
     }
 
     public String getExecutionLog(int deploymentId) throws IOException {

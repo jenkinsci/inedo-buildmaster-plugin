@@ -262,7 +262,7 @@ public class BuildMasterApiTest {
 
         if (compareJson) {
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.API_RELEASE.getAsString(), buildmaster.getJsonString(), "[?(@.id==1)]", ApiRelease.class);
+                    MockData.API_RELEASE.getAsString(), buildmaster.getJsonString(), "[0]", ApiRelease.class);
         }
 	}
 	
@@ -298,10 +298,10 @@ public class BuildMasterApiTest {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
 
-        ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, packageNumber, "Testing");
+        ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, packageNumber, "Integration");
 
         assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
-        assertThat("Envrionment is what was asked for", deployments[0].environmentName, is("Testing"));
+        assertThat("Envrionment is what was asked for", deployments[0].environmentName, is("Integration"));
 
         if (compareJson) {
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
