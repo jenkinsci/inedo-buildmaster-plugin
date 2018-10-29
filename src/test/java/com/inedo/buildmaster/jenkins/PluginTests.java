@@ -123,7 +123,7 @@ public class PluginTests {
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
         TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
-			.setSetBuildVariables(new PackageVariables(false, "hello=performSetVariables"));
+                .setSetBuildVariables(new PackageVariables("hello=performSetVariables"));
 		
 		restLog();
 		assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(true));
@@ -132,8 +132,12 @@ public class PluginTests {
 		assertThat("Variable passed", log, containsString("performSetVariables"));
 		assertThat("Variable passed", log, not(containsString("trying")));
 		
-		data.setSetBuildVariables(new PackageVariables(true, "trying=again"));
 		
+        PackageVariables vars = new PackageVariables("trying=again");
+        vars.setPreserveVariables(true);
+
+        data.setSetBuildVariables(vars);
+
 		restLog();
 		assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(true));
 		
