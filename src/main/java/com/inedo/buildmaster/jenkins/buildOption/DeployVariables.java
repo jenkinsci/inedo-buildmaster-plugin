@@ -8,28 +8,22 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
-public class SetBuildVariables extends AbstractDescribableImpl<SetBuildVariables> implements Serializable {
+public class DeployVariables extends AbstractDescribableImpl<DeployVariables> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final boolean preserveVariables;
     private final String variables;
-
-    public boolean isPreserveVariables() {
-        return preserveVariables;
-    }
 
     public String getVariables() {
         return variables;
     }
 
     @DataBoundConstructor
-    public SetBuildVariables(boolean preserveVariables, String variables) {
-        this.preserveVariables = preserveVariables;
+    public DeployVariables(String variables) {
         this.variables = variables;
     }
-    
+
     @Extension
-    public static class DescriptorImpl extends Descriptor<SetBuildVariables> {
+    public static class DescriptorImpl extends Descriptor<DeployVariables> {
         @Override
         public String getDisplayName() {
             return "";

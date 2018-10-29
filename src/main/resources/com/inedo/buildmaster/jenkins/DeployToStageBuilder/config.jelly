@@ -14,6 +14,7 @@
   </f:entry>
 
   <f:optionalProperty title="Wait Till Build Completed" field="waitTillBuildCompleted" />
+  <f:optionalProperty title="Set Build Variables in BuildMaster" field="deployVariables" />
   
   <f:advanced title="Advanced Settings">
     <f:entry title="Application" field="applicationId" >

@@ -6,6 +6,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import com.inedo.buildmaster.jenkins.buildOption.DeployVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 import hudson.AbortException;
@@ -30,6 +31,7 @@ import jenkins.tasks.SimpleBuildStep;
 public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     private String stage = "";
     private WaitTillCompleted waitTillBuildCompleted = null;
+    private DeployVariables deployVariables = null;
     private String applicationId = DescriptorImpl.defaultApplicationId;
     private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
     private String packageNumber = DescriptorImpl.defaultPackageNumber;
@@ -47,6 +49,11 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     @DataBoundSetter
     public final void setWaitTillBuildCompleted(WaitTillCompleted waitTillBuildCompleted) {
         this.waitTillBuildCompleted = waitTillBuildCompleted;
+    }
+
+    @DataBoundSetter
+    public final void setDeployVariables(DeployVariables deployVariables) {
+        this.deployVariables = deployVariables;
     }
 
     @DataBoundSetter
@@ -76,6 +83,14 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         return waitTillBuildCompleted;
     }
     
+    public boolean isDeployVariables() {
+        return deployVariables != null;
+    }
+
+    public DeployVariables getDeployVariables() {
+        return deployVariables;
+    }
+
     public String getApplicationId() {
         return applicationId;
     }

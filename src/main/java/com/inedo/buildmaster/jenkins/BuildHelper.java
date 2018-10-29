@@ -46,10 +46,10 @@ public class BuildHelper {
 
         Map<String, String> variablesList = new HashMap<>();
 
-        if (trigger.isSetBuildVariables()) {
-            variablesList = getVariablesListExpanded(run, listener, trigger.getSetBuildVariables().getVariables());
+        if (trigger.isPackageVariables()) {
+            variablesList = getVariablesListExpanded(run, listener, trigger.getPackageVariables().getVariables());
 
-            if (trigger.getSetBuildVariables().isPreserveVariables()) {
+            if (trigger.getPackageVariables().isPreserveVariables()) {
                 helper.getLogWriter().info("Gather previous builds build variables");
                 String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(applicationId, releaseNumber);
                 ApiVariable[] variables = buildmaster.getPackageVariables(application.Application_Name, releaseNumber, currentPackageNumber);
@@ -150,7 +150,13 @@ public class BuildHelper {
             throw new AbortException("Unknown application id " + applicationId);
         }
         
-        ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, packageNumber, stage);
+        Map<String, String> variablesList = new HashMap<>();
+
+        if (builder.isDeployVariables()) {
+            variablesList = getVariablesListExpanded(run, listener, builder.getDeployVariables().getVariables());
+        }
+
+        ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, packageNumber, variablesList, stage);
 
         if (builder.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till deployment completed");

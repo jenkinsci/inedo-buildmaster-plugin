@@ -457,7 +457,7 @@ public class BuildMasterApi {
             recordResult = false;
 
             try {
-                deployments = deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null);
+                deployments = deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null, null);
             } finally {
                 recordResult = storeRecordResult;
             }
@@ -477,9 +477,10 @@ public class BuildMasterApi {
      * @throws IOException
      * @throws InterruptedException
      * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
+     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#deploy-package">Endpoint Specification</a>
      */
-    public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, String stage) throws IOException, InterruptedException {
+    public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList, String stage)
+            throws IOException, InterruptedException {
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
         // Don't pass in packageNumber - it's not building yet!
         // TODO This will cause get active deployments to bring back everything because we need Active and Executing status
@@ -492,13 +493,21 @@ public class BuildMasterApi {
             logWriter.info("Deploy package to " + stage + " stage");
         }
 
-        JsonReader reader = HttpEasy.request()
+        HttpEasy request = HttpEasy.request()
                 .path("/api/releases/packages/deploy")
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId) 
                 .field("releaseNumber", releaseNumber)
                 .field("packageNumber", packageNumber)
-                .field("toStage", stage)
+                .field("toStage", stage);
+
+        if (variablesList != null) {
+            for (Map.Entry<String, String> variable : variablesList.entrySet()) {
+                request.field("$" + variable.getKey(), variable.getValue());
+            }
+        }
+
+        JsonReader reader = request
                 .put()
                 .getJsonReader();
 

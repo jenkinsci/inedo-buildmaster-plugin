@@ -298,7 +298,7 @@ public class BuildMasterApiTest {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
 
-        ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, packageNumber, "Integration");
+        ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, packageNumber, null, "Integration");
 
         assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
         assertThat("Envrionment is what was asked for", deployments[0].environmentName, is("Integration"));
@@ -311,7 +311,7 @@ public class BuildMasterApiTest {
 
 	@Test
 	public void getPackage() throws IOException {
-		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
+        String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = String.valueOf(buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber));
 		
         ApiReleasePackage releasePackage = buildmaster.getPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber);

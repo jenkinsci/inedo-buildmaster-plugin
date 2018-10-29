@@ -1,7 +1,7 @@
 package com.inedo.buildmaster.jenkins;
 
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 /**
@@ -11,7 +11,7 @@ import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
  */
 public class TriggerableData implements ICreatePackage {
 	public WaitTillCompleted waitTillBuildCompleted = null;
-	public SetBuildVariables setBuildVariables = null;
+	public PackageVariables setBuildVariables = null;
 	public EnableReleaseDeployable enableReleaseDeployable = null;
 	public String applicationId;
 	public String releaseNumber;
@@ -34,11 +34,11 @@ public class TriggerableData implements ICreatePackage {
 		return waitTillBuildCompleted;
 	}
 
-	public boolean isSetBuildVariables() {
+	public boolean isPackageVariables() {
 		return setBuildVariables != null;
 	}
 
-	public SetBuildVariables getSetBuildVariables() {
+	public PackageVariables getPackageVariables() {
 		return setBuildVariables;
 	}
 	
@@ -72,7 +72,7 @@ public class TriggerableData implements ICreatePackage {
 		return this;
 	}
 
-	public TriggerableData setSetBuildVariables(SetBuildVariables value) {
+	public TriggerableData setSetBuildVariables(PackageVariables value) {
 		setBuildVariables = value;
 		return this;
 	}

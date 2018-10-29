@@ -16,7 +16,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 import hudson.AbortException;
@@ -38,7 +38,7 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
     private static final long serialVersionUID = 1L;
 
     private WaitTillCompleted waitTillBuildCompleted = null;
-    private SetBuildVariables setBuildVariables = null;
+    private PackageVariables packageVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
     private boolean deployToFirstStage = false;
     private String applicationId;
@@ -55,8 +55,8 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
     }
 
     @DataBoundSetter
-    public final void setSetBuildVariables(SetBuildVariables setBuildVariables) {
-        this.setBuildVariables = setBuildVariables;
+    public final void setPackageVariables(PackageVariables packageVariables) {
+        this.packageVariables = packageVariables;
     }
 
     @DataBoundSetter
@@ -92,12 +92,12 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
         return waitTillBuildCompleted;
     }
 
-    public boolean isSetBuildVariables() {
-        return setBuildVariables != null;
+    public boolean isPackageVariables() {
+        return packageVariables != null;
     }
 
-    public SetBuildVariables getSetBuildVariables() {
-        return setBuildVariables;
+    public PackageVariables getPackageVariables() {
+        return packageVariables;
     }
 
     public boolean isEnableReleaseDeployable() {

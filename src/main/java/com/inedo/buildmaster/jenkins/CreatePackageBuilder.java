@@ -8,7 +8,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
@@ -35,7 +35,7 @@ import jenkins.tasks.SimpleBuildStep;
  */
 public class CreatePackageBuilder extends Builder implements SimpleBuildStep, ICreatePackage {
     private WaitTillCompleted waitTillBuildCompleted = null;
-    private SetBuildVariables setBuildVariables = null;
+    private PackageVariables packageVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
     private boolean deployToFirstStage = true;
     private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
@@ -52,8 +52,8 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
     }
 
     @DataBoundSetter
-    public final void setSetBuildVariables(SetBuildVariables setBuildVariables) {
-        this.setBuildVariables = setBuildVariables;
+    public final void setPackageVariables(PackageVariables packageVariables) {
+        this.packageVariables = packageVariables;
     }
 
     @DataBoundSetter
@@ -89,12 +89,12 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
         return waitTillBuildCompleted;
     }
 
-    public boolean isSetBuildVariables() {
-        return setBuildVariables != null;
+    public boolean isPackageVariables() {
+        return packageVariables != null;
     }
 
-    public SetBuildVariables getSetBuildVariables() {
-        return setBuildVariables;
+    public PackageVariables getPackageVariables() {
+        return packageVariables;
     }
 
     public boolean isEnableReleaseDeployable() {

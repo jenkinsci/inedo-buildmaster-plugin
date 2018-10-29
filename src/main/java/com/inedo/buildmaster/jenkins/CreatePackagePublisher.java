@@ -7,7 +7,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.jenkins.buildOption.SetBuildVariables;
+import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 import hudson.Extension;
@@ -30,7 +30,7 @@ import hudson.util.FormValidation;
  */
 public class CreatePackagePublisher extends Recorder implements ICreatePackage {
     private WaitTillCompleted waitTillBuildCompleted = null;
-    private SetBuildVariables setBuildVariables = null;
+    private PackageVariables packageVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
     private boolean deployToFirstStage = true;
     private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
@@ -47,8 +47,8 @@ public class CreatePackagePublisher extends Recorder implements ICreatePackage {
     }
 
     @DataBoundSetter
-    public final void setSetBuildVariables(SetBuildVariables setBuildVariables) {
-        this.setBuildVariables = setBuildVariables;
+    public final void setPackageVariables(PackageVariables packageVariables) {
+        this.packageVariables = packageVariables;
     }
 
     @DataBoundSetter
@@ -84,12 +84,12 @@ public class CreatePackagePublisher extends Recorder implements ICreatePackage {
         return waitTillBuildCompleted;
     }
 
-    public boolean isSetBuildVariables() {
-        return setBuildVariables != null;
+    public boolean isPackageVariables() {
+        return packageVariables != null;
     }
 
-    public SetBuildVariables getSetBuildVariables() {
-        return setBuildVariables;
+    public PackageVariables getPackageVariables() {
+        return packageVariables;
     }
 
     public boolean isEnableReleaseDeployable() {
