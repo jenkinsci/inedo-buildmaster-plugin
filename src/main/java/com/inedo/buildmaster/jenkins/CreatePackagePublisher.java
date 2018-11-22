@@ -6,10 +6,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
+import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -118,7 +121,15 @@ public class CreatePackagePublisher extends Recorder implements ICreatePackage {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        BuildHelper.createPackage(build, listener, this);
+        ApiPackageDeployment apiPackage = BuildHelper.createPackage(build, listener, this);
+
+        if (apiPackage == null) {
+            throw new AbortException("Deployment failed");
+        }
+
+        JenkinsHelper helper = new JenkinsHelper(build, listener);
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + apiPackage.releasePackage.number);
+        helper.injectEnvrionmentVariable("BUILDMASTER_PACKAGE_NUMBER", apiPackage.releasePackage.number);
 
         return true;
     }
@@ -142,7 +153,7 @@ public class CreatePackagePublisher extends Recorder implements ICreatePackage {
 
         @Override
         public String getDisplayName() {
-            return "BuildMaster: Trigger Build";
+            return "Create BuildMaster Package";
         }
 
         // TODO jelly expandableTextbox does not support form validation currently so this does nothing:
