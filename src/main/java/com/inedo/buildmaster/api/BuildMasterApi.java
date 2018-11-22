@@ -665,9 +665,7 @@ public class BuildMasterApi {
     /**
      * Wait till any deployment for the current package have completed, including automatic promotions.
      * 
-     * @param applicationId
-     * @param releaseNumber
-     * @param packageNumber
+     * @param deployments
      * @param printLogOnFailure
      * @return
      */
