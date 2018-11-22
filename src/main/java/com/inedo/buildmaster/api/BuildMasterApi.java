@@ -452,7 +452,7 @@ public class BuildMasterApi {
         ApiReleasePackage releasePackage = reader.fromJson(ApiReleasePackage.class);
         ApiDeployment[] deployments = null;
 
-        logWriter.info("Package %s has been created for %s release %s", releasePackage.number, releasePackage.applicationName, releasePackage.releaseNumber);
+        logWriter.info("Package %s has been created for release %s of the %s application", releasePackage.number, releasePackage.applicationName, releasePackage.releaseNumber);
 
         if (deployToFirstStage) {
             boolean storeRecordResult = recordResult;
