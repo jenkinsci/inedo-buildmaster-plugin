@@ -674,7 +674,7 @@ public class BuildMasterApi {
     public boolean waitForDeploymentToComplete(ApiDeployment[] deployments, boolean printLogOnFailure) throws IOException, InterruptedException {
         for (ApiDeployment deployment : deployments) {
             // Wait for the initial deployment to complete
-            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false)) {
+            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure)) {
                 return false;
             }
         }
@@ -683,7 +683,7 @@ public class BuildMasterApi {
         ApiDeployment[] secondaryDeployments;
         while ((secondaryDeployments = getActiveDeployments(deployments[0].applicationId, deployments[0].releaseNumber, deployments[0].packageNumber)).length > 0) {
             for (ApiDeployment deployment : secondaryDeployments) {
-                if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false)) {
+                if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure)) {
                     return false;
                 }
             }
@@ -703,7 +703,7 @@ public class BuildMasterApi {
         try {
             deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
 
-            logWriter.info("Waiting for deployment to '%s' stage to complete...", deployment.pipelineStageName);
+            logWriter.info("Waiting for deployment to '%s' stage to complete%s...", deployment.pipelineStageName, (printLogOnFailure ? "" : " for package " + packageNumber));
 
             // Pause logging of API requests
             HttpEasy.withDefaults().logRequest(false);
