@@ -452,6 +452,8 @@ public class BuildMasterApi {
         ApiReleasePackage releasePackage = reader.fromJson(ApiReleasePackage.class);
         ApiDeployment[] deployments = null;
 
+        logWriter.info("Package %s has been created for %s release %s", releasePackage.number, releasePackage.applicationName, releasePackage.releaseNumber);
+
         if (deployToFirstStage) {
             boolean storeRecordResult = recordResult;
             recordResult = false;
@@ -651,20 +653,37 @@ public class BuildMasterApi {
             throws IOException, InterruptedException {
         ApiDeployment[] deployments = getActiveDeployments(applicationId, releaseNumber, packageNumber);
 
-        return waitForDeploymentsToComplete(deployments, false);
+        for (ApiDeployment deployment : deployments) {
+            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     /**
-     * Wait for the build to complete
+     * Wait till any deployment for the current package have completed, including automatic promotions.
      * 
+     * @param applicationId
+     * @param releaseNumber
+     * @param packageNumber
      * @param printLogOnFailure
-     * @throws IOException
-     * @throws InterruptedException
+     * @return
      */
-    public boolean waitForDeploymentsToComplete(ApiDeployment[] deployments, boolean printLogOnFailure) throws IOException, InterruptedException {
-        if (deployments != null) {
-            for (ApiDeployment deployment : deployments) {
-                if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure)) {
+    public boolean waitForDeploymentToComplete(ApiDeployment[] deployments, boolean printLogOnFailure) throws IOException, InterruptedException {
+        for (ApiDeployment deployment : deployments) {
+            // Wait for the initial deployment to complete
+            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false)) {
+                return false;
+            }
+        }
+
+        // Wait for any automatic promotions to complete
+        ApiDeployment[] secondaryDeployments;
+        while ((secondaryDeployments = getActiveDeployments(deployments[0].applicationId, deployments[0].releaseNumber, deployments[0].packageNumber)).length > 0) {
+            for (ApiDeployment deployment : secondaryDeployments) {
+                if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false)) {
                     return false;
                 }
             }
@@ -673,18 +692,21 @@ public class BuildMasterApi {
         return true;
     }
 
-    public boolean waitForDeploymentToComplete(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId, boolean printLogOnFailure)
-            throws IOException, InterruptedException {
-        final List<String> executing = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText(), DeploymentStatus.EXECUTING.getText() });
-        final List<String> pending = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText() });
+    private static final List<String> executing = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText(), DeploymentStatus.EXECUTING.getText() });
+    private static final List<String> pending = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText() });
 
-        ApiDeployment deployment;
+    private boolean waitForDeploymentToComplete(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId, boolean printLogOnFailure)
+            throws IOException, InterruptedException {
+
+        ApiDeployment deployment = null;
 
         try {
-
             deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
 
-            // TODO pause logging httpeasy?
+            logWriter.info("Waiting for deployment to '%s' stage to complete...", deployment.pipelineStageName);
+
+            // Pause logging of API requests
+            HttpEasy.withDefaults().logRequest(false);
 
             long startTime = new Date().getTime();
             Integer envrionmentId = deployment.environmentId;
@@ -717,18 +739,19 @@ public class BuildMasterApi {
                     }
                 }
             }
+
+            boolean successful = DeploymentStatus.SUCCEEDED.getText().equalsIgnoreCase(deployment.status) || DeploymentStatus.WARNED.getText().equalsIgnoreCase(deployment.status);
+
+            if (!successful && printLogOnFailure) {
+                printExecutionLog(deployment.id);
+            }
+
+            return successful;
+
         } finally {
-            // TODO resume logging httpeasy
-            // this.logRequest = true;
+            // Resume logging - if enabled
+            HttpEasy.withDefaults().logRequest(config.logApiRequests);
         }
-
-        boolean successful = DeploymentStatus.SUCCEEDED.getText().equalsIgnoreCase(deployment.status) || DeploymentStatus.WARNED.getText().equalsIgnoreCase(deployment.status);
-
-        if (!successful && printLogOnFailure) {
-            printExecutionLog(deployment.id);
-        }
-
-        return successful;
     }
 
     public String getExecutionLog(int deploymentId) throws IOException {

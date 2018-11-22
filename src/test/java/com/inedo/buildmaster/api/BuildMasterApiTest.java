@@ -40,7 +40,7 @@ import com.inedo.utils.TestConfig;
 public class BuildMasterApiTest {
 	private static MockServer mockServer = null;
 	private static BuildMasterApi buildmaster;
-    private static boolean compareJson = false;
+    private static boolean compareJson = true;
 	
 	@BeforeClass
     public static void beforeClass() throws IOException {
@@ -283,7 +283,7 @@ public class BuildMasterApiTest {
 
         assertThat("Expect returned packageNumber to be the same as requested", packageNumber, is(packageDeployment.releasePackage.number));
 		
-        boolean result = buildmaster.waitForDeploymentsToComplete(packageDeployment.deployments, true);
+        boolean result = buildmaster.waitForDeploymentToComplete(packageDeployment.deployments, true);
 
         assertThat("Expect Test package " + packageNumber + " to have built and deployed successfully", result);
 
@@ -339,10 +339,11 @@ public class BuildMasterApiTest {
     public void printExecutionLog() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+
         ApiDeployment deployment = buildmaster.getLatestDeployment(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
-        buildmaster.waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false);
-        
+        buildmaster.waitForActiveDeploymentsToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber);
+
         String log = buildmaster.getExecutionLog(deployment.id);
 		
         assertThat("Expect Test package " + packageNumber + " to have an execution log", log.length(), is(greaterThan(0)));
@@ -389,9 +390,7 @@ public class BuildMasterApiTest {
 			
 			System.out.println("Variable HELLO=" + value);
 			
-            buildmaster.waitForDeploymentsToComplete(packageDeployment.deployments, false);
-			
-			//buildmaster.waitForBuildCompletion(TestConfig.getApplicationid(), releaseNumber, packageNumber, false);
+            buildmaster.waitForDeploymentToComplete(packageDeployment.deployments, false);
 		}
 	}
 

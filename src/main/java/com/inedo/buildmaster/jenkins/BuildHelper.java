@@ -76,9 +76,9 @@ public class BuildHelper {
             apiPackage = buildmaster.createPackage(applicationId, releaseNumber, packageNumber, variablesList, trigger.getDeployToFirstStage());
 
             if (!apiPackage.releasePackage.number.equals(packageNumber)) {
-                helper.getLogWriter().info(String.format("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.",
+                helper.getLogWriter().info("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.",
                         packageNumber,
-                        apiPackage.releasePackage.number));
+                        apiPackage.releasePackage.number);
             }
         } else {
             helper.getLogWriter().info("Create BuildMaster package");
@@ -87,7 +87,7 @@ public class BuildHelper {
 
         if (trigger.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till deployment completed");
-            if (!buildmaster.waitForDeploymentsToComplete(apiPackage.deployments, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure())) {
+            if (!buildmaster.waitForDeploymentToComplete(apiPackage.deployments, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure())) {
                 return null;
             }
         }
@@ -160,7 +160,7 @@ public class BuildHelper {
 
         if (builder.isWaitTillBuildCompleted()) {
             helper.getLogWriter().info("Wait till deployment completed");
-            return buildmaster.waitForDeploymentsToComplete(deployments, builder.getWaitTillBuildCompleted().isPrintLogOnFailure());
+            return buildmaster.waitForDeploymentToComplete(deployments, builder.getWaitTillBuildCompleted().isPrintLogOnFailure());
         }
 
         return true;
