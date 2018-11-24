@@ -21,7 +21,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 group = 'com.inedo.buildmaster'
-version = '2.2.0'
+version = '2.3.0'
 description = 'Inedo BuildMaster Plugin'
 
 ext {
@@ -33,7 +33,7 @@ jenkinsPlugin {
     displayName = 'Inedo BuildMaster Plugin.'
     url = 'http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/inedo-buildmaster-plugin'
-    compatibleSinceVersion = '1.7'
+    compatibleSinceVersion = '2.3.0'
     developers {
         developer {
             id 'andrew-sumner'

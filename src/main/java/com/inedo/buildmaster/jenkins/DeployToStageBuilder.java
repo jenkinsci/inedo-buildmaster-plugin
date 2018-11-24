@@ -7,7 +7,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import com.inedo.buildmaster.jenkins.buildOption.DeployVariables;
-import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 import hudson.AbortException;
 import hudson.Extension;
@@ -30,7 +29,8 @@ import jenkins.tasks.SimpleBuildStep;
  */
 public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     private String stage = "";
-    private WaitTillCompleted waitTillBuildCompleted = null;
+    private boolean waitUntilDeploymentCompleted = true;
+    private boolean printLogOnFailure = true;
     private DeployVariables deployVariables = null;
     private String applicationId = DescriptorImpl.defaultApplicationId;
     private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
@@ -47,8 +47,13 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     }
 
     @DataBoundSetter
-    public final void setWaitTillBuildCompleted(WaitTillCompleted waitTillBuildCompleted) {
-        this.waitTillBuildCompleted = waitTillBuildCompleted;
+    public final void setWaitUntilDeploymentCompleted(boolean waitUntilDeploymentCompleted) {
+        this.waitUntilDeploymentCompleted = waitUntilDeploymentCompleted;
+    }
+
+    @DataBoundSetter
+    public final void setPrintLogOnFailure(boolean printLogOnFailure) {
+        this.printLogOnFailure = printLogOnFailure;
     }
 
     @DataBoundSetter
@@ -75,14 +80,14 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         return stage;
     }
 
-    public boolean isWaitTillBuildCompleted() {
-        return waitTillBuildCompleted != null;
+    public boolean isWaitUntilDeploymentCompleted() {
+        return waitUntilDeploymentCompleted;
     }
 
-    public WaitTillCompleted getWaitTillBuildCompleted() {
-        return waitTillBuildCompleted;
+    public boolean isPrintLogOnFailure() {
+        return printLogOnFailure;
     }
-    
+
     public boolean isDeployVariables() {
         return deployVariables != null;
     }

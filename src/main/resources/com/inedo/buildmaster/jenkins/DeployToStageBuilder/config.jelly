@@ -13,8 +13,15 @@
     <f:textbox />
   </f:entry>
 
-  <f:optionalProperty title="Wait Till Build Completed" field="waitTillBuildCompleted" />
-  <f:optionalProperty title="Set Build Variables in BuildMaster" field="deployVariables" />
+    <f:entry title="Wait until deployment completed" field="waitUntilDeploymentCompleted" >
+      <f:checkbox default="true" />
+    </f:entry>
+    
+    <f:entry title="Show deployment log on failure" field="printLogOnFailure" >
+      <f:checkbox default="true" />
+    </f:entry>
+    
+  <f:optionalProperty title="Set deployment variables" field="deployVariables" />
   
   <f:advanced title="Advanced Settings">
     <f:entry title="Application" field="applicationId" >

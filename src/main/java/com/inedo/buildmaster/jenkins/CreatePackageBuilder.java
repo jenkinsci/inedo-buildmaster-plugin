@@ -6,10 +6,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.domain.ApiPackageDeployment;
+import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
-import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
 import hudson.AbortException;
@@ -34,10 +34,9 @@ import jenkins.tasks.SimpleBuildStep;
  * @author Andrew Sumner
  */
 public class CreatePackageBuilder extends Builder implements SimpleBuildStep, ICreatePackage {
-    private WaitTillCompleted waitTillBuildCompleted = null;
+    private DeployToFirstStage deployToFirstStage = null;
     private PackageVariables packageVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
-    private boolean deployToFirstStage = true;
     private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
     private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
     private String packageNumber = "${BUILDMASTER_PACKAGE_NUMBER}";
@@ -47,8 +46,8 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
     }
 
     @DataBoundSetter
-    public final void setWaitTillBuildCompleted(WaitTillCompleted waitTillBuildCompleted) {
-        this.waitTillBuildCompleted = waitTillBuildCompleted;
+    public final void setDeployToFirstStage(DeployToFirstStage deployToFirstStage) {
+        this.deployToFirstStage = deployToFirstStage;
     }
 
     @DataBoundSetter
@@ -76,17 +75,12 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
         this.packageNumber = packageNumber;
     }
 
-    @DataBoundSetter
-    public final void setDeployToFirstStage(boolean deployToFirstStage) {
-        this.deployToFirstStage = deployToFirstStage;
+    public boolean isDeployToFirstStage() {
+        return deployToFirstStage != null;
     }
 
-    public boolean isWaitTillBuildCompleted() {
-        return waitTillBuildCompleted != null;
-    }
-
-    public WaitTillCompleted getWaitTillBuildCompleted() {
-        return waitTillBuildCompleted;
+    public DeployToFirstStage getDeployToFirstStage() {
+        return deployToFirstStage;
     }
 
     public boolean isPackageVariables() {
@@ -117,21 +111,17 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
         return packageNumber;
     }
 
-    public boolean getDeployToFirstStage() {
-        return deployToFirstStage;
-    }
-
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        ApiPackageDeployment apiPackage = BuildHelper.createPackage(run, listener, this);
+        ApiReleasePackage releasePackage = BuildHelper.createPackage(run, listener, this);
 
-        if (apiPackage == null) {
+        if (releasePackage == null) {
             throw new AbortException("Deployment failed");
         }
 
         JenkinsHelper helper = new JenkinsHelper(run, listener);
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + apiPackage.releasePackage.number);
-        helper.injectEnvrionmentVariable("BUILDMASTER_PACKAGE_NUMBER", apiPackage.releasePackage.number);
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + releasePackage.number);
+        helper.injectEnvrionmentVariable("BUILDMASTER_PACKAGE_NUMBER", releasePackage.number);
     }
 
     @Extension

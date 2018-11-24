@@ -1,17 +1,17 @@
 package com.inedo.buildmaster.jenkins;
 
+import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
-import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 public interface ICreatePackage {
-    public boolean isWaitTillBuildCompleted();
+    public boolean isDeployToFirstStage();
 
     public boolean isPackageVariables();
 
     public boolean isEnableReleaseDeployable();
 
-    public WaitTillCompleted getWaitTillBuildCompleted();
+    public DeployToFirstStage getDeployToFirstStage();
 
     public PackageVariables getPackageVariables();
 
@@ -22,6 +22,4 @@ public interface ICreatePackage {
     public String getReleaseNumber();
 
     public String getPackageNumber();
-
-    public boolean getDeployToFirstStage();
 }

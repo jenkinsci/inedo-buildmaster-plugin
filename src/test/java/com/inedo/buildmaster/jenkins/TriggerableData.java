@@ -1,8 +1,8 @@
 package com.inedo.buildmaster.jenkins;
 
+import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
-import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 /**
  * Data to inject into TriggerBuildHelper for testing
@@ -10,15 +10,14 @@ import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
  * @author Andrew Sumner
  */
 public class TriggerableData implements ICreatePackage {
-	public WaitTillCompleted waitTillBuildCompleted = null;
+    public DeployToFirstStage deployToFirstStage = null;
 	public PackageVariables setBuildVariables = null;
 	public EnableReleaseDeployable enableReleaseDeployable = null;
 	public String applicationId;
 	public String releaseNumber;
     public String packageNumber;
-    public boolean deployToFirstStage;
 
-    public TriggerableData(String applicationId, String releaseNumber, String packageNumber, boolean deployToFirstStage) {
+    public TriggerableData(String applicationId, String releaseNumber, String packageNumber, DeployToFirstStage deployToFirstStage) {
 		this.applicationId = applicationId;
 		this.releaseNumber = releaseNumber;
 		this.packageNumber = packageNumber;
@@ -26,12 +25,12 @@ public class TriggerableData implements ICreatePackage {
 	}
 	
 	// Getters
-	public boolean isWaitTillBuildCompleted() {
-		return waitTillBuildCompleted != null;
+    public boolean isDeployToFirstStage() {
+        return deployToFirstStage != null;
 	}
 	
-	public WaitTillCompleted getWaitTillBuildCompleted() {
-		return waitTillBuildCompleted;
+    public DeployToFirstStage getDeployToFirstStage() {
+        return deployToFirstStage;
 	}
 
 	public boolean isPackageVariables() {
@@ -61,14 +60,10 @@ public class TriggerableData implements ICreatePackage {
 	public String getPackageNumber() {
 		return packageNumber;
 	}
-	
-    public boolean getDeployToFirstStage() {
-        return deployToFirstStage;
-    }
 
 	// Setters
-	public TriggerableData setWaitTillBuildCompleted(WaitTillCompleted value) {
-		waitTillBuildCompleted = value;
+    public TriggerableData setDeployToFirstStage(DeployToFirstStage value) {
+        deployToFirstStage = value;
 		return this;
 	}
 
@@ -96,10 +91,5 @@ public class TriggerableData implements ICreatePackage {
 		packageNumber = value;
 		return this;
 	}
-
-    public TriggerableData setDeployToFirstStage(boolean value) {
-        deployToFirstStage = value;
-        return this;
-    }
 
 }

@@ -17,7 +17,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.inedo.buildmaster.domain.ApiDeployment;
-import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.ApiReleasePackage;
 import com.inedo.buildmaster.domain.ApiVariable;
@@ -40,7 +39,7 @@ import com.inedo.utils.TestConfig;
 public class BuildMasterApiTest {
 	private static MockServer mockServer = null;
 	private static BuildMasterApi buildmaster;
-    private static boolean compareJson = true;
+    private static boolean compareJson = false;
 	
 	@BeforeClass
     public static void beforeClass() throws IOException {
@@ -59,7 +58,7 @@ public class BuildMasterApiTest {
 
 		GlobalConfig.injectConfiguration(config);
 		
-		buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter()).setRecordResult();
+		buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());
         buildmaster.setRecordJson(compareJson);
 	}
 		
@@ -181,6 +180,9 @@ public class BuildMasterApiTest {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		
         Deployable[] applicationDeployables = buildmaster.getApplicationDeployables(TestConfig.getApplicationid());
+
+        assertThat("Application must have a deployable defined.", applicationDeployables.length, is(greaterThan(0)));
+
         int targetDeployableId = applicationDeployables[0].Deployable_Id;
 
         buildmaster.enableReleaseDeployable(TestConfig.getApplicationid(), releaseNumber, targetDeployableId);
@@ -274,23 +276,25 @@ public class BuildMasterApiTest {
 		variablesList.put("hello", "world");
         variablesList.put("cause", "unit test");
 		
-        ApiPackageDeployment packageDeployment = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber, variablesList, true);
-
+        ApiReleasePackage releasePackage = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber, variablesList);
         if (compareJson) {
             JsonCompare.assertFieldsIdentical("API Structure has not changed",
                     MockData.API_RELEASE_PACKAGE.getAsString(), buildmaster.getJsonString(), ApiReleasePackage.class);
         }
 
-        assertThat("Expect returned packageNumber to be the same as requested", packageNumber, is(packageDeployment.releasePackage.number));
+        assertThat("Expect returned packageNumber to be the same as requested", packageNumber, is(releasePackage.number));
 		
-        boolean result = buildmaster.waitForDeploymentToComplete(packageDeployment.deployments, true);
-
-        assertThat("Expect Test package " + packageNumber + " to have built and deployed successfully", result);
+        ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, releasePackage.number, null, null);
 
         if (compareJson) {
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
                     MockData.API_DEPLOYMENT.getAsString(), buildmaster.getJsonString(), "[0]", ApiDeployment.class);
         }
+
+        boolean result = buildmaster.waitForDeploymentToComplete(deployments, true);
+
+        assertThat("Expect Test package " + packageNumber + " to have built and deployed successfully", result);
+
 	}
 	
     @Test
@@ -330,7 +334,7 @@ public class BuildMasterApiTest {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
         String packageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
 		
-        boolean result = buildmaster.waitForActiveDeploymentsToComplete(TestConfig.getApplicationid(), releaseNumber, packageNumber);
+        boolean result = buildmaster.waitForActiveDeploymentsToComplete(TestConfig.getApplicationid(), releaseNumber);
 		
         assertThat("Expect Test package " + packageNumber + " to have built and deployed successfully", result);
 	}
@@ -342,7 +346,7 @@ public class BuildMasterApiTest {
 
         ApiDeployment deployment = buildmaster.getLatestDeployment(TestConfig.getApplicationid(), releaseNumber, packageNumber);
 		
-        buildmaster.waitForActiveDeploymentsToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber);
+        buildmaster.waitForActiveDeploymentsToComplete(deployment.applicationId, deployment.releaseNumber);
 
         String log = buildmaster.getExecutionLog(deployment.id);
 		
@@ -373,13 +377,15 @@ public class BuildMasterApiTest {
 			System.out.println("Test Run: " + testrun);
 						
 			variablesList.put("hello", "world" + testrun);			
-            ApiPackageDeployment packageDeployment = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, variablesList, true);
-            System.out.println("PackageNumber=" + packageDeployment.releasePackage.number);
+            ApiReleasePackage releasePackage = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, variablesList);
+            System.out.println("PackageNumber=" + releasePackage.number);
+
+            ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, releasePackage.number, null, null);
 
 			String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
             System.out.println("CurrentPackageNumber=" + currentPackageNumber);
 
-            ApiVariable[] variables = buildmaster.getPackageVariables(packageDeployment.releasePackage.applicationName, releaseNumber, packageDeployment.releasePackage.number);
+            ApiVariable[] variables = buildmaster.getPackageVariables(releasePackage.applicationName, releaseNumber, releasePackage.number);
 			String value = "not found";
 			
 			for (ApiVariable variable : variables) {
@@ -390,7 +396,7 @@ public class BuildMasterApiTest {
 			
 			System.out.println("Variable HELLO=" + value);
 			
-            buildmaster.waitForDeploymentToComplete(packageDeployment.deployments, false);
+            buildmaster.waitForDeploymentToComplete(deployments, false);
 		}
 	}
 

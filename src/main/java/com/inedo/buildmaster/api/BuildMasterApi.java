@@ -22,7 +22,6 @@ import org.xml.sax.SAXException;
 import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.inedo.buildmaster.domain.ApiDeployment;
-import com.inedo.buildmaster.domain.ApiPackageDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.ApiReleasePackage;
 import com.inedo.buildmaster.domain.ApiVariable;
@@ -47,7 +46,7 @@ public class BuildMasterApi {
     private final BuildMasterConfig config;
     private final JenkinsLogWriter logWriter;
     
-    private boolean recordResult = false;
+    private boolean recordJson = false;
     private String jsonString;
 
     public BuildMasterApi(JenkinsLogWriter listener) {
@@ -71,17 +70,13 @@ public class BuildMasterApi {
                 .sensitiveParameters("key", "API_Key");
     }
 
-    public void setRecordJson(boolean record) {
-        this.recordResult = record;
+    public BuildMasterApi setRecordJson(boolean record) {
+        this.recordJson = record;
+        return this;
     }
 
     public String getJsonString() {
         return jsonString;
-    }
-
-    public BuildMasterApi setRecordResult() {
-        recordResult = true;
-        return this;
     }
 
     /**
@@ -111,7 +106,7 @@ public class BuildMasterApi {
                 .get()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -126,7 +121,7 @@ public class BuildMasterApi {
                 .get()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -152,7 +147,7 @@ public class BuildMasterApi {
                 .get()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -172,7 +167,7 @@ public class BuildMasterApi {
                 .get()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -211,7 +206,7 @@ public class BuildMasterApi {
                 .get()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -240,7 +235,7 @@ public class BuildMasterApi {
                 .post()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -269,7 +264,7 @@ public class BuildMasterApi {
                 .post()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -340,7 +335,7 @@ public class BuildMasterApi {
                 .get()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -390,7 +385,7 @@ public class BuildMasterApi {
                 .post()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -412,9 +407,9 @@ public class BuildMasterApi {
      * @throws IOException
      * @throws InterruptedException
      */
-    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, Map<String, String> variablesList, boolean deployToFirstStage)
+    public ApiReleasePackage createPackage(int applicationId, String releaseNumber, Map<String, String> variablesList)
             throws IOException, InterruptedException {
-        return createPackage(applicationId, releaseNumber, null, variablesList, deployToFirstStage);
+        return createPackage(applicationId, releaseNumber, null, variablesList);
     }
 
     /**
@@ -429,7 +424,7 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#create-package">Endpoint Specification</a>
      */
-    public ApiPackageDeployment createPackage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList, boolean deployToFirstStage)
+    public ApiReleasePackage createPackage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList)
             throws IOException, InterruptedException {
         HttpEasy request = HttpEasy.request()
                 .path("/api/releases/packages/create")
@@ -445,27 +440,11 @@ public class BuildMasterApi {
         JsonReader reader = request.put()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
-        ApiReleasePackage releasePackage = reader.fromJson(ApiReleasePackage.class);
-        ApiDeployment[] deployments = null;
-
-        logWriter.info("Package %s has been created for release %s of the %s application", releasePackage.number, releasePackage.applicationName, releasePackage.releaseNumber);
-
-        if (deployToFirstStage) {
-            boolean storeRecordResult = recordResult;
-            recordResult = false;
-
-            try {
-                deployments = deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null, null);
-            } finally {
-                recordResult = storeRecordResult;
-            }
-        }
-
-        return new ApiPackageDeployment(releasePackage, deployments);
+        return reader.fromJson(ApiReleasePackage.class);
     }
     
     /**
@@ -484,16 +463,7 @@ public class BuildMasterApi {
     public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList, String stage)
             throws IOException, InterruptedException {
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
-        // Don't pass in packageNumber - it's not building yet!
-        // TODO This will cause get active deployments to bring back everything because we need Active and Executing status
-        logWriter.info("Wait for any active deployments to complete");
         waitForActiveDeploymentsToComplete(applicationId, releaseNumber);
-
-        if (Strings.isNullOrEmpty(stage)) {
-            logWriter.info("Deploy package to next stage");
-        } else {
-            logWriter.info("Deploy package to " + stage + " stage");
-        }
 
         HttpEasy request = HttpEasy.request()
                 .path("/api/releases/packages/deploy")
@@ -513,7 +483,7 @@ public class BuildMasterApi {
                 .put()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -541,7 +511,7 @@ public class BuildMasterApi {
                 .post()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -609,7 +579,7 @@ public class BuildMasterApi {
                 .get()
                 .getJsonReader();
 
-        if (recordResult) {
+        if (recordJson) {
             jsonString = reader.asPrettyString();
         }
 
@@ -640,18 +610,13 @@ public class BuildMasterApi {
     }
 
     /**
-     * Checks to see if any existing builds are running a build step, if so will wait for it to complete
+     * Checks to see deployments are running for a release, if so will wait for them to complete.
      * 
      * @throws IOException
      * @throws InterruptedException
      */
     public boolean waitForActiveDeploymentsToComplete(int applicationId, String releaseNumber) throws IOException, InterruptedException {
-        return waitForActiveDeploymentsToComplete(applicationId, releaseNumber, null);
-    }
-
-    public boolean waitForActiveDeploymentsToComplete(int applicationId, String releaseNumber, String packageNumber)
-            throws IOException, InterruptedException {
-        ApiDeployment[] deployments = getActiveDeployments(applicationId, releaseNumber, packageNumber);
+        ApiDeployment[] deployments = getActiveDeployments(applicationId, releaseNumber, null);
 
         for (ApiDeployment deployment : deployments) {
             if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false)) {
@@ -663,7 +628,7 @@ public class BuildMasterApi {
     }
 
     /**
-     * Wait till any deployment for the current package have completed, including automatic promotions.
+     * Wait for the package deployment, and any automatic promotions, to complete.
      * 
      * @param deployments
      * @param printLogOnFailure
@@ -677,12 +642,14 @@ public class BuildMasterApi {
             }
         }
 
-        // Wait for any automatic promotions to complete
-        ApiDeployment[] secondaryDeployments;
-        while ((secondaryDeployments = getActiveDeployments(deployments[0].applicationId, deployments[0].releaseNumber, deployments[0].packageNumber)).length > 0) {
-            for (ApiDeployment deployment : secondaryDeployments) {
-                if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure)) {
-                    return false;
+        if (deployments.length > 0) {
+            // Wait for any automatic promotions to complete
+            ApiDeployment[] secondaryDeployments;
+            while ((secondaryDeployments = getActiveDeployments(deployments[0].applicationId, deployments[0].releaseNumber, deployments[0].packageNumber)).length > 0) {
+                for (ApiDeployment deployment : secondaryDeployments) {
+                    if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure)) {
+                        return false;
+                    }
                 }
             }
         }
@@ -701,10 +668,10 @@ public class BuildMasterApi {
         try {
             deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
 
-            logWriter.info("Waiting for deployment to '%s' stage to complete%s...", deployment.pipelineStageName, (printLogOnFailure ? "" : " for package " + packageNumber));
+            logWriter.info("Waiting for deployment to the %s stage to complete%s...", deployment.pipelineStageName, (printLogOnFailure ? "" : " for package " + packageNumber));
 
             // Pause logging of API requests
-            HttpEasy.withDefaults().logRequest(false);
+            // TODO HttpEasy.withDefaults().logRequest(false);
 
             long startTime = new Date().getTime();
             Integer envrionmentId = deployment.environmentId;
@@ -741,6 +708,7 @@ public class BuildMasterApi {
             boolean successful = DeploymentStatus.SUCCEEDED.getText().equalsIgnoreCase(deployment.status) || DeploymentStatus.WARNED.getText().equalsIgnoreCase(deployment.status);
 
             if (!successful && printLogOnFailure) {
+                logWriter.info("Deployment has failed");
                 printExecutionLog(deployment.id);
             }
 
@@ -748,11 +716,15 @@ public class BuildMasterApi {
 
         } finally {
             // Resume logging - if enabled
-            HttpEasy.withDefaults().logRequest(config.logApiRequests);
+            // TODO HttpEasy.withDefaults().logRequest(config.logApiRequests);
         }
     }
 
     public String getExecutionLog(int deploymentId) throws IOException {
+        if (Strings.isNullOrEmpty(config.user) || Strings.isNullOrEmpty(config.password)) {
+            throw new IOException("Unable to get BuildMaster execution logs - username and password must be configured in global settings");
+        }
+
         // TODO: This is the only API that requires username / password - put that into the documentation
         String log = HttpEasy.request()
                 .path("/executions/logs?executionId={}&level=0")
@@ -769,15 +741,19 @@ public class BuildMasterApi {
      * 
      * @throws IOException
      */
-    public void printExecutionLog(int deploymentId) throws IOException {
-        String log = getExecutionLog(deploymentId);
+    public void printExecutionLog(int deploymentId) {
+        try {
+            String log = getExecutionLog(deploymentId);
 
-        logWriter.info("");
-        logWriter.info("BuildMaster Execution Log:");
-        logWriter.info("-------------------------");
+            logWriter.info("");
+            logWriter.info("BuildMaster Execution Log:");
+            logWriter.info("-------------------------");
 
-        Arrays.stream(log.split("\\r?\\n")).forEach(line -> logWriter.info(line));
+            Arrays.stream(log.split("\\r?\\n")).forEach(line -> logWriter.info(line));
 
-        logWriter.info("");
+            logWriter.info("");
+        } catch (Exception e) {
+            logWriter.error(String.format("Unable to get BuildMaster deployment execution log: %s", e.getMessage()));
+        }
     }
 }

@@ -4,9 +4,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.base.Strings;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiDeployment;
-import com.inedo.buildmaster.domain.ApiPackageDeployment;
+import com.inedo.buildmaster.domain.ApiReleasePackage;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
@@ -24,7 +25,7 @@ import hudson.model.TaskListener;
 public class BuildHelper {
     public static final String DEFAULT_PACKAGE_NUMBER = "${BUILDMASTER_PACKAGE_NUMBER}";
 
-    public static ApiPackageDeployment createPackage(Run<?, ?> run, TaskListener listener, ICreatePackage trigger) throws IOException, InterruptedException {
+    public static ApiReleasePackage createPackage(Run<?, ?> run, TaskListener listener, ICreatePackage trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
 
         if (!GlobalConfig.isRequiredFieldsConfigured()) {
@@ -69,30 +70,36 @@ public class BuildHelper {
             buildmaster.enableReleaseDeployable(applicationId, releaseNumber, Integer.valueOf(deployableId));
         }
 
-        ApiPackageDeployment apiPackage;
+        ApiReleasePackage releasePackage;
 
         if (packageNumber != null && !packageNumber.equalsIgnoreCase("null") && !packageNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(packageNumber)) {
-            helper.getLogWriter().info("Create BuildMaster package with PackageNumber=" + packageNumber);
-            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, packageNumber, variablesList, trigger.getDeployToFirstStage());
+            helper.getLogWriter().info("Create package %s for the %s application, release %s", packageNumber, application.Application_Name, releaseNumber);
+            releasePackage = buildmaster.createPackage(applicationId, releaseNumber, packageNumber, variablesList);
 
-            if (!apiPackage.releasePackage.number.equals(packageNumber)) {
+            if (!releasePackage.number.equals(packageNumber)) {
                 helper.getLogWriter().info("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.",
                         packageNumber,
-                        apiPackage.releasePackage.number);
+                        releasePackage.number);
             }
         } else {
-            helper.getLogWriter().info("Create BuildMaster package");
-            apiPackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList, trigger.getDeployToFirstStage());
+            helper.getLogWriter().info("Create package for the %s application, release %s", application.Application_Name, releaseNumber);
+            releasePackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList);
         }
 
-        if (trigger.isWaitTillBuildCompleted()) {
-            helper.getLogWriter().info("Wait till deployment completed");
-            if (!buildmaster.waitForDeploymentToComplete(apiPackage.deployments, trigger.getWaitTillBuildCompleted().isPrintLogOnFailure())) {
-                return null;
+        helper.getLogWriter().info("Package %s has been created", releasePackage.number);
+
+        if (trigger.isDeployToFirstStage()) {
+            helper.getLogWriter().info("Deploy package %s to the first stage", releasePackage.number);
+            ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null, null);
+
+            if (trigger.getDeployToFirstStage().isWaitUntilDeploymentCompleted()) {
+                if (!buildmaster.waitForDeploymentToComplete(deployments, trigger.getDeployToFirstStage().isPrintLogOnFailure())) {
+                    return null;
+                }
             }
         }
 
-        return apiPackage;
+        return releasePackage;
     }
 
     public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) throws IOException {
@@ -156,11 +163,15 @@ public class BuildHelper {
             variablesList = getVariablesListExpanded(run, listener, builder.getDeployVariables().getVariables());
         }
 
+        if (Strings.isNullOrEmpty(stage)) {
+            helper.getLogWriter().info("Deploy package %s to the next stage", packageNumber);
+        } else {
+            helper.getLogWriter().info("Deploy package %s to the '" + stage + "' stage", packageNumber);
+        }
         ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, packageNumber, variablesList, stage);
 
-        if (builder.isWaitTillBuildCompleted()) {
-            helper.getLogWriter().info("Wait till deployment completed");
-            return buildmaster.waitForDeploymentToComplete(deployments, builder.getWaitTillBuildCompleted().isPrintLogOnFailure());
+        if (builder.isWaitUntilDeploymentCompleted()) {
+            return buildmaster.waitForDeploymentToComplete(deployments, builder.isPrintLogOnFailure());
         }
 
         return true;

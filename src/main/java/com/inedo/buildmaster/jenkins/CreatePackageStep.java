@@ -14,10 +14,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.domain.ApiPackageDeployment;
+import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
-import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 
 import hudson.AbortException;
 import hudson.Extension;
@@ -37,10 +37,9 @@ import hudson.util.FormValidation;
 public class CreatePackageStep extends Step implements ICreatePackage, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private WaitTillCompleted waitTillBuildCompleted = null;
+    private DeployToFirstStage deployToFirstStage = null;
     private PackageVariables packageVariables = null;
     private EnableReleaseDeployable enableReleaseDeployable = null;
-    private boolean deployToFirstStage = false;
     private String applicationId;
     private String releaseNumber;
     private String packageNumber;
@@ -50,8 +49,8 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
     }
 
     @DataBoundSetter
-    public final void setWaitTillBuildCompleted(WaitTillCompleted waitTillBuildCompleted) {
-        this.waitTillBuildCompleted = waitTillBuildCompleted;
+    public final void setDeployToFirstStage(DeployToFirstStage deployToFirstStage) {
+        this.deployToFirstStage = deployToFirstStage;
     }
 
     @DataBoundSetter
@@ -79,17 +78,12 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
         this.packageNumber = packageNumber;
     }
 
-    @DataBoundSetter
-    public final void setDeployToFirstStage(boolean deployToFirstStage) {
-        this.deployToFirstStage = deployToFirstStage;
+    public boolean isDeployToFirstStage() {
+        return deployToFirstStage != null;
     }
 
-    public boolean isWaitTillBuildCompleted() {
-        return waitTillBuildCompleted != null;
-    }
-
-    public WaitTillCompleted getWaitTillBuildCompleted() {
-        return waitTillBuildCompleted;
+    public DeployToFirstStage getDeployToFirstStage() {
+        return deployToFirstStage;
     }
 
     public boolean isPackageVariables() {
@@ -118,10 +112,6 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
 
     public String getPackageNumber() {
         return packageNumber;
-    }
-
-    public boolean getDeployToFirstStage() {
-        return deployToFirstStage;
     }
 
     @Override
@@ -175,13 +165,13 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
 
         @Override
         protected String run() throws Exception {
-            ApiPackageDeployment apiPackage = BuildHelper.createPackage(this.getContext().get(Run.class), this.getContext().get(TaskListener.class), packageConfig);
+            ApiReleasePackage releasePackage = BuildHelper.createPackage(this.getContext().get(Run.class), this.getContext().get(TaskListener.class), packageConfig);
 
-            if (apiPackage == null) {
+            if (releasePackage == null) {
                 throw new AbortException("Deployment failed");
             }
             
-            return apiPackage.releasePackage.number;
+            return releasePackage.number;
         }
     }
 }

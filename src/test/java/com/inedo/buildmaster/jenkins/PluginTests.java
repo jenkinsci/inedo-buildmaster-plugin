@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -24,9 +25,10 @@ import org.junit.Test;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
+import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
-import com.inedo.buildmaster.jenkins.buildOption.WaitTillCompleted;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
@@ -56,7 +58,7 @@ public class PluginTests {
 	
 	public String releaseNumber;
 	public String packageNumber;
-    public boolean deployToFirstStage;
+    public DeployToFirstStage deployToFirstStage = null;
 			
 	@Before
 	public void before() throws IOException, InterruptedException {
@@ -71,7 +73,7 @@ public class PluginTests {
 
 		GlobalConfig.injectConfiguration(config);
 		
-		build = mock(AbstractBuild.class);;
+        build = mock(AbstractBuild.class);
 		//launcher = mock(Launcher.class);
 		listener = mock(BuildListener.class);
 		env = mock(EnvVars.class);
@@ -82,11 +84,11 @@ public class PluginTests {
 		when(env.expand(anyString())).then(returnsFirstArg());
 		when(listener.getLogger()).thenReturn(logger);
 		
-		BuildMasterApi buildmaster = new BuildMasterApi(mockServer.getBuildMasterConfig(), new JenkinsConsoleLogWriter());
+        BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		this.packageNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
-        this.deployToFirstStage = true;
+        this.deployToFirstStage = new DeployToFirstStage();
 	}
 	
 	@After
@@ -101,8 +103,11 @@ public class PluginTests {
         TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage);
 	
 		restLog();
-		assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(true));
 		
+        ApiReleasePackage releasePackage = BuildHelper.createPackage(build, listener, data);
+
+        assertThat("Result should be successful", releasePackage, is(notNullValue()));
+
 		String log[] = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
         assertThat("Create Build step should be the last actioned performed.", log[log.length - 1], containsString("Create BuildMaster build with PackageNumber="));
@@ -110,8 +115,7 @@ public class PluginTests {
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
-			.setWaitTillBuildCompleted(new WaitTillCompleted(true));
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage);
 		
 		restLog();
 		assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(true));
@@ -122,7 +126,7 @@ public class PluginTests {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, new DeployToFirstStage())
                 .setSetBuildVariables(new PackageVariables("hello=performSetVariables"));
 		
 		restLog();
