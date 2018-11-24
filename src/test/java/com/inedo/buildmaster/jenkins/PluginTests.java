@@ -88,7 +88,7 @@ public class PluginTests {
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		this.packageNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
-        this.deployToFirstStage = new DeployToFirstStage();
+        this.deployToFirstStage = new DeployToFirstStage(true);
 	}
 	
 	@After
@@ -126,7 +126,7 @@ public class PluginTests {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, new DeployToFirstStage())
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, new DeployToFirstStage(true))
                 .setSetBuildVariables(new PackageVariables("hello=performSetVariables"));
 		
 		restLog();
