@@ -12,15 +12,11 @@ import hudson.model.Descriptor;
 public class DeployToFirstStage extends AbstractDescribableImpl<DeployToFirstStage> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private boolean waitUntilDeploymentCompleted = true;
-    private boolean printLogOnFailure = true;
+    private boolean waitUntilDeploymentCompleted = false;
+    private boolean printLogOnFailure = false;
 
     @DataBoundConstructor
-    public DeployToFirstStage() {
-    }
-
-    @DataBoundSetter
-    public final void setWaitUntilDeploymentCompleted(boolean waitUntilDeploymentCompleted) {
+    public DeployToFirstStage(boolean waitUntilDeploymentCompleted) {
         this.waitUntilDeploymentCompleted = waitUntilDeploymentCompleted;
     }
 

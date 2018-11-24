@@ -163,10 +163,18 @@ public class BuildHelper {
             variablesList = getVariablesListExpanded(run, listener, builder.getDeployVariables().getVariables());
         }
 
+        Application application = buildmaster.getApplication(applicationId);
+
+        if (application == null) {
+            JenkinsHelper.fail("Unknown application id " + applicationId);
+            return false;
+        }
+
         if (Strings.isNullOrEmpty(stage)) {
-            helper.getLogWriter().info("Deploy package %s to the next stage", packageNumber);
+            helper.getLogWriter().info("Deploy package %s to the next stage for the %s application, release %s", packageNumber, application.Application_Name, releaseNumber);
         } else {
-            helper.getLogWriter().info("Deploy package %s to the '" + stage + "' stage", packageNumber);
+            helper.getLogWriter().info("Deploy package %s to the '" + stage + "' stage for the %s application, release %s", packageNumber, application.Application_Name,
+                    releaseNumber);
         }
         ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, packageNumber, variablesList, stage);
 
