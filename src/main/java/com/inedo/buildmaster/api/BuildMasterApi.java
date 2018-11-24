@@ -738,8 +738,6 @@ public class BuildMasterApi {
 
     /**
      * Prints the build log for the execution id.
-     * 
-     * @throws IOException
      */
     public void printExecutionLog(int deploymentId) {
         try {
