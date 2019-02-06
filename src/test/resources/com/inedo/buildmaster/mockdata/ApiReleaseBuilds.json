@@ -9,6 +9,7 @@
 	  "applicationName": "TestApplication",
 	  "pipelineId": 1,
 	  "pipelineName": "TestApplication",
+      "furthestStage": "Integration",
 	  "releaseId": 1,
 	  "releaseNumber": "0.0.0",
 	  "releaseName": "0.0.0"

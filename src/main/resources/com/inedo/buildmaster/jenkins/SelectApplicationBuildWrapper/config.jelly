@@ -28,7 +28,7 @@
     </j:choose>
   </f:entry>
   
-  <f:entry title="Package Number Source" field="packageNumberSource">
+  <f:entry title="Build Number Source" field="packageNumberSource">
     <f:select default="NOT_REQUIRED"/>
   </f:entry>
   

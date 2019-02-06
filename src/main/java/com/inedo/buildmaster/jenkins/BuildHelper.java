@@ -7,7 +7,7 @@ import java.util.Map;
 import com.google.common.base.Strings;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiDeployment;
-import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
@@ -25,7 +25,7 @@ import hudson.model.TaskListener;
 public class BuildHelper {
     public static final String DEFAULT_PACKAGE_NUMBER = "${BUILDMASTER_PACKAGE_NUMBER}";
 
-    public static ApiReleasePackage createPackage(Run<?, ?> run, TaskListener listener, ICreatePackage trigger) throws IOException, InterruptedException {
+    public static ApiReleaseBuild createPackage(Run<?, ?> run, TaskListener listener, ICreatePackage trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
 
         if (!GlobalConfig.isRequiredFieldsConfigured()) {
@@ -36,7 +36,7 @@ public class BuildHelper {
 
         int applicationId = Integer.valueOf(helper.expandVariable(trigger.getApplicationId()));
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
-        String packageNumber = helper.expandVariable(trigger.getPackageNumber());
+        String buildNumber = helper.expandVariable(trigger.getPackageNumber());
 
         Application application = buildmaster.getApplication(applicationId);
 
@@ -52,8 +52,8 @@ public class BuildHelper {
 
             if (trigger.getPackageVariables().isPreserveVariables()) {
                 helper.getLogWriter().info("Gather previous builds build variables");
-                String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(applicationId, releaseNumber);
-                ApiVariable[] variables = buildmaster.getPackageVariables(application.Application_Name, releaseNumber, currentPackageNumber);
+                String currentBuildNumber = buildmaster.getReleaseCurrentBuildNumber(applicationId, releaseNumber);
+                ApiVariable[] variables = buildmaster.getBuildVariables(application.Application_Name, releaseNumber, currentBuildNumber);
 
                 for (ApiVariable variable : variables) {
                     if (!variablesList.containsKey(variable.name)) {
@@ -70,27 +70,27 @@ public class BuildHelper {
             buildmaster.enableReleaseDeployable(applicationId, releaseNumber, Integer.valueOf(deployableId));
         }
 
-        ApiReleasePackage releasePackage;
+        ApiReleaseBuild releasePackage;
 
-        if (packageNumber != null && !packageNumber.equalsIgnoreCase("null") && !packageNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(packageNumber)) {
-            helper.getLogWriter().info("Create package %s for the %s application, release %s", packageNumber, application.Application_Name, releaseNumber);
-            releasePackage = buildmaster.createPackage(applicationId, releaseNumber, packageNumber, variablesList);
+        if (buildNumber != null && !buildNumber.equalsIgnoreCase("null") && !buildNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(buildNumber)) {
+            helper.getLogWriter().info("Create build %s for the %s application, release %s", buildNumber, application.Application_Name, releaseNumber);
+            releasePackage = buildmaster.createBuild(applicationId, releaseNumber, buildNumber, variablesList);
 
-            if (!releasePackage.number.equals(packageNumber)) {
+            if (!releasePackage.number.equals(buildNumber)) {
                 helper.getLogWriter().info("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.",
-                        packageNumber,
+                        buildNumber,
                         releasePackage.number);
             }
         } else {
-            helper.getLogWriter().info("Create package for the %s application, release %s", application.Application_Name, releaseNumber);
-            releasePackage = buildmaster.createPackage(applicationId, releaseNumber, variablesList);
+            helper.getLogWriter().info("Create build for the %s application, release %s", application.Application_Name, releaseNumber);
+            releasePackage = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
         }
 
-        helper.getLogWriter().info("Package %s has been created", releasePackage.number);
+        helper.getLogWriter().info("Build %s has been created", releasePackage.number);
 
         if (trigger.isDeployToFirstStage()) {
-            helper.getLogWriter().info("Deploy package %s to the first stage", releasePackage.number);
-            ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, releasePackage.number, null, null);
+            helper.getLogWriter().info("Deploy build %s to the first stage", releasePackage.number);
+            ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, releasePackage.number, null, null);
 
             if (trigger.getDeployToFirstStage().isWaitUntilDeploymentCompleted()) {
                 if (!buildmaster.waitForDeploymentToComplete(deployments, trigger.getDeployToFirstStage().isPrintLogOnFailure())) {
@@ -150,7 +150,7 @@ public class BuildHelper {
         
         int applicationId = Integer.valueOf(helper.expandVariable(builder.getApplicationId()));
         String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
-        String packageNumber = helper.expandVariable(builder.getPackageNumber());
+        String buildNumber = helper.expandVariable(builder.getPackageNumber());
         String stage = helper.expandVariable(builder.getStage());
 
         if (buildmaster.getApplication(applicationId) == null) {
@@ -171,12 +171,12 @@ public class BuildHelper {
         }
 
         if (Strings.isNullOrEmpty(stage)) {
-            helper.getLogWriter().info("Deploy package %s to the next stage for the %s application, release %s", packageNumber, application.Application_Name, releaseNumber);
+            helper.getLogWriter().info("Deploy build %s to the next stage for the %s application, release %s", buildNumber, application.Application_Name, releaseNumber);
         } else {
-            helper.getLogWriter().info("Deploy package %s to the '" + stage + "' stage for the %s application, release %s", packageNumber, application.Application_Name,
+            helper.getLogWriter().info("Deploy build %s to the '" + stage + "' stage for the %s application, release %s", buildNumber, application.Application_Name,
                     releaseNumber);
         }
-        ApiDeployment[] deployments = buildmaster.deployPackageToStage(applicationId, releaseNumber, packageNumber, variablesList, stage);
+        ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, buildNumber, variablesList, stage);
 
         if (builder.isWaitUntilDeploymentCompleted()) {
             return buildmaster.waitForDeploymentToComplete(deployments, builder.isPrintLogOnFailure());

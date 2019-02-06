@@ -128,17 +128,17 @@ public class JsonCompare {
 
         for (String key : expectedKeys) {
             if (!actual.has(key)) {
-                result.fail(String.format("Expected field %s in response but none found", key));
+                result.fail(String.format("Expected field '%s' in response but none found", key));
             }
         }
     }
 
     private static void checkJsonObjectKeysActualInExpected(JsonObject expected, JsonObject actual, JsonCompareResult result) {
-        Set<String> actualKeys = expected.keySet();
+        Set<String> actualKeys = actual.keySet();
 
         for (String key : actualKeys) {
             if (!expected.has(key)) {
-                result.fail(String.format("nUnexpected field %s found in mocked data", key));
+                result.fail(String.format("Expected field '%s' in mocked data but none found", key));
             }
         }
     }

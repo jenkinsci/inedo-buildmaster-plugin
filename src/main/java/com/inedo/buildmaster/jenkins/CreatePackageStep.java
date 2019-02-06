@@ -14,7 +14,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
@@ -134,7 +134,7 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
 
         @Override
         public String getDisplayName() {
-            return "Create BuildMaster Package";
+            return "Create BuildMaster Build";
         }
 
         public FormValidation doCheckVariables(@QueryParameter String value) {
@@ -165,7 +165,7 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
 
         @Override
         protected String run() throws Exception {
-            ApiReleasePackage releasePackage = BuildHelper.createPackage(this.getContext().get(Run.class), this.getContext().get(TaskListener.class), packageConfig);
+            ApiReleaseBuild releasePackage = BuildHelper.createPackage(this.getContext().get(Run.class), this.getContext().get(TaskListener.class), packageConfig);
 
             if (releasePackage == null) {
                 throw new AbortException("Deployment failed");

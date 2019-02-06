@@ -64,7 +64,7 @@ public class MockServer {
 			
 			switch (method) {
             case "/api/releases/packages":
-                response.setEntity(MockData.API_RELEASE_PACKAGES.getInputSteam());
+                response.setEntity(MockData.API_RELEASE_BUILDS.getInputSteam());
 
             case "/api/releases/packages/deploy":
                 response.setEntity(MockData.API_DEPLOYMENT.getInputSteam());
@@ -74,18 +74,18 @@ public class MockServer {
                 response.setEntity(MockData.API_DEPLOYMENT.getInputSteam());
 
             case "/api/variables/packages/TestApplication/0.0.0/29":
-                response.setEntity(MockData.PACKAGE_VARIABLES.getInputSteam());
+                response.setEntity(MockData.BUILD_VARIABLES.getInputSteam());
 
             case "/api/releases":
                 response.setEntity(MockData.API_RELEASE.getInputSteam());
                 break;
 
             case "/api/releases/packages/create":
-                response.setEntity(MockData.API_RELEASE_PACKAGE.getInputSteam());
+                response.setEntity(MockData.API_RELEASE_BUILD.getInputSteam());
                 break;
 
             case "/api/variables/packages/TestApplication/0.0.0/16":
-                response.setEntity(MockData.PACKAGE_VARIABLES.getInputSteam());
+                response.setEntity(MockData.BUILD_VARIABLES.getInputSteam());
                 break;
 
 			case "Applications_GetApplications":
@@ -104,9 +104,6 @@ public class MockServer {
                 response.setEntity(MockData.DEPLOYABLE.getInputSteam());
 				break;	
 				
-			case "Releases_GetReleases":
-                response.setEntity(MockData.RELEASES.getInputSteam());
-				break;
 			
 			case "Releases_GetRelease": 
                 response.setEntity(MockData.RELEASE.getInputSteam());
@@ -140,10 +137,6 @@ public class MockServer {
             // case "Builds_GetExecutionLog":
             // response.setEntity(MockData.BUILD_EXECUTION_DETAILS.getInputSteam());
             // break;
-
-			case "Variables_GetVariableValues":
-                response.setEntity(MockData.VARIABLE.getInputSteam());
-				break;
 				
 			default:
 				response.setStatusCode(HttpStatus.SC_NOT_FOUND);

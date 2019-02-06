@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
-import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
@@ -87,7 +87,7 @@ public class PluginTests {
         BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		this.packageNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+		this.packageNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
         this.deployToFirstStage = new DeployToFirstStage(true);
 	}
 	
@@ -104,13 +104,13 @@ public class PluginTests {
 	
 		restLog();
 		
-        ApiReleasePackage releasePackage = BuildHelper.createPackage(build, listener, data);
+        ApiReleaseBuild releasePackage = BuildHelper.createPackage(build, listener, data);
 
         assertThat("Result should be successful", releasePackage, is(notNullValue()));
 
 		String log[] = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
-        assertThat("Create Build step should be the last actioned performed.", log[log.length - 1], containsString("Create BuildMaster build with PackageNumber="));
+        assertThat("Create Build step should be the last actioned performed.", log[log.length - 1], containsString("Create BuildMaster build with BuildNumber="));
 	}
 
 	@Test

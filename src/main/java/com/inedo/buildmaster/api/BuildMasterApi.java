@@ -23,7 +23,7 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
-import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ApplicationDetail;
@@ -277,11 +277,11 @@ public class BuildMasterApi {
      * 
      * @throws IOException
      */
-    public String getReleaseNextPackageNumber(int applicationId, String releaseNumber) throws IOException {
+    public String getReleaseNextBuildNumber(int applicationId, String releaseNumber) throws IOException {
         ApiRelease release = getRelease(applicationId, releaseNumber);
 
-        if (release != null && release.latestPackageNumber != null) {
-            return String.valueOf(Integer.parseInt(release.latestPackageNumber) + 1);
+        if (release != null && release.latestBuildNumber != null) {
+            return String.valueOf(Integer.parseInt(release.latestBuildNumber) + 1);
         }
 
         return "1";
@@ -293,11 +293,11 @@ public class BuildMasterApi {
      * 
      * @throws IOException
      */
-    public String getReleaseCurrentPackageNumber(int applicationId, String releaseNumber) throws IOException {
+    public String getReleaseCurrentBuildNumber(int applicationId, String releaseNumber) throws IOException {
         ApiRelease release = getRelease(applicationId, releaseNumber);
 
         if (release != null) {
-            return release.latestPackageNumber;
+            return release.latestBuildNumber;
         }
 
         return null;
@@ -375,13 +375,13 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-packages">Endpoint Specification</a>
      */
-    public ApiReleasePackage getPackage(int applicationId, String releaseNumber, String packageNumber) throws IOException {
+    public ApiReleaseBuild getBuild(int applicationId, String releaseNumber, String buildNumber) throws IOException {
         JsonReader reader = HttpEasy.request()
-                .path("/api/releases/packages")
+                .path("/api/releases/builds")
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId)
                 .field("releaseNumber", releaseNumber)
-                .field("packageNumber", packageNumber)
+                .field("buildNumber", buildNumber)
                 .post()
                 .getJsonReader();
 
@@ -389,10 +389,10 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        ApiReleasePackage[] packages = reader.fromJson(ApiReleasePackage[].class);
+        ApiReleaseBuild[] builds = reader.fromJson(ApiReleaseBuild[].class);
 
-        if (packages.length > 0) {
-            return packages[0];
+        if (builds.length > 0) {
+            return builds[0];
         }
 
         return null;
@@ -402,14 +402,14 @@ public class BuildMasterApi {
      * Creates a new build of an application and promote it to the
      * first environment. Error thrown on failure.
      * 
-     * @return ApiPackageDeployment
+     * @return ApiReleaseBuild
      * 
      * @throws IOException
      * @throws InterruptedException
      */
-    public ApiReleasePackage createPackage(int applicationId, String releaseNumber, Map<String, String> variablesList)
+    public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, Map<String, String> variablesList)
             throws IOException, InterruptedException {
-        return createPackage(applicationId, releaseNumber, null, variablesList);
+        return createBuild(applicationId, releaseNumber, null, variablesList);
     }
 
     /**
@@ -417,21 +417,21 @@ public class BuildMasterApi {
      * number and returns the build number of the new build. Error thrown on
      * failure.
      * 
-     * @return ApiPackageDeployment
+     * @return ApiReleaseBuild
      * 
      * @throws IOException
      * @throws InterruptedException
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#create-package">Endpoint Specification</a>
      */
-    public ApiReleasePackage createPackage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList)
+    public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList)
             throws IOException, InterruptedException {
         HttpEasy request = HttpEasy.request()
-                .path("/api/releases/packages/create")
+                .path("/api/releases/builds/create")
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId) 
                 .field("releaseNumber", releaseNumber)
-                .field("packageNumber", packageNumber);
+                .field("buildNumber", buildNumber);
 
         for (Map.Entry<String, String> variable : variablesList.entrySet()) {
             request.field("$" + variable.getKey(), variable.getValue());
@@ -444,14 +444,14 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        return reader.fromJson(ApiReleasePackage.class);
+        return reader.fromJson(ApiReleaseBuild.class);
     }
     
     /**
      * 
      * @param applicationId Required
      * @param releaseNumber Required
-     * @param packageNumber Required
+     * @param buildNumber Required
      * @param stage Optional. If not supplied, the next stage in the pipeline will be used.
      * @return ApiDeployment[]
      * 
@@ -460,17 +460,17 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#deploy-package">Endpoint Specification</a>
      */
-    public ApiDeployment[] deployPackageToStage(int applicationId, String releaseNumber, String packageNumber, Map<String, String> variablesList, String stage)
+    public ApiDeployment[] deployBuildToStage(int applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList, String stage)
             throws IOException, InterruptedException {
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
         waitForActiveDeploymentsToComplete(applicationId, releaseNumber);
 
         HttpEasy request = HttpEasy.request()
-                .path("/api/releases/packages/deploy")
+                .path("/api/releases/builds/deploy")
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId) 
                 .field("releaseNumber", releaseNumber)
-                .field("packageNumber", packageNumber)
+                .field("buildNumber", buildNumber)
                 .field("toStage", stage);
 
         if (variablesList != null) {
@@ -499,13 +499,13 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
-    private ApiDeployment[] getDeployments(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId, DeploymentStatus status) throws IOException {
+    private ApiDeployment[] getDeployments(int applicationId, String releaseNumber, String buildNumber, Integer deploymentId, DeploymentStatus status) throws IOException {
         JsonReader reader = HttpEasy.request()
-                .path("/api/releases/packages/deployments")
+                .path("/api/releases/builds/deployments")
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId)
                 .field("releaseNumber", releaseNumber)
-                .field("packageNumber", packageNumber)
+                .field("buildNumber", buildNumber)
                 .field("deploymentId", deploymentId)
                 .field("status", status == null ? null : status.getText())
                 .post()
@@ -527,8 +527,8 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
-    public ApiDeployment getLatestDeployment(int applicationId, String releaseNumber, String packageNumber) throws IOException {
-        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, null, null);
+    public ApiDeployment getLatestDeployment(int applicationId, String releaseNumber, String buildNumber) throws IOException {
+        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, buildNumber, null, null);
 
         if (deployments.length > 0) {
             return deployments[0];
@@ -537,8 +537,8 @@ public class BuildMasterApi {
         return new ApiDeployment();
     }
 
-    public ApiDeployment getDeployment(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId) throws IOException {
-        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, packageNumber, deploymentId, null);
+    public ApiDeployment getDeployment(int applicationId, String releaseNumber, String buildNumber, Integer deploymentId) throws IOException {
+        ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, buildNumber, deploymentId, null);
 
         if (deployments.length > 0) {
             return deployments[0];
@@ -548,11 +548,11 @@ public class BuildMasterApi {
         return new ApiDeployment();
     }
 
-    public ApiDeployment[] getActiveDeployments(int applicationId, String releaseNumber, String packageNumber) throws IOException {
+    public ApiDeployment[] getActiveDeployments(int applicationId, String releaseNumber, String buildNumber) throws IOException {
         List<ApiDeployment> deployments = new ArrayList<>();
 
-        deployments.addAll(Arrays.asList(getDeployments(applicationId, releaseNumber, packageNumber, null, DeploymentStatus.PENDING)));
-        deployments.addAll(Arrays.asList(getDeployments(applicationId, releaseNumber, packageNumber, null, DeploymentStatus.EXECUTING)));
+        deployments.addAll(Arrays.asList(getDeployments(applicationId, releaseNumber, buildNumber, null, DeploymentStatus.PENDING)));
+        deployments.addAll(Arrays.asList(getDeployments(applicationId, releaseNumber, buildNumber, null, DeploymentStatus.EXECUTING)));
 
         return deployments.toArray(new ApiDeployment[0]);
     }
@@ -564,17 +564,17 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/variables">Variables Management</a>
      */
-    public ApiVariable[] getPackageVariables(String applicationName, String releaseNumber, String packageNumber) throws IOException {
+    public ApiVariable[] getBuildVariables(String applicationName, String releaseNumber, String buildNumber) throws IOException {
         // if (applicationId == null)
         // return new ApiVariable[0];
         if (releaseNumber == null || releaseNumber.isEmpty())
             return new ApiVariable[0];
-        if (packageNumber == null || packageNumber.isEmpty())
+        if (buildNumber == null || buildNumber.isEmpty())
             return new ApiVariable[0];
 
         JsonReader reader = HttpEasy.request()
-                .path("/api/variables/packages/{application-name}/{release-number}/{package-numberx1}")
-                .urlParameters(applicationName, releaseNumber, packageNumber)
+                .path("/api/variables/builds/{application-name}/{release-number}/{build-number}")
+                .urlParameters(applicationName, releaseNumber, buildNumber)
                 .queryParam("key", config.apiKey)
                 .get()
                 .getJsonReader();
@@ -619,7 +619,7 @@ public class BuildMasterApi {
         ApiDeployment[] deployments = getActiveDeployments(applicationId, releaseNumber, null);
 
         for (ApiDeployment deployment : deployments) {
-            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, false, true)) {
+            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.buildNumber, deployment.id, false, true)) {
                 return false;
             }
         }
@@ -628,7 +628,7 @@ public class BuildMasterApi {
     }
 
     /**
-     * Wait for the package deployment, and any automatic promotions, to complete.
+     * Wait for the build deployment, and any automatic promotions, to complete.
      * 
      * @param deployments
      * @param printLogOnFailure
@@ -637,7 +637,7 @@ public class BuildMasterApi {
     public boolean waitForDeploymentToComplete(ApiDeployment[] deployments, boolean printLogOnFailure) throws IOException, InterruptedException {
         for (ApiDeployment deployment : deployments) {
             // Wait for the initial deployment to complete
-            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure, false)) {
+            if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.buildNumber, deployment.id, printLogOnFailure, false)) {
                 return false;
             }
         }
@@ -645,9 +645,9 @@ public class BuildMasterApi {
         if (deployments.length > 0) {
             // Wait for any automatic promotions to complete
             ApiDeployment[] secondaryDeployments;
-            while ((secondaryDeployments = getActiveDeployments(deployments[0].applicationId, deployments[0].releaseNumber, deployments[0].packageNumber)).length > 0) {
+            while ((secondaryDeployments = getActiveDeployments(deployments[0].applicationId, deployments[0].releaseNumber, deployments[0].buildNumber)).length > 0) {
                 for (ApiDeployment deployment : secondaryDeployments) {
-                    if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.packageNumber, deployment.id, printLogOnFailure, false)) {
+                    if (!waitForDeploymentToComplete(deployment.applicationId, deployment.releaseNumber, deployment.buildNumber, deployment.id, printLogOnFailure, false)) {
                         return false;
                     }
                 }
@@ -660,18 +660,18 @@ public class BuildMasterApi {
     private static final List<String> executing = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText(), DeploymentStatus.EXECUTING.getText() });
     private static final List<String> pending = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText() });
 
-    private boolean waitForDeploymentToComplete(int applicationId, String releaseNumber, String packageNumber, Integer deploymentId, boolean printLogOnFailure,
-            boolean includePackageNumberInLog)
+    private boolean waitForDeploymentToComplete(int applicationId, String releaseNumber, String buildNumber, Integer deploymentId, boolean printLogOnFailure,
+            boolean includeBuildNumberInLog)
             throws IOException, InterruptedException {
 
         ApiDeployment deployment = null;
 
         try {
-            deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
+            deployment = getDeployment(applicationId, releaseNumber, buildNumber, deploymentId);
 
             logWriter.info("Waiting for deployment to the %s stage to complete%s...",
                     deployment.pipelineStageName,
-                    (includePackageNumberInLog ? " for package " + packageNumber : ""));
+                    (includeBuildNumberInLog ? " for build " + buildNumber : ""));
 
             // Pause logging of API requests
             // TODO HttpEasy.withDefaults().logRequest(false);
@@ -686,7 +686,7 @@ public class BuildMasterApi {
             while (executing.contains(deployment.status)) { // && deployment.environmentId == null
                 Thread.sleep(7000);
 
-                deployment = getDeployment(applicationId, releaseNumber, packageNumber, deploymentId);
+                deployment = getDeployment(applicationId, releaseNumber, buildNumber, deploymentId);
 
                 // Restart counter if now deploying to new environment
                 if (envrionmentId != deployment.environmentId) {

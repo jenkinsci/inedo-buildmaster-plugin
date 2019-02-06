@@ -1,5 +1,5 @@
 <div>
-  <p>Creates a new package for the selected BuildMaster application and sets the BUILDMASTER_PACKAGE_NUMBER script and environment variables.<p>
+  <p>Creates a new build for the selected BuildMaster application and sets the BUILDMASTER_PACKAGE_NUMBER script and environment variables.<p>
   
   <p>Unlike the FreeStyle plugins, this script plugin can be used for both build and post build actions.
      The choice of executing this plugin as a build step or post build action will be largely dependent on how you import the build artifacts into BuildMaster:  
@@ -14,7 +14,7 @@
   </p> 
 
   <p>
-    If you have multiple Jenkins jobs all triggering a build for the same BuildMaster application check out the "Enable Deployable in BuildMaster" and "Copy Previous Package's Variables"
+    If you have multiple Jenkins jobs all triggering a build for the same BuildMaster application check out the "Enable Deployable in BuildMaster" and "Copy Previous Build's Variables"
     options as a means to ensure that the new BuildMaster build picks up artifacts from only the Jenkins jobs that have build for its release. 
   </p>
   

@@ -5,7 +5,7 @@
     See global.jelly for a general discussion about jelly script.
   -->
 
-  <!-- f:optionalProperty title="Automatically deploy to first stage" field="deployToFirstStage" / -->
+  <!-- f:optionalProperty title="Automatically advance to first stage" field="deployToFirstStage" / -->
   <!-- Duplicating optionalBlock so can default to checked when first created -->
   <f:optionalBlock title="Automatically deploy to first stage" field="deployToFirstStage" checked="${instance==null ? true : instance.deployToFirstStage!=null}" >
     <j:set var="descriptor" value="${app.getDescriptorOrDie(descriptor.getPropertyTypeOrDie(instance,field).clazz)}" />
@@ -13,7 +13,7 @@
     <st:include from="${descriptor}" page="${descriptor.configPage}" />
   </f:optionalBlock>
   
-  <f:optionalProperty title="Set package variables" field="packageVariables" />
+  <f:optionalProperty title="Set build variables" field="packageVariables" />
   
   <f:advanced title="Advanced Settings">
     <f:entry title="Application" field="applicationId" >
@@ -22,7 +22,7 @@
     <f:entry title="Release" field="releaseNumber" >
       <f:textbox default="$${BUILDMASTER_RELEASE_NUMBER}" />
     </f:entry>
-    <f:entry title="Package Number" field="packageNumber" >
+    <f:entry title="Build Number" field="packageNumber" >
       <f:textbox default="${descriptor.defaultPackageNumber}" />
     </f:entry>
     <f:optionalProperty title="Enable Deployable in BuildMaster" field="enableReleaseDeployable" />

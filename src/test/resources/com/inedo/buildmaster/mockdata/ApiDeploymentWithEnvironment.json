@@ -1,21 +1,23 @@
 [
   {
     "id": 34,
-    "plan": "Deploy TestApplication",
+    "plan": "Deploy Test Application",
     "status": "pending",
     "started": "2018-06-07T11:55:48.6470000Z",
     "createdBy": "SYSTEM",
     "createdOn": "2018-06-07T11:55:48.6430000Z",
     "pipelineId": 1,
-    "pipelineName": "TestApplication",
+    "pipelineName": "Test Application",
     "pipelineStageName": "Testing",
-    "environmentId": 2,
-    "environmentName": "Testing",
+    "environmentId": 1,
+    "environmentName": "Integration",
     "applicationId": 1,
     "applicationName": "TestApplication",
     "releaseId": 1,
     "releaseNumber": "0.0.0",
     "releaseName": "0.0.0",
+    "buildId": 27,
+    "buildNumber": "27",
     "packageId": 27,
     "packageNumber": "27"
   }

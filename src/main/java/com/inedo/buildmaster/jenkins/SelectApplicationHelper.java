@@ -47,7 +47,7 @@ public class SelectApplicationHelper {
         // Populate BUILDMASTER_PACKAGE_NUMBER variable
         switch (source.getPackageNumberSource()) {
         case "BUILDMASTER":
-            application.packageNumber = buildmaster.getReleaseNextPackageNumber(application.applicationId, application.releaseNumber);
+            application.packageNumber = buildmaster.getReleaseNextBuildNumber(application.applicationId, application.releaseNumber);
             application.packageNumberSource = "BuildMaster";
 
             break;

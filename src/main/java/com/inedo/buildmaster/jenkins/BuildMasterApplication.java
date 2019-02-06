@@ -9,6 +9,6 @@ public class BuildMasterApplication {
 
     @Override
     public String toString() {
-        return String.format("ApplicationId: %s, ReleaseNumber: %s, PackageNumber: %s, DeployableId: %s", applicationId, releaseNumber, packageNumber, deployableId);
+        return String.format("ApplicationId: %s, ReleaseNumber: %s, BuildNumber: %s, DeployableId: %s", applicationId, releaseNumber, packageNumber, deployableId);
     }
 }

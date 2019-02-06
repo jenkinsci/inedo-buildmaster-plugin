@@ -7,18 +7,16 @@ import org.apache.http.entity.InputStreamEntity;
 
 public enum MockData {
     API_DEPLOYMENT("ApiDeployment.json"),
-    API_RELEASE_PACKAGE("ApiReleasePackage.json"),
-    API_RELEASE_PACKAGES("ApiReleasePackages.json"),
+    API_DEPLOYMENT_WITH_ENV("ApiDeploymentWithEnvironment.json"),
+    API_RELEASE_BUILD("ApiReleaseBuild.json"), 
+    API_RELEASE_BUILDS("ApiReleaseBuilds.json"),
     API_RELEASE("ApiRelease.json"),
-    PACKAGE_VARIABLES("PackageVariables.json"), 
+    BUILD_VARIABLES("BuildVariables.json"), 
     APPLICATION("Application.json"),
     APPLICATIONS("Applications.json"),
     DEPLOYABLE("Deployable.json"),
     DEPLOYABLES("Deployables.json"),
-    // remove
-    RELEASE("Release.json"),
-    RELEASES("Releases.json"), 
-    VARIABLE("Variable.json");
+    RELEASE("Release.json");
 
     private static final String RESOURCE_PACKAGE = "/com/inedo/buildmaster/mockdata/";
     private String resourceName;

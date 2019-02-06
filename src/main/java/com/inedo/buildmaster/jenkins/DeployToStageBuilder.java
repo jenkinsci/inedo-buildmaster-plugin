@@ -136,7 +136,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
 
         @Override
         public String getDisplayName() {
-            return "Deploy BuildMaster Package To Stage";
+            return "Deploy BuildMaster Build To Stage";
         }
     }
 }

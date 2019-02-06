@@ -40,12 +40,13 @@ public class ApiRelease {
     public Integer pipelineId;
     /** A string representing the name of the pipeline used by the release. */
     public String pipelineName;
-    /** An integer representing the system-unique identifier of the active or deployed package that has made it furthest in the pipeline for the release. */
-    public Integer furthestPackageId;
-    /** A string representing the application-unique number of the active or deployed package that has made it furthest in the pipeline for the release. */
-    public String furthestPackageNumber;
-    /** An integer representing the system-unique identifier of the active or deployed package that was most recently created. */
-    public Integer latestPackageId;
+    /** An integer representing the system-unique identifier of the active or deployed build that has made it furthest in the pipeline for the release. */
+    public Integer furthestBuildId;
+    /** A string representing the application-unique number of the active or deployed build that has made it furthest in the pipeline for the release. */
+    public String furthestBuildNumber;
+    /** An integer representing the system-unique identifier of the active or deployed build that was most recently created. */
+    public Integer latestBuildId;
     /** A string representing the application-unique number of the active or deployed package that was most recently created. */
-    public String latestPackageNumber;
+    public String latestBuildNumber;
+
 }

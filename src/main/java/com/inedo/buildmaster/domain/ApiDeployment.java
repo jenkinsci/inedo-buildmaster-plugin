@@ -49,9 +49,9 @@ public class ApiDeployment {
     public String releaseNumber;
     /** A string representing the name of the release for the deployment. */
     public String releaseName;
-    /** An integer representing the system-unique identifier of the package for the deployment. */
-    public Integer packageId;
-    /** A string representing the release-unique number of the package for the deployment. */
-    public String packageNumber;
+    /** An integer representing the system-unique identifier of the build for the deployment. */
+    public Integer buildId;
+    /** A string representing the release-unique number of the build for the deployment. */
+    public String buildNumber;
 
 }

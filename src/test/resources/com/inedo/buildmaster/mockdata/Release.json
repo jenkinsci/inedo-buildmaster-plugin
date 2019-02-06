@@ -28,7 +28,8 @@
       "Latest_Execution_Id": 10,
       "Latest_Execution_Start_Date": "2018-06-07T08:13:32.153Z",
       "Latest_Execution_RunState_Code": "C",
-      "Latest_Execution_Status_Code": "S"
+      "Latest_Execution_Status_Code": "S",
+      "Latest_Execution_Environment_Id": 1
     }
   ],
   "ReleaseDeployables_Extended": [

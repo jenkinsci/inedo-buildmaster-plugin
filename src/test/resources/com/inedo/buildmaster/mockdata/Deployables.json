@@ -1,7 +1,7 @@
 [
   {
     "Deployable_Id": 1,
-    "Deployable_Name": "ExampleDeployable",
+    "Deployable_Name": "Test Application Deployable",
     "CreatedBy_User_Name": "Admin",
     "CreatedOn_Date": "2017-02-26T00:10:24.327",
     "ModifiedBy_User_Name": "Admin",

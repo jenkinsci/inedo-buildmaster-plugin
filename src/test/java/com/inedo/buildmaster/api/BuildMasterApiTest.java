@@ -18,7 +18,7 @@ import org.junit.Test;
 
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
-import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.Deployable;
@@ -124,7 +124,7 @@ public class BuildMasterApiTest {
 
         if (compareJson) {
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.DEPLOYABLES.getAsString(), buildmaster.getJsonString(), "[?(@.Deployable_Name=='ExampleDeployable')]", Deployable.class);
+                    MockData.DEPLOYABLES.getAsString(), buildmaster.getJsonString(), "[?(@.Deployable_Name=='Test Application Deployable')]", Deployable.class);
         }
 	}
 		
@@ -239,28 +239,28 @@ public class BuildMasterApiTest {
 	}
 
 	@Test
-	public void getPackageVariables() throws IOException {
+    public void getBuildVariables() throws IOException {
         Application application = buildmaster.getApplication(TestConfig.getApplicationid());
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		String testPackageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+        String testBuildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationid(), releaseNumber);
 		
-        ApiVariable[] variables = buildmaster.getPackageVariables(application.Application_Name, releaseNumber, testPackageNumber);
+        ApiVariable[] variables = buildmaster.getBuildVariables(application.Application_Name, releaseNumber, testBuildNumber);
 		
-        assertThat("Expect Test previous package to have variables defined", variables.length, is(greaterThan(0)));
+        assertThat("Expect Test previous build to have variables defined", variables.length, is(greaterThan(0)));
 
 		if (compareJson) {
             // As the returned json is just a list of variables that has been massaged into the ApiVariable structure we're not checking the class
             JsonCompare.assertFieldsIdentical("API Structure has not changed",
-                    MockData.PACKAGE_VARIABLES.getAsString(), buildmaster.getJsonString(), null);
+                    MockData.BUILD_VARIABLES.getAsString(), buildmaster.getJsonString(), null);
         }
 	}
 	
 	@Test
-	public void getNextPackageNumber() throws NumberFormatException, IOException {
+    public void getNextBuildNumber() throws NumberFormatException, IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		Integer nextPackageNumber = Integer.parseInt(buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber));
+        Integer nextBuildNumber = Integer.parseInt(buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationid(), releaseNumber));
 		
-		assertThat("Expect nextPackageNumber to be greate than zero", nextPackageNumber , is(greaterThan(0)));
+        assertThat("Expect nextBuildNumber to be greate than zero", nextBuildNumber, is(greaterThan(0)));
 
         if (compareJson) {
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
@@ -269,22 +269,22 @@ public class BuildMasterApiTest {
 	}
 	
 	@Test
-	public void createPackage() throws IOException, InterruptedException {
+    public void createBuild() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		String packageNumber = buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+        String buildNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
 		Map<String, String> variablesList = new HashMap<>();
 		variablesList.put("hello", "world");
         variablesList.put("cause", "unit test");
 		
-        ApiReleasePackage releasePackage = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber, variablesList);
+        ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationid(), releaseNumber, buildNumber, variablesList);
         if (compareJson) {
             JsonCompare.assertFieldsIdentical("API Structure has not changed",
-                    MockData.API_RELEASE_PACKAGE.getAsString(), buildmaster.getJsonString(), ApiReleasePackage.class);
+                    MockData.API_RELEASE_BUILD.getAsString(), buildmaster.getJsonString(), ApiReleaseBuild.class);
         }
 
-        assertThat("Expect returned packageNumber to be the same as requested", packageNumber, is(releasePackage.number));
+        assertThat("Expect returned buildNumber to be the same as requested", buildNumber, is(releaseBuild.number));
 		
-        ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, releasePackage.number, null, null);
+        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationid(), releaseNumber, releaseBuild.number, null, null);
 
         if (compareJson) {
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
@@ -293,64 +293,63 @@ public class BuildMasterApiTest {
 
         boolean result = buildmaster.waitForDeploymentToComplete(deployments, true);
 
-        assertThat("Expect Test package " + packageNumber + " to have built and deployed successfully", result);
-
+        assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
 	}
 	
     @Test
-    public void deployPackageToStage() throws IOException, InterruptedException {
+    public void deployBuildToStage() throws IOException, InterruptedException {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-        String packageNumber = String.valueOf(Integer.parseInt(buildmaster.getReleaseNextPackageNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
+        String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationid(), releaseNumber)) - 1);
 
-        ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, packageNumber, null, "Integration");
+        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationid(), releaseNumber, buildNumber, null, "Integration");
 
         assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
         assertThat("Envrionment is what was asked for", deployments[0].environmentName, is("Integration"));
 
         if (compareJson) {
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.API_DEPLOYMENT.getAsString(), buildmaster.getJsonString(), "[0]", ApiDeployment.class);
+                    MockData.API_DEPLOYMENT_WITH_ENV.getAsString(), buildmaster.getJsonString(), "[0]", ApiDeployment.class);
         }
     }
 
 	@Test
-	public void getPackage() throws IOException {
+    public void getBuild() throws IOException {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-        String packageNumber = String.valueOf(buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber));
+        String buildNumber = String.valueOf(buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationid(), releaseNumber));
 		
-        ApiReleasePackage releasePackage = buildmaster.getPackage(TestConfig.getApplicationid(), releaseNumber, packageNumber);
+        ApiReleaseBuild releaseBuild = buildmaster.getBuild(TestConfig.getApplicationid(), releaseNumber, buildNumber);
 		
-        assertThat("Expect Test Application to have package number " + packageNumber, releasePackage.number.length(), is(greaterThan(0)));
+        assertThat("Expect Test Application to have build number " + buildNumber, releaseBuild.number.length(), is(greaterThan(0)));
 
         if (compareJson) {
             // NOTE: returns array even though should only be a single value
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.API_RELEASE_PACKAGES.getAsString(), buildmaster.getJsonString(), "[0]", ApiReleasePackage.class);
+                    MockData.API_RELEASE_BUILDS.getAsString(), buildmaster.getJsonString(), "[0]", ApiReleaseBuild.class);
         }
 	}
 	
 	@Test
 	public void getWaitForBuildCompletion() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-        String packageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+        String buildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationid(), releaseNumber);
 		
         boolean result = buildmaster.waitForActiveDeploymentsToComplete(TestConfig.getApplicationid(), releaseNumber);
 		
-        assertThat("Expect Test package " + packageNumber + " to have built and deployed successfully", result);
+        assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
 	}
 
 	@Test
     public void printExecutionLog() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-        String packageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
+        String buildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationid(), releaseNumber);
 
-        ApiDeployment deployment = buildmaster.getLatestDeployment(TestConfig.getApplicationid(), releaseNumber, packageNumber);
+        ApiDeployment deployment = buildmaster.getLatestDeployment(TestConfig.getApplicationid(), releaseNumber, buildNumber);
 		
         buildmaster.waitForActiveDeploymentsToComplete(deployment.applicationId, deployment.releaseNumber);
 
         String log = buildmaster.getExecutionLog(deployment.id);
 		
-        assertThat("Expect Test package " + packageNumber + " to have an execution log", log.length(), is(greaterThan(0)));
+        assertThat("Expect Test build " + buildNumber + " to have an execution log", log.length(), is(greaterThan(0)));
 	}
 
 	/*
@@ -377,15 +376,15 @@ public class BuildMasterApiTest {
 			System.out.println("Test Run: " + testrun);
 						
 			variablesList.put("hello", "world" + testrun);			
-            ApiReleasePackage releasePackage = buildmaster.createPackage(TestConfig.getApplicationid(), releaseNumber, variablesList);
-            System.out.println("PackageNumber=" + releasePackage.number);
+            ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationid(), releaseNumber, variablesList);
+            System.out.println("BuildNumber=" + releaseBuild.number);
 
-            ApiDeployment[] deployments = buildmaster.deployPackageToStage(TestConfig.getApplicationid(), releaseNumber, releasePackage.number, null, null);
+            ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationid(), releaseNumber, releaseBuild.number, null, null);
 
-			String currentPackageNumber = buildmaster.getReleaseCurrentPackageNumber(TestConfig.getApplicationid(), releaseNumber);
-            System.out.println("CurrentPackageNumber=" + currentPackageNumber);
+            String currentBuildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationid(), releaseNumber);
+            System.out.println("CurrentBuildNumber=" + currentBuildNumber);
 
-            ApiVariable[] variables = buildmaster.getPackageVariables(releasePackage.applicationName, releaseNumber, releasePackage.number);
+            ApiVariable[] variables = buildmaster.getBuildVariables(releaseBuild.applicationName, releaseNumber, releaseBuild.number);
 			String value = "not found";
 			
 			for (ApiVariable variable : variables) {

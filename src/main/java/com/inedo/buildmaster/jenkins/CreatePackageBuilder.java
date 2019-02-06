@@ -6,7 +6,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.domain.ApiReleasePackage;
+import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
@@ -113,7 +113,7 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        ApiReleasePackage releasePackage = BuildHelper.createPackage(run, listener, this);
+        ApiReleaseBuild releasePackage = BuildHelper.createPackage(run, listener, this);
 
         if (releasePackage == null) {
             throw new AbortException("Deployment failed");
@@ -137,7 +137,7 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
 
         @Override
         public String getDisplayName() {
-            return "Create BuildMaster Package";
+            return "Create BuildMaster Build";
         }
 
         // TODO jelly expandableTextbox does not support form validation currently so this does nothing:

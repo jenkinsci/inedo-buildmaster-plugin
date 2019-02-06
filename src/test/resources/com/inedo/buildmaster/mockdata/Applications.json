@@ -1,7 +1,8 @@
 [
   {
     "Application_Id": 1,
-    "Application_Name": "TestApplication",
+    "Application_Name": "Application1",
+    "Application_Description": "",
     "ReleaseNumber_Scheme_Name": "MajorMinorRevision",
     "BuildNumber_Scheme_Name": "Sequential",
     "AllowMultipleActiveBuilds_Indicator": false,
@@ -17,7 +18,8 @@
   },
   {
     "Application_Id": 2,
-    "Application_Name": "Application2",
+    "Application_Name": "TestApplication",
+    "Application_Description": "",
     "ReleaseNumber_Scheme_Name": "MajorMinorRevision",
     "BuildNumber_Scheme_Name": "Sequential",
     "AllowMultipleActiveBuilds_Indicator": false,
@@ -26,6 +28,9 @@
     "CreatedOn_Date": "2018-06-04T00:51:28.37Z",
     "ModifiedBy_User_Name": "Admin",
     "ModifiedOn_Date": "2018-06-04T00:51:28.56Z",
+    "ApplicationGroup_Id": 1,
+    "ApplicationGroup_Name": "Test Application Group",
+    "ApplicationGroup_Description": "",
     "Active_Releases_Count": 1,
     "VariableSupport_Code": "N",
     "ShowDeployables_Indicator": false,
