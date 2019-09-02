@@ -4,17 +4,17 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.bootstrap.HttpServer;
-import org.apache.http.impl.bootstrap.ServerBootstrap;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpRequestHandler;
-
 import com.inedo.buildmaster.api.BuildMasterConfig;
+
+import hidden.jth.org.apache.http.HttpException;
+import hidden.jth.org.apache.http.HttpRequest;
+import hidden.jth.org.apache.http.HttpResponse;
+import hidden.jth.org.apache.http.HttpStatus;
+import hidden.jth.org.apache.http.entity.StringEntity;
+import hidden.jth.org.apache.http.impl.bootstrap.HttpServer;
+import hidden.jth.org.apache.http.impl.bootstrap.ServerBootstrap;
+import hidden.jth.org.apache.http.protocol.HttpContext;
+import hidden.jth.org.apache.http.protocol.HttpRequestHandler;
 
 /**
  * A Mocked server that replaces a live BuildMaster installation
@@ -29,7 +29,7 @@ public class MockServer {
 	private BuildMasterConfig config;
 
 	public MockServer() throws IOException {
-		handler = new HttpHandler();
+        handler = new HttpHandler();
 		server = ServerBootstrap.bootstrap()
 					.setLocalAddress(InetAddress.getLocalHost())
 					.setListenerPort(0)	// Any free port

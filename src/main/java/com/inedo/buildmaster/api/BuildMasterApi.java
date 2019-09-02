@@ -35,6 +35,8 @@ import com.inedo.buildmaster.jenkins.GlobalConfig;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 import com.inedo.buildmaster.jenkins.utils.JenkinsLogWriter;
 
+import hudson.util.Secret;
+
 /**
  * BuildMaster json api interface
  * 
@@ -724,7 +726,7 @@ public class BuildMasterApi {
     }
 
     public String getExecutionLog(int deploymentId) throws IOException {
-        if (Strings.isNullOrEmpty(config.user) || Strings.isNullOrEmpty(config.password)) {
+        if (Strings.isNullOrEmpty(config.user) || Strings.isNullOrEmpty(Secret.toString(config.password))) {
             throw new IOException("Unable to get BuildMaster execution logs - username and password must be configured in global settings");
         }
 
@@ -732,7 +734,7 @@ public class BuildMasterApi {
         String log = HttpEasy.request()
                 .path("/executions/logs?executionId={}&level=0")
                 .urlParameters(deploymentId)
-                .authorization(config.user, config.password)
+                .authorization(config.user, Secret.toString(config.password))
                 .get()
                 .asString();
 

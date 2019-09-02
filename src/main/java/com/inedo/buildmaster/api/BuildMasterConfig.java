@@ -2,6 +2,8 @@ package com.inedo.buildmaster.api;
 
 import java.io.Serializable;
 
+import hudson.util.Secret;
+
 /**
  * Configuration settings required to can the BuildMaster json api
  * 
@@ -14,7 +16,7 @@ public class BuildMasterConfig implements Serializable {
     public String url;
     public String apiKey;
     public String user;
-    public String password;
+    public Secret password;
     public boolean logApiRequests;
     public boolean trustAllCertificates;
 

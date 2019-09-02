@@ -7,6 +7,8 @@ import java.util.Properties;
 
 import com.inedo.buildmaster.api.BuildMasterConfig;
 
+import hudson.util.Secret;
+
 /**
  * Reads and supplies properties from the config.properties file that are required by the framework.
  *
@@ -22,7 +24,7 @@ public class TestConfig {
     private static String url;
     private static String apiKey;
     private static String username;
-    private static String password;
+    private static Secret password;
     private static boolean trustAllCertificates;
     private static int applicationId;
 
@@ -44,7 +46,8 @@ public class TestConfig {
         url = getOptionalProperty(prop, "url");
         apiKey = getOptionalProperty(prop, "apiKey");
         username = getOptionalProperty(prop, "username");
-        password = getOptionalProperty(prop, "password");
+        // TODO This always throws null pointer exception
+        password = Secret.fromString(getOptionalProperty(prop, "password"));
         trustAllCertificates = Boolean.parseBoolean(getOptionalProperty(prop, "trustAllCertificates"));
         applicationId = Integer.parseInt(getOptionalProperty(prop, "applicationId"));
     }
