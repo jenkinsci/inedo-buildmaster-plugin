@@ -129,7 +129,7 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
 
         @Override
         public String getFunctionName() {
-            return "buildMasterCreateBuild";
+            return "buildMasterCreatePackage";
         }
 
         @Override
