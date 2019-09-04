@@ -12,11 +12,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
-import org.apache.xml.dtm.ref.DTMNodeList;
 import org.concordion.cubano.driver.http.HttpEasy;
 import org.concordion.cubano.driver.http.JsonReader;
 import org.concordion.cubano.driver.http.XmlReader;
 import org.w3c.dom.Attr;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.google.common.base.Strings;
@@ -34,8 +34,6 @@ import com.inedo.buildmaster.domain.ReleaseStatus;
 import com.inedo.buildmaster.jenkins.GlobalConfig;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 import com.inedo.buildmaster.jenkins.utils.JenkinsLogWriter;
-
-import hudson.util.Secret;
 
 /**
  * BuildMaster json api interface
@@ -180,14 +178,16 @@ public class BuildMasterApi {
 
         try {
             XmlReader xmlReader = new XmlReader(xml);
-            DTMNodeList nodes = (DTMNodeList) xmlReader.evaluate("//*/Stages/*/Properties/@Name", XPathConstants.NODESET);
+            Object evaluate = xmlReader.evaluate("//*/Stages/*/Properties/@Name", XPathConstants.NODESET);
+            if (evaluate != null) {
+                NodeList nodes = (NodeList) evaluate;
 
-            int length = nodes.getLength();
-            for (int i = 0; i < length; i++) {
-                Attr attr = (Attr) nodes.item(i);
-                stages.add(attr.getValue());
+                int length = nodes.getLength();
+                for (int i = 0; i < length; i++) {
+                    Attr attr = (Attr) nodes.item(i);
+                    stages.add(attr.getValue());
+                }
             }
-
         } catch (ParserConfigurationException | SAXException | XPathExpressionException e) {
             logWriter.error("Unable to parse XML for pipleline stages", e);
         }
@@ -726,7 +726,7 @@ public class BuildMasterApi {
     }
 
     public String getExecutionLog(int deploymentId) throws IOException {
-        if (Strings.isNullOrEmpty(config.user) || Strings.isNullOrEmpty(Secret.toString(config.password))) {
+        if (Strings.isNullOrEmpty(config.user) || Strings.isNullOrEmpty(config.password)) {
             throw new IOException("Unable to get BuildMaster execution logs - username and password must be configured in global settings");
         }
 
@@ -734,7 +734,7 @@ public class BuildMasterApi {
         String log = HttpEasy.request()
                 .path("/executions/logs?executionId={}&level=0")
                 .urlParameters(deploymentId)
-                .authorization(config.user, Secret.toString(config.password))
+                .authorization(config.user, config.password)
                 .get()
                 .asString();
 
