@@ -176,7 +176,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             config.url = url;
             config.apiKey = apiKey;
             config.user = user;
-            config.password = password;
+            config.password = Secret.toString(password);
             config.trustAllCertificates = trustAllCertificates;
 
             BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
@@ -196,7 +196,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             config.url = url;
             config.apiKey = apiKey;
             config.user = user;
-            config.password = password;
+            config.password = Secret.toString(password);
             config.logApiRequests = logApiRequests;
             config.trustAllCertificates = trustAllCertificates;
 
