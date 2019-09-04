@@ -15,6 +15,11 @@
     "furthestBuildNumber": "19",
     "latestBuildId": 108,
     "latestBuildNumber": "40",
+    "deployables": [
+      {
+        "name": "Test Application Deployable"
+      }
+    ],
     "furthestPackageId": 29,
     "furthestPackageNumber": "29",
     "latestPackageId": 29,
