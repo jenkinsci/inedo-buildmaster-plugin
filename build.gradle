@@ -61,13 +61,13 @@ dependencies {
 		exclude group: 'com.github.markusbernhardt', module: 'proxy-vole' 
 	}
 	
-	testCompile 'com.jayway.jsonpath:json-path:2.3.0'
-	testCompile 'junit:junit:4.8.2'
-	testCompile 'org.mockito:mockito-core:2.18.3'
+	testCompile 'com.jayway.jsonpath:json-path:2.4.0'
+	testCompile 'junit:junit:4.12'
+	testCompile 'org.mockito:mockito-core:2.28.2'
 	testCompile 'org.jenkins-ci.main:jenkins-test-harness:2.55'
 	
 	// TODO BuildMasterApiTest is using SimpleLogger - remove that and this
-	compile 'org.slf4j:slf4j-api:1.7.21'
+	compile 'org.slf4j:slf4j-api:1.7.28'
 	compile 'org.slf4j:slf4j-simple:1.7.21'
 }
 
