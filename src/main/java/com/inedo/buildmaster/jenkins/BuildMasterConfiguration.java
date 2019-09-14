@@ -77,8 +77,8 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             user = value;
         }
         
-        public void setPassword(String value) {
-            password = Secret.fromString(value);
+        public void setPassword(Secret value) {
+            password = value;
         }
         
         public void setLogApiRequests(boolean logApiRequests) {
@@ -104,8 +104,8 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             return user;
         }
         
-        public String getPassword() {
-            return Secret.toString(password);
+        public Secret getPassword() {
+            return password;
         }
         
         public boolean getLogApiRequests() {
@@ -168,7 +168,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
                 @QueryParameter("url") final String url,
                 @QueryParameter("apiKey") final String apiKey,
                 @QueryParameter("user") final String user,
-                @QueryParameter("password") final String password,
+                @QueryParameter("password") final Secret password,
                 @QueryParameter("trustAllCertificates") final boolean trustAllCertificates) throws IOException, ServletException {
 
             BuildMasterConfig config = new BuildMasterConfig();
@@ -176,7 +176,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             config.url = url;
             config.apiKey = apiKey;
             config.user = user;
-            config.password = password;
+            config.password = Secret.toString(password);
             config.trustAllCertificates = trustAllCertificates;
 
             BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());

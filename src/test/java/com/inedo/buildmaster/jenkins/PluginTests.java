@@ -58,6 +58,7 @@ public class PluginTests {
 	
 	public String releaseNumber;
 	public String packageNumber;
+    public int deployableId;
     public DeployToFirstStage deployToFirstStage = null;
 			
 	@Before
@@ -70,6 +71,8 @@ public class PluginTests {
 		} else {
 			config = TestConfig.getProGetConfig();
 		}
+
+        config.logApiRequests = true;
 
 		GlobalConfig.injectConfiguration(config);
 		
@@ -89,6 +92,7 @@ public class PluginTests {
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		this.packageNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
         this.deployToFirstStage = new DeployToFirstStage(true);
+        this.deployableId = buildmaster.getReleaseDeployables(TestConfig.getApplicationid(), releaseNumber)[0].Deployable_Id;
 	}
 	
 	@After
@@ -110,7 +114,7 @@ public class PluginTests {
 
 		String log[] = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
-        assertThat("Create Build step should be the last actioned performed.", log[log.length - 1], containsString("Create BuildMaster build with BuildNumber="));
+        assertThat("Waiting for deployemnt to stage should be the last actioned performed.", log[log.length - 1], containsString("Waiting for deployment to"));
 	}
 
 	@Test
@@ -118,10 +122,10 @@ public class PluginTests {
         TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage);
 		
 		restLog();
-		assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(true));
+        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
 		
-		String log[] = extractLogLines();
-		assertThat("Wait step should be the last actioned performed for successful build." , log[log.length - 1], containsString("Execution Status: Succeeded"));
+        String log[] = extractLogLinesRemovingApiCall();
+        assertThat("Wait step should be the last actioned performed for successful build.", log[log.length - 1], containsString("Waiting for deployment to"));
 	}
 	
 	@Test
@@ -130,7 +134,7 @@ public class PluginTests {
                 .setSetBuildVariables(new PackageVariables("hello=performSetVariables"));
 		
 		restLog();
-		assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(true));
+        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
 		
 		String log = extractLog();
 		assertThat("Variable passed", log, containsString("performSetVariables"));
@@ -143,7 +147,7 @@ public class PluginTests {
         data.setSetBuildVariables(vars);
 
 		restLog();
-		assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(true));
+        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
 		
 		log = extractLog();		
 		assertThat("Variable passed", log, containsString("hello"));
@@ -153,14 +157,13 @@ public class PluginTests {
 	@Test
 	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
         TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
-			.setEnableReleaseDeployable(new EnableReleaseDeployable("2077"));
+                .setEnableReleaseDeployable(new EnableReleaseDeployable(String.valueOf(this.deployableId)));
 		
 		restLog();
-		assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(true));
+        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
 		
 		String log = extractLog();
-		assertThat("Has requested updated", log, containsString("Releases_CreateOrUpdateRelease"));
-		assertThat("Has passed deployable id", log, containsString("Deployable_Id=\"2077\""));
+        assertThat("Has passed deployable id", log, containsString("Enable release deployable with id=" + String.valueOf(this.deployableId)));
 	}
 	
 	// Mocking of Server
@@ -179,12 +182,17 @@ public class PluginTests {
 	
 	private String[] extractLogLinesRemovingApiCall() {
 		ArrayList<String> out = new ArrayList<String>(Arrays.asList(extractLogLines()));
+        String[] methods = new String[] { "GET", "SET", "PUT", "POST" };
 		
 		for (Iterator<String> iterator = out.iterator(); iterator.hasNext();) {
 		    String string = iterator.next();
-		    if (string.contains("Executing request")) {
-		        iterator.remove();
-		    }
+
+            for (String method : methods) {
+                if (string.startsWith(String.format("[BuildMaster] Sending %s to http", method))) {
+                    iterator.remove();
+                    break;
+                }
+            }
 		}
 		
 		return out.toArray(new String[0]);
