@@ -63,13 +63,6 @@ public class BuildHelper {
             }
         }
 
-        if (trigger.isEnableReleaseDeployable()) {
-            String deployableId = helper.expandVariable(trigger.getEnableReleaseDeployable().getDeployableId());
-            helper.getLogWriter().info("Enable release deployable with id=" + deployableId);
-
-            buildmaster.enableReleaseDeployable(applicationId, releaseNumber, Integer.valueOf(deployableId));
-        }
-
         ApiReleaseBuild releasePackage;
 
         if (buildNumber != null && !buildNumber.equalsIgnoreCase("null") && !buildNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(buildNumber)) {

@@ -27,7 +27,6 @@ import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
@@ -58,7 +57,6 @@ public class PluginTests {
 	
 	public String releaseNumber;
 	public String packageNumber;
-    public int deployableId;
     public DeployToFirstStage deployToFirstStage = null;
 			
 	@Before
@@ -92,7 +90,6 @@ public class PluginTests {
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 		this.packageNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
         this.deployToFirstStage = new DeployToFirstStage(true);
-        this.deployableId = buildmaster.getReleaseDeployables(TestConfig.getApplicationid(), releaseNumber)[0].Deployable_Id;
 	}
 	
 	@After
@@ -152,18 +149,6 @@ public class PluginTests {
 		log = extractLog();		
 		assertThat("Variable passed", log, containsString("hello"));
 		assertThat("Variable passed", log, containsString("trying"));
-	}
-	
-	@Test
-	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
-                .setEnableReleaseDeployable(new EnableReleaseDeployable(String.valueOf(this.deployableId)));
-		
-		restLog();
-        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
-		
-		String log = extractLog();
-        assertThat("Has passed deployable id", log, containsString("Enable release deployable with id=" + String.valueOf(this.deployableId)));
 	}
 	
 	// Mocking of Server

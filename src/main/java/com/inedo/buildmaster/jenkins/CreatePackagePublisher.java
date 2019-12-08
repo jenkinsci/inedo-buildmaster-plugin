@@ -8,7 +8,6 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
@@ -34,7 +33,6 @@ import hudson.util.FormValidation;
 public class CreatePackagePublisher extends Recorder implements ICreatePackage {
     private DeployToFirstStage deployToFirstStage = null;
     private PackageVariables packageVariables = null;
-    private EnableReleaseDeployable enableReleaseDeployable = null;
     private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
     private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
     private String packageNumber = "${BUILDMASTER_PACKAGE_NUMBER}";
@@ -51,11 +49,6 @@ public class CreatePackagePublisher extends Recorder implements ICreatePackage {
     @DataBoundSetter
     public final void setPackageVariables(PackageVariables packageVariables) {
         this.packageVariables = packageVariables;
-    }
-
-    @DataBoundSetter
-    public final void setEnableReleaseDeployable(EnableReleaseDeployable enableReleaseDeployable) {
-        this.enableReleaseDeployable = enableReleaseDeployable;
     }
 
     @DataBoundSetter
@@ -87,14 +80,6 @@ public class CreatePackagePublisher extends Recorder implements ICreatePackage {
 
     public PackageVariables getPackageVariables() {
         return packageVariables;
-    }
-
-    public boolean isEnableReleaseDeployable() {
-        return enableReleaseDeployable != null;
-    }
-
-    public EnableReleaseDeployable getEnableReleaseDeployable() {
-        return enableReleaseDeployable;
     }
 
     public String getApplicationId() {

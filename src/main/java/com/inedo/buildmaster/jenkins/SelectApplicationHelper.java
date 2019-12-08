@@ -70,12 +70,6 @@ public class SelectApplicationHelper {
             }
         }
 
-        if (source.getDeployableId() == null || source.getDeployableId().isEmpty() || NOT_REQUIRED.equalsIgnoreCase(source.getDeployableId())) {
-            application.deployableId = null;
-        } else {
-            application.deployableId = Integer.valueOf(source.getDeployableId());
-        }
-
         return application;
     }
 

@@ -27,9 +27,7 @@ import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ApplicationDetail;
-import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.DeploymentStatus;
-import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.domain.ReleaseStatus;
 import com.inedo.buildmaster.jenkins.GlobalConfig;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
@@ -135,26 +133,6 @@ public class BuildMasterApi {
     }
 
     /**
-     * Gets the deployables for a specific application
-     * 
-     * @throws IOException
-     */
-    public Deployable[] getApplicationDeployables(int applicationId) throws IOException {
-        JsonReader reader = HttpEasy.request()
-                .path("/api/json/Applications_GetDeployables")
-                .queryParam("API_Key", config.apiKey)
-                .queryParam("Application_Id", applicationId)
-                .get()
-                .getJsonReader();
-
-        if (recordJson) {
-            jsonString = reader.asPrettyString();
-        }
-
-        return reader.fromJson(Deployable[].class);
-    }
-
-    /**
      * Gets the applications pipelines
      * 
      * @throws IOException
@@ -193,32 +171,6 @@ public class BuildMasterApi {
         }
 
         return stages;
-    }
-
-    /**
-     * Gets the specified deployable
-     * 
-     * @throws IOException
-     */
-    public Deployable getDeployable(int deployableId) throws IOException {
-        JsonReader reader = HttpEasy.request()
-                .path("/api/json/Applications_GetDeployable")
-                .queryParam("API_Key", config.apiKey)
-                .queryParam("Deployable_Id", deployableId)
-                .get()
-                .getJsonReader();
-
-        if (recordJson) {
-            jsonString = reader.asPrettyString();
-        }
-
-        Deployable[] deployables = reader.fromJson(Deployable[].class);
-
-        if (deployables.length > 0) {
-            return deployables[0];
-        }
-
-        return null;
     }
 
     /**
@@ -320,54 +272,6 @@ public class BuildMasterApi {
         }
 
         return "";
-    }
-
-    /**
-     * Gets release number of newest active release
-     * 
-     * @throws IOException
-     */
-    public Deployable[] getReleaseDeployables(int applicationId, String releaseNumber) throws IOException {
-        // There is no direct API so having to use old release api
-        JsonReader reader = HttpEasy.request()
-                .path("/api/json/Releases_GetRelease")
-                .queryParam("API_Key", config.apiKey)
-                .queryParam("Application_Id", applicationId)
-                .queryParam("Release_Number", releaseNumber)
-                .get()
-                .getJsonReader();
-
-        if (recordJson) {
-            jsonString = reader.asPrettyString();
-        }
-
-        return reader.fromJson(ReleaseDetails.class).ReleaseDeployables_Extended;
-    }
-
-    /**
-     * Enables deployable on an existing release if it is not currently enabled
-     * 
-     * @throws IOException
-     */
-    public void enableReleaseDeployable(int applicationId, String releaseNumber, int deployableId) throws IOException {
-        Deployable[] deployables = getReleaseDeployables(applicationId, releaseNumber);
-
-        for (Deployable deployable : deployables) {
-            if ("I".equals(deployable.InclusionType_Code)) {
-                if (deployable.Deployable_Id == deployableId) {
-                    logWriter.info("Deployable already enabled");
-                    return;
-                }
-            }
-        }
-
-        HttpEasy.request()
-                .path("/api/json/Releases_CreateOrUpdateReleaseDeployable")
-                .queryParam("API_Key", config.apiKey)
-                .queryParam("Application_Id", applicationId)
-                .queryParam("Release_Number", releaseNumber)
-                .queryParam("Deployable_Id", deployableId)
-                .get();
     }
 
     /**

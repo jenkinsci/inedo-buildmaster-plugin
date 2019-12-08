@@ -10,7 +10,6 @@ import org.kohsuke.stapler.QueryParameter;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.ReleaseStatus;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
@@ -35,7 +34,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
     private String applicationId;
     private String releaseNumber = SelectApplicationHelper.LATEST_RELEASE;
     private String packageNumberSource = SelectApplicationHelper.NOT_REQUIRED;
-    private String deployableId = SelectApplicationHelper.NOT_REQUIRED;
 
     @DataBoundConstructor
     public SelectApplicationBuildWrapper(String applicationId) {
@@ -52,11 +50,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         this.packageNumberSource = packageNumberSource;
     }
 
-    @DataBoundSetter
-    public final void setDeployableId(String deployableId) {
-        this.deployableId = deployableId;
-    }
-
     public String getApplicationId() {
         return applicationId;
     }
@@ -67,10 +60,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 
     public String getPackageNumberSource() {
         return packageNumberSource;
-    }
-
-    public String getDeployableId() {
-        return deployableId;
     }
 
     @Override
@@ -92,13 +81,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
                     .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=%s, sourced from %s", application.packageNumber, application.packageNumberSource));
             context.env("BUILDMASTER_PACKAGE_NUMBER", application.packageNumber);
         }
-
-        if (application.deployableId != null) {
-            helper.getLogWriter().info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + application.deployableId);
-            context.env("BUILDMASTER_DEPLOYABLE_ID", String.valueOf(application.deployableId));
-        }
     }
-
 
     @Extension
     @Symbol("buildMasterWithApplicationRelease")
@@ -220,51 +203,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
             }
 
             return items;
-        }
-
-        public ListBoxModel doFillDeployableIdItems(@QueryParameter String applicationId) throws IOException {
-            ListBoxModel items = new ListBoxModel();
-
-            // items.add("", "");
-            items.add("Not Required", SelectApplicationHelper.NOT_REQUIRED);
-
-            if (!getIsBuildMasterAvailable()) {
-                return items;
-            }
-
-            if (applicationId != null && !applicationId.isEmpty()) {
-                Deployable[] deployables = buildmaster.getApplicationDeployables(Integer.valueOf(applicationId));
-
-                for (Deployable deployable : deployables) {
-                    items.add(deployable.Deployable_Name, String.valueOf(deployable.Deployable_Id));
-                }
-            }
-
-            return items;
-        }
-
-        public FormValidation doCheckDeployableId(@QueryParameter String value) {
-            if (value.length() == 0)
-                return FormValidation.error("Please set a deployable");
-
-            if (!getIsBuildMasterAvailable()) {
-                return FormValidation.ok();
-            }
-
-            // Validate release is still active
-            if (!SelectApplicationHelper.NOT_REQUIRED.equals(value)) {
-                try {
-                    Deployable deployable = buildmaster.getDeployable(Integer.valueOf(value));
-
-                    if (deployable == null) {
-                        return FormValidation.error("The deployable " + value + " does not exist for this application");
-                    }
-                } catch (Exception ex) {
-                    return FormValidation.error(ex.getClass().getName() + ": " + ex.getMessage());
-                }
-            }
-
-            return FormValidation.ok();
         }
 
         public ListBoxModel doFillPackageNumberSourceItems() {

@@ -15,8 +15,6 @@ public enum MockData {
     BUILD_VARIABLES("BuildVariables.json"), 
     APPLICATION("Application.json"),
     APPLICATIONS("Applications.json"),
-    DEPLOYABLE("Deployable.json"),
-    DEPLOYABLES("Deployables.json"),
     RELEASE("Release.json");
 
     private static final String RESOURCE_PACKAGE = "/com/inedo/buildmaster/mockdata/";

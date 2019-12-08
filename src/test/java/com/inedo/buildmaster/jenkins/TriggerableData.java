@@ -1,7 +1,6 @@
 package com.inedo.buildmaster.jenkins;
 
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 
 /**
@@ -12,7 +11,6 @@ import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 public class TriggerableData implements ICreatePackage {
     public DeployToFirstStage deployToFirstStage = null;
 	public PackageVariables setBuildVariables = null;
-	public EnableReleaseDeployable enableReleaseDeployable = null;
 	public String applicationId;
 	public String releaseNumber;
     public String packageNumber;
@@ -41,14 +39,6 @@ public class TriggerableData implements ICreatePackage {
 		return setBuildVariables;
 	}
 	
-	public boolean isEnableReleaseDeployable() {
-		return enableReleaseDeployable != null;
-	}
-
-	public EnableReleaseDeployable getEnableReleaseDeployable() {
-		return enableReleaseDeployable;
-	}
-	
 	public String getApplicationId() {
 		return applicationId;
 	}
@@ -71,12 +61,7 @@ public class TriggerableData implements ICreatePackage {
 		setBuildVariables = value;
 		return this;
 	}
-	
-	public TriggerableData setEnableReleaseDeployable(EnableReleaseDeployable value) {
-		enableReleaseDeployable = value;
-		return this;
-	}
-	
+
 	public TriggerableData setApplicationId(String value) {
 		applicationId = value;
 		return this;

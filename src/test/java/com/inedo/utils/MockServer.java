@@ -96,15 +96,6 @@ public class MockServer {
                 response.setEntity(MockData.APPLICATION.getInputSteam());
                 break;
 
-			case "Applications_GetDeployables":
-                response.setEntity(MockData.DEPLOYABLES.getInputSteam());
-				break;
-				
-			case "Applications_GetDeployable":
-                response.setEntity(MockData.DEPLOYABLE.getInputSteam());
-				break;	
-				
-			
 			case "Releases_GetRelease": 
                 response.setEntity(MockData.RELEASE.getInputSteam());
 				break;

@@ -21,7 +21,6 @@ import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.domain.Deployable;
 import com.inedo.buildmaster.domain.Release;
 import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.jenkins.GlobalConfig;
@@ -71,7 +70,6 @@ public class BuildMasterApiTest {
 		GlobalConfig.injectConfiguration(null);
 	}
 
-	
 	@Test
 	public void checkConnection() throws IOException {
 		// An exception will be thrown if fails
@@ -115,35 +113,6 @@ public class BuildMasterApiTest {
                     MockData.APPLICATION.getAsString(), buildmaster.getJsonString(), "Applications_Extended[0]", Application.class);
         }
 	}
-	
-	@Test
-    public void getApplicationDeployables() throws IOException {
-        Deployable[] deployables = buildmaster.getApplicationDeployables(TestConfig.getApplicationid());
-    	
-        assertThat("Expect BuildMaster to have applications created", deployables.length, is(greaterThan(0)));
-
-        if (compareJson) {
-            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.DEPLOYABLES.getAsString(), buildmaster.getJsonString(), "[?(@.Deployable_Name=='Test Application Deployable')]", Deployable.class);
-        }
-	}
-		
-	@Test
-	public void getDeployable() throws IOException  {
-        Deployable[] deployables = buildmaster.getApplicationDeployables(TestConfig.getApplicationid());
-
-        assertThat("Expect deployable", deployables.length, is(greaterThan(0)));
-
-    	Deployable deployable = buildmaster.getDeployable(deployables[0].Deployable_Id);
-    	
-        assertThat("Deployable is the one asked for", deployable.Deployable_Id, is(deployables[0].Deployable_Id));
-
-        if (compareJson) {
-            // NOTE: returns array even though should only be a single value
-            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.DEPLOYABLE.getAsString(), buildmaster.getJsonString(), "[0]", Deployable.class);
-        }
-	}
 
     @Test
     public void getPipelineStages() throws IOException {
@@ -154,53 +123,6 @@ public class BuildMasterApiTest {
         assertThat("Expect pipeline stages", stages.size(), is(greaterThan(0)));
     }
 
-    @Test
-    public void getReleaseDeployables() throws IOException {
-        String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-
-        Deployable[] releaseDeployables = buildmaster.getReleaseDeployables(TestConfig.getApplicationid(), releaseNumber);
-
-        assertThat("Expect deployable", releaseDeployables.length, is(greaterThan(0)));
-
-        if (compareJson) {
-            // Calling old Releases_GetRelease API to get this information
-            JsonCompare.assertFieldsIdentical("API Structure has not changed",
-                    MockData.RELEASE.getAsString(), buildmaster.getJsonString(), ReleaseDetails.class);
-
-            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed - Releases_Extended property",
-                    MockData.RELEASE.getAsString(), buildmaster.getJsonString(), "Releases_Extended[0]", Release.class);
-
-            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed - ReleaseDeployables_Extended property",
-                    MockData.RELEASE.getAsString(), buildmaster.getJsonString(), "ReleaseDeployables_Extended[0]", Deployable.class);
-        }
-    }
-
-	@Test
-	public void enableReleaseDeployable() throws IOException {
-		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		
-        Deployable[] applicationDeployables = buildmaster.getApplicationDeployables(TestConfig.getApplicationid());
-
-        assertThat("Application must have a deployable defined.", applicationDeployables.length, is(greaterThan(0)));
-
-        int targetDeployableId = applicationDeployables[0].Deployable_Id;
-
-        buildmaster.enableReleaseDeployable(TestConfig.getApplicationid(), releaseNumber, targetDeployableId);
-
-        Deployable[] releaseDeployables = buildmaster.getReleaseDeployables(TestConfig.getApplicationid(), releaseNumber);
-
-		boolean found = false;
-		
-        for (Deployable deployable : releaseDeployables) {
-            if (deployable.Deployable_Id == targetDeployableId) {
-				found = true;
-				break;
-			}
-		}
-		
-		assertThat(found, is(true));
-	}
-	
 	@Test
 	public void getLatestActiveReleaseNumber() throws IOException {
 		String release = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());

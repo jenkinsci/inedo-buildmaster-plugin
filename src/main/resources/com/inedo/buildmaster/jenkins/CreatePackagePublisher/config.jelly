@@ -25,6 +25,5 @@
     <f:entry title="Build Number" field="packageNumber" >
       <f:textbox default="${descriptor.defaultPackageNumber}" />
     </f:entry>
-    <f:optionalProperty title="Enable Deployable in BuildMaster" field="enableReleaseDeployable" />
   </f:advanced>
 </j:jelly>

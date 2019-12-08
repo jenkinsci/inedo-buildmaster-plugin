@@ -16,7 +16,6 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 
 import hudson.AbortException;
@@ -39,7 +38,6 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
 
     private DeployToFirstStage deployToFirstStage = null;
     private PackageVariables packageVariables = null;
-    private EnableReleaseDeployable enableReleaseDeployable = null;
     private String applicationId;
     private String releaseNumber;
     private String packageNumber;
@@ -56,11 +54,6 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
     @DataBoundSetter
     public final void setPackageVariables(PackageVariables packageVariables) {
         this.packageVariables = packageVariables;
-    }
-
-    @DataBoundSetter
-    public final void setEnableReleaseDeployable(EnableReleaseDeployable enableReleaseDeployable) {
-        this.enableReleaseDeployable = enableReleaseDeployable;
     }
 
     @DataBoundSetter
@@ -94,14 +87,6 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
         return packageVariables;
     }
 
-    public boolean isEnableReleaseDeployable() {
-        return enableReleaseDeployable != null;
-    }
-
-    public EnableReleaseDeployable getEnableReleaseDeployable() {
-        return enableReleaseDeployable;
-    }
-    
     public String getApplicationId() {
         return applicationId;
     }

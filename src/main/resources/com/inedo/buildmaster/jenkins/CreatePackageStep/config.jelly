@@ -26,8 +26,4 @@
   </f:optionalBlock>
   
   <f:optionalProperty title="Set build variables" field="packageVariables" />
-  
-  <f:advanced title="Advanced Settings">
-    <f:optionalProperty title="Enable deployable in BuildMaster" field="enableReleaseDeployable" />
-  </f:advanced>
 </j:jelly>
