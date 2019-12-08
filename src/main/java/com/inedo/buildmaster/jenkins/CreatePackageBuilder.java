@@ -115,7 +115,6 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
             super(CreatePackageBuilder.class);
         }
 
-        @SuppressWarnings("rawtypes")
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
         }

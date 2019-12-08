@@ -75,7 +75,7 @@ public class SelectApplicationHelper {
 
     private int getApplicationId(String applicationId) throws AbortException {
         if (applicationId.matches("[0-9]{1,}")) {
-            return Integer.valueOf(applicationId);
+            return Integer.parseInt(applicationId);
         }
         
         Optional<Application> application;

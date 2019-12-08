@@ -34,7 +34,7 @@ public class GlobalConfig {
     }
 
     private static BuildMasterConfiguration.DescriptorImpl getSharedDescriptor() {
-        return (BuildMasterConfiguration.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(BuildMasterConfiguration.class);
+        return (BuildMasterConfiguration.DescriptorImpl) Jenkins.getInstanceOrNull().getDescriptorOrDie(BuildMasterConfiguration.class);
     }
 
 }

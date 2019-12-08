@@ -9,7 +9,7 @@ import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
  * @author Andrew Sumner
  */
 public class TriggerableData implements ICreatePackage {
-    public DeployToFirstStage deployToFirstStage = null;
+    public DeployToFirstStage deployToFirstStage;
 	public PackageVariables setBuildVariables = null;
 	public String applicationId;
 	public String releaseNumber;

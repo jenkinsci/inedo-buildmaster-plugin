@@ -120,7 +120,6 @@ public class CreatePackagePublisher extends Recorder implements ICreatePackage {
             super(CreatePackagePublisher.class);
         }
 
-        @SuppressWarnings("rawtypes")
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             // Indicates that this builder can be used with all kinds of project types
             return true;

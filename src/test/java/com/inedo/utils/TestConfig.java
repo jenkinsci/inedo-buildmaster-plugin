@@ -14,6 +14,7 @@ import com.inedo.buildmaster.api.BuildMasterConfig;
  *
  * @author Andrew Sumner
  */
+@SuppressWarnings("UnnecessaryBoxing")
 public class TestConfig {
     /** Name of the property file */
     protected static final String CONFIG_FILE = "test.properties";
@@ -62,7 +63,7 @@ public class TestConfig {
             return prop;
         }
 
-        try (InputStream input = new FileInputStream(filename);) {
+        try (InputStream input = new FileInputStream(filename)) {
             prop.load(input);
         } catch (Exception e) {
             throw new RuntimeException("Unable to read properties file.", e);

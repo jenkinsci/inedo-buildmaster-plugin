@@ -4,17 +4,17 @@ import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 
 public interface ICreatePackage {
-    public boolean isDeployToFirstStage();
+    boolean isDeployToFirstStage();
 
-    public boolean isPackageVariables();
+    boolean isPackageVariables();
 
-    public DeployToFirstStage getDeployToFirstStage();
+    DeployToFirstStage getDeployToFirstStage();
 
-    public PackageVariables getPackageVariables();
+    PackageVariables getPackageVariables();
 
-    public String getApplicationId();
+    String getApplicationId();
 
-    public String getReleaseNumber();
+    String getReleaseNumber();
 
-    public String getPackageNumber();
+    String getPackageNumber();
 }

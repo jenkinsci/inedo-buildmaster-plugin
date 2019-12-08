@@ -1,9 +1,5 @@
 package com.inedo.buildmaster.jenkins;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -117,12 +113,8 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
         }
         
         public boolean isRequiredFieldsConfigured() {
-            if (url == null || apiKey == null ||
-                    url.isEmpty() || apiKey.isEmpty()) {
-                return false;
-            }
-
-            return true;
+            return url != null && apiKey != null &&
+                    !url.isEmpty() && !apiKey.isEmpty();
         }
         
         /**
@@ -137,7 +129,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
          *      prevent the form from being saved. It just means that a message
          *      will be displayed to the user. 
          */
-        public FormValidation doCheckUrl(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckUrl(@QueryParameter String value) {
             if (value.length() == 0)
                 return FormValidation.error("Please set a URL");
             
@@ -147,14 +139,14 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckUser(@QueryParameter String value, @QueryParameter String password) throws IOException, ServletException {
+        public FormValidation doCheckUser(@QueryParameter String value, @QueryParameter String password) {
             if (password != null && !password.isEmpty() && value.length() == 0)
                 return FormValidation.error("User is required");
 
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckPassword(@QueryParameter String value, @QueryParameter String user) throws IOException, ServletException {
+        public FormValidation doCheckPassword(@QueryParameter String value, @QueryParameter String user) {
             if (user != null && !user.isEmpty() && value.length() == 0)
                 return FormValidation.error("Password is required");
 
@@ -169,7 +161,7 @@ public class BuildMasterConfiguration extends GlobalConfiguration {
                 @QueryParameter("apiKey") final String apiKey,
                 @QueryParameter("user") final String user,
                 @QueryParameter("password") final Secret password,
-                @QueryParameter("trustAllCertificates") final boolean trustAllCertificates) throws IOException, ServletException {
+                @QueryParameter("trustAllCertificates") final boolean trustAllCertificates) {
 
             BuildMasterConfig config = new BuildMasterConfig();
 

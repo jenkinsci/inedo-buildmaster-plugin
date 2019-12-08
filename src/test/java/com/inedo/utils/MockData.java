@@ -18,9 +18,9 @@ public enum MockData {
     RELEASE("Release.json");
 
     private static final String RESOURCE_PACKAGE = "/com/inedo/buildmaster/mockdata/";
-    private String resourceName;
+    private final String resourceName;
 
-    private MockData(String name) {
+    MockData(String name) {
         this.resourceName = name;
     }
 

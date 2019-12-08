@@ -1,6 +1,5 @@
 package com.inedo.utils;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.EnumSet;
 import java.util.Set;
@@ -14,7 +13,6 @@ import com.jayway.jsonpath.spi.json.GsonJsonProvider;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
-import org.concordion.cubano.driver.http.JsonReader;
 
 public class JsonCompare {
     static {

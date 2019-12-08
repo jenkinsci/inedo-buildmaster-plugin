@@ -34,7 +34,7 @@ public class BuildHelper {
 
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
-        int applicationId = Integer.valueOf(helper.expandVariable(trigger.getApplicationId()));
+        int applicationId = Integer.parseInt(helper.expandVariable(trigger.getApplicationId()));
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
         String buildNumber = helper.expandVariable(trigger.getPackageNumber());
 
@@ -106,7 +106,7 @@ public class BuildHelper {
         return variablesList;
     }
 
-    public static Map<String, String> getVariablesList(String variables) throws IOException {
+    public static Map<String, String> getVariablesList(String variables) {
         Map<String, String> variablesList = new HashMap<>();
 
         if (variables != null) {
@@ -141,7 +141,7 @@ public class BuildHelper {
         
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
         
-        int applicationId = Integer.valueOf(helper.expandVariable(builder.getApplicationId()));
+        int applicationId = Integer.parseInt(helper.expandVariable(builder.getApplicationId()));
         String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
         String buildNumber = helper.expandVariable(builder.getPackageNumber());
         String stage = helper.expandVariable(builder.getStage());

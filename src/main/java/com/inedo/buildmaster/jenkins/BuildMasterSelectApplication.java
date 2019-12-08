@@ -3,7 +3,7 @@ package com.inedo.buildmaster.jenkins;
 public interface BuildMasterSelectApplication {
     String getApplicationId();
 
-    public String getReleaseNumber();
+    String getReleaseNumber();
 
-    public String getPackageNumberSource();
+    String getPackageNumberSource();
 }

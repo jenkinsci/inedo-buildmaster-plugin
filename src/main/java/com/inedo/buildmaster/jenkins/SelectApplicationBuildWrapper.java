@@ -31,7 +31,7 @@ import jenkins.tasks.SimpleBuildWrapper;
 
 public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements ResourceActivity, BuildMasterSelectApplication
 {
-    private String applicationId;
+    private final String applicationId;
     private String releaseNumber = SelectApplicationHelper.LATEST_RELEASE;
     private String packageNumberSource = SelectApplicationHelper.NOT_REQUIRED;
 
@@ -63,7 +63,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
     }
 
     @Override
-    public void setUp(Context context, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars initialEnvironment) throws IOException, InterruptedException {
+    public void setUp(Context context, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars initialEnvironment) throws IOException {
         SelectApplicationHelper execute = new SelectApplicationHelper(build, listener);
 
         BuildMasterApplication application = execute.selectApplication(this);
@@ -108,11 +108,10 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
          */
         public boolean getIsBuildMasterAvailable() {
             if (isBuildMasterAvailable == null) {
-                isBuildMasterAvailable = true;
-
                 try {
                     buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());
                     buildmaster.checkConnection();
+                    isBuildMasterAvailable = true;
                 } catch (Exception ex) {
                     isBuildMasterAvailable = false;
                     connectionError = ex.getClass().getName() + ": " + ex.getMessage();
@@ -165,7 +164,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
             // Validate release is still active
             if (!SelectApplicationHelper.LATEST_RELEASE.equals(value) && applicationId != null && !applicationId.isEmpty()) {
                 try {
-                    ApiRelease releaseDetails = buildmaster.getRelease(Integer.valueOf(applicationId), value);
+                    ApiRelease releaseDetails = buildmaster.getRelease(Integer.parseInt(applicationId), value);
 
                     if (releaseDetails == null) {
                         return FormValidation.error("The release " + value + " does not exist for this application");
@@ -195,7 +194,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
             }
 
             if (applicationId != null && !applicationId.isEmpty()) {
-                ApiRelease[] releases = buildmaster.getActiveReleases(Integer.valueOf(applicationId));
+                ApiRelease[] releases = buildmaster.getActiveReleases(Integer.parseInt(applicationId));
 
                 for (ApiRelease release : releases) {
                     items.add(release.number);

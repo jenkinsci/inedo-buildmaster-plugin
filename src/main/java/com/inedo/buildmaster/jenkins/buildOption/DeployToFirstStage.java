@@ -12,7 +12,7 @@ import hudson.model.Descriptor;
 public class DeployToFirstStage extends AbstractDescribableImpl<DeployToFirstStage> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private boolean waitUntilDeploymentCompleted = false;
+    private boolean waitUntilDeploymentCompleted;
     private boolean printLogOnFailure = false;
 
     @DataBoundConstructor

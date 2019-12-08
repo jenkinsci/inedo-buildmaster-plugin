@@ -100,7 +100,7 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
     }
 
     @Override
-    public StepExecution start(StepContext context) throws Exception {
+    public StepExecution start(StepContext context) {
         return new Execution(context, this);
     }
 

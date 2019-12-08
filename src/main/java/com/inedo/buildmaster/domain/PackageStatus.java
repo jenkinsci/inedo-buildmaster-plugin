@@ -4,9 +4,9 @@ public enum PackageStatus {
 
     ACTIVE("active"), DEPLOYED("deployed"), REJECTED("rejected");
 
-    private String text;
+    private final String text;
 
-    private PackageStatus(String text) {
+    PackageStatus(String text) {
         this.text = text;
     }
 

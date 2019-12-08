@@ -6,7 +6,6 @@ import java.net.URI;
 
 import com.inedo.buildmaster.api.BuildMasterConfig;
 
-import hidden.jth.org.apache.http.HttpException;
 import hidden.jth.org.apache.http.HttpRequest;
 import hidden.jth.org.apache.http.HttpResponse;
 import hidden.jth.org.apache.http.HttpStatus;
@@ -23,13 +22,12 @@ import hidden.jth.org.apache.http.protocol.HttpRequestHandler;
  */
 public class MockServer {
 	// Required for mocking via test server
-	private HttpServer server = null;
-	private HttpRequestHandler handler;
+	private HttpServer server;
 
 	private BuildMasterConfig config;
 
 	public MockServer() throws IOException {
-        handler = new HttpHandler();
+		HttpRequestHandler handler = new HttpHandler();
 		server = ServerBootstrap.bootstrap()
 					.setLocalAddress(InetAddress.getLocalHost())
 					.setListenerPort(0)	// Any free port
@@ -54,10 +52,10 @@ public class MockServer {
 	}
 	
 	// Handler for the test server that returns responses based on the requests.
-	public class HttpHandler implements HttpRequestHandler {
+	public static class HttpHandler implements HttpRequestHandler {
 
 		@Override
-		public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+		public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws IOException {
 			URI uri = URI.create(request.getRequestLine().getUri());
 			
 			String method = uri.getPath().replace("/api/json/", "");

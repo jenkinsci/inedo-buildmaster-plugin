@@ -52,8 +52,8 @@ public class PluginTests {
 	//public Launcher launcher;
 	public BuildListener listener;
 	public EnvVars env;
-	public ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-	public PrintStream logger = new PrintStream(outContent);
+	public final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+	public final PrintStream logger = new PrintStream(outContent);
 	
 	public String releaseNumber;
 	public String packageNumber;
@@ -93,7 +93,7 @@ public class PluginTests {
 	}
 	
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown(){
 		if (mockServer != null) {
 			mockServer.stop();
 		}
@@ -109,7 +109,7 @@ public class PluginTests {
 
         assertThat("Result should be successful", releasePackage, is(notNullValue()));
 
-		String log[] = extractLogLinesRemovingApiCall();
+		String[] log = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
         assertThat("Waiting for deployemnt to stage should be the last actioned performed.", log[log.length - 1], containsString("Waiting for deployment to"));
 	}
@@ -121,7 +121,7 @@ public class PluginTests {
 		restLog();
         assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
 		
-        String log[] = extractLogLinesRemovingApiCall();
+        String[] log = extractLogLinesRemovingApiCall();
         assertThat("Wait step should be the last actioned performed for successful build.", log[log.length - 1], containsString("Waiting for deployment to"));
 	}
 	
@@ -166,7 +166,7 @@ public class PluginTests {
 	}
 	
 	private String[] extractLogLinesRemovingApiCall() {
-		ArrayList<String> out = new ArrayList<String>(Arrays.asList(extractLogLines()));
+		ArrayList<String> out = new ArrayList<>(Arrays.asList(extractLogLines()));
         String[] methods = new String[] { "GET", "SET", "PUT", "POST" };
 		
 		for (Iterator<String> iterator = out.iterator(); iterator.hasNext();) {

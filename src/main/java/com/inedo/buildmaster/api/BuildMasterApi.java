@@ -2,11 +2,7 @@ package com.inedo.buildmaster.api;
 
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathConstants;
@@ -311,10 +307,9 @@ public class BuildMasterApi {
      * @return ApiReleaseBuild
      * 
      * @throws IOException
-     * @throws InterruptedException
      */
     public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, Map<String, String> variablesList)
-            throws IOException, InterruptedException {
+            throws IOException {
         return createBuild(applicationId, releaseNumber, null, variablesList);
     }
 
@@ -326,12 +321,11 @@ public class BuildMasterApi {
      * @return ApiReleaseBuild
      * 
      * @throws IOException
-     * @throws InterruptedException
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#create-package">Endpoint Specification</a>
      */
     public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList)
-            throws IOException, InterruptedException {
+            throws IOException {
         HttpEasy request = HttpEasy.request()
                 .path("/api/releases/builds/create")
                 .field("key", config.apiKey)
@@ -489,7 +483,7 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        List<ApiVariable> variables = new ArrayList<ApiVariable>();
+        List<ApiVariable> variables = new ArrayList<>();
 
         for (Map.Entry<String, JsonElement> entry : reader.asJson().getAsJsonObject().entrySet()) {
             ApiVariable var = new ApiVariable();
@@ -566,11 +560,12 @@ public class BuildMasterApi {
     private static final List<String> executing = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText(), DeploymentStatus.EXECUTING.getText() });
     private static final List<String> pending = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText() });
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean waitForDeploymentToComplete(int applicationId, String releaseNumber, String buildNumber, Integer deploymentId, boolean printLogOnFailure,
-            boolean includeBuildNumberInLog)
+                                                boolean includeBuildNumberInLog)
             throws IOException, InterruptedException {
 
-        ApiDeployment deployment = null;
+        ApiDeployment deployment;
 
         try {
             deployment = getDeployment(applicationId, releaseNumber, buildNumber, deploymentId);
@@ -595,7 +590,7 @@ public class BuildMasterApi {
                 deployment = getDeployment(applicationId, releaseNumber, buildNumber, deploymentId);
 
                 // Restart counter if now deploying to new environment
-                if (envrionmentId != deployment.environmentId) {
+                if (!Objects.equals(envrionmentId, deployment.environmentId)) {
                     envrionmentId = deployment.environmentId;
                     startTime = new Date().getTime();
                 }

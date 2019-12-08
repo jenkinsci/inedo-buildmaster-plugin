@@ -21,8 +21,6 @@ import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.domain.Release;
-import com.inedo.buildmaster.domain.ReleaseDetails;
 import com.inedo.buildmaster.jenkins.GlobalConfig;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.JsonCompare;
@@ -62,7 +60,7 @@ public class BuildMasterApiTest {
 	}
 		
 	@AfterClass
-	public static void tearDown() throws Exception {
+	public static void tearDown() {
 		if (mockServer != null) {
 			mockServer.stop();
 		}

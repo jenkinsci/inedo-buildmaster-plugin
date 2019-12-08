@@ -14,7 +14,7 @@ import hudson.model.TaskListener;
 public class JenkinsHelper {
     private final Run<?, ?> run;
     private final TaskListener listener;
-    private JenkinsLogWriter logWriter = null;
+    private JenkinsLogWriter logWriter;
 
     /**
      * For unit tests as they don't have access to the build or listener
