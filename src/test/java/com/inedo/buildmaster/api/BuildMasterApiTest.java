@@ -19,7 +19,6 @@ import org.junit.Test;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
-import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.GlobalConfig;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
@@ -157,23 +156,6 @@ public class BuildMasterApiTest {
                     MockData.API_RELEASE.getAsString(), buildmaster.getJsonString(), "[0]", ApiRelease.class);
         }
 	}
-
-	@Test
-    public void getBuildVariables() throws IOException {
-        Application application = buildmaster.getApplication(TestConfig.getApplicationid());
-		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-        String testBuildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationid(), releaseNumber);
-		
-        ApiVariable[] variables = buildmaster.getBuildVariables(application.Application_Name, releaseNumber, testBuildNumber);
-		
-        assertThat("Expect Test previous build to have variables defined", variables.length, is(greaterThan(0)));
-
-		if (compareJson) {
-            // As the returned json is just a list of variables that has been massaged into the ApiVariable structure we're not checking the class
-            JsonCompare.assertFieldsIdentical("API Structure has not changed",
-                    MockData.BUILD_VARIABLES.getAsString(), buildmaster.getJsonString(), null);
-        }
-	}
 	
 	@Test
     public void getNextBuildNumber() throws NumberFormatException, IOException {
@@ -287,15 +269,15 @@ public class BuildMasterApiTest {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
 				
 		Map<String, String> variablesList = new HashMap<>();
-        int exectiontimes = 1;
-		
-		for (int i = 0; i < exectiontimes; i++) {
-			String testrun = String.valueOf(i + 1);
-			
-			System.out.println("");
-			System.out.println("Test Run: " + testrun);
+        int executionTimes = 1;
+
+		for (int i = 0; i < executionTimes; i++) {
+			String testRun = String.valueOf(i + 1);
+
+			System.out.println();
+			System.out.println("Test Run: " + testRun);
 						
-			variablesList.put("hello", "world" + testrun);			
+			variablesList.put("hello", "world" + testRun);
             ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationid(), releaseNumber, variablesList);
             System.out.println("BuildNumber=" + releaseBuild.number);
 
@@ -304,17 +286,6 @@ public class BuildMasterApiTest {
             String currentBuildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationid(), releaseNumber);
             System.out.println("CurrentBuildNumber=" + currentBuildNumber);
 
-            ApiVariable[] variables = buildmaster.getBuildVariables(releaseBuild.applicationName, releaseNumber, releaseBuild.number);
-			String value = "not found";
-			
-			for (ApiVariable variable : variables) {
-				if (variable.name.equalsIgnoreCase("hello")) {
-					value = variable.value;
-				}
-			}			
-			
-			System.out.println("Variable HELLO=" + value);
-			
             buildmaster.waitForDeploymentToComplete(deployments, false);
 		}
 	}

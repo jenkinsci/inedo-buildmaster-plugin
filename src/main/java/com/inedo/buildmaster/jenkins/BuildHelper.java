@@ -8,7 +8,6 @@ import com.google.common.base.Strings;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
-import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
@@ -49,18 +48,6 @@ public class BuildHelper {
 
         if (trigger.isPackageVariables()) {
             variablesList = getVariablesListExpanded(run, listener, trigger.getPackageVariables().getVariables());
-
-            if (trigger.getPackageVariables().isPreserveVariables()) {
-                helper.getLogWriter().info("Gather previous builds build variables");
-                String currentBuildNumber = buildmaster.getReleaseCurrentBuildNumber(applicationId, releaseNumber);
-                ApiVariable[] variables = buildmaster.getBuildVariables(application.Application_Name, releaseNumber, currentBuildNumber);
-
-                for (ApiVariable variable : variables) {
-                    if (!variablesList.containsKey(variable.name)) {
-                        variablesList.put(variable.name, variable.value);
-                    }
-                }
-            }
         }
 
         ApiReleaseBuild releasePackage;
@@ -95,7 +82,7 @@ public class BuildHelper {
         return releasePackage;
     }
 
-    public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) throws IOException {
+    public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
         Map<String, String> variablesList = getVariablesList(variables);
 

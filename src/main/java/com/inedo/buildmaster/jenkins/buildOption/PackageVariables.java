@@ -9,15 +9,12 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
+import javax.annotation.Nonnull;
+
 public class PackageVariables extends AbstractDescribableImpl<PackageVariables> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private boolean preserveVariables = false;
     private final String variables;
-
-    public boolean isPreserveVariables() {
-        return preserveVariables;
-    }
 
     public String getVariables() {
         return variables;
@@ -28,13 +25,9 @@ public class PackageVariables extends AbstractDescribableImpl<PackageVariables> 
         this.variables = variables;
     }
     
-    @DataBoundSetter
-    public final void setPreserveVariables(boolean preserveVariables) {
-        this.preserveVariables = preserveVariables;
-    }
-
     @Extension
     public static class DescriptorImpl extends Descriptor<PackageVariables> {
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "";

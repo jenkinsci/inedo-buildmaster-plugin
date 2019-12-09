@@ -139,7 +139,6 @@ public class PluginTests {
 		
 		
         PackageVariables vars = new PackageVariables("trying=again");
-        vars.setPreserveVariables(true);
 
         data.setSetBuildVariables(vars);
 

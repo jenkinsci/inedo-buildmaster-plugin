@@ -20,7 +20,6 @@ import com.google.gson.JsonElement;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
-import com.inedo.buildmaster.domain.ApiVariable;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ApplicationDetail;
 import com.inedo.buildmaster.domain.DeploymentStatus;
@@ -455,58 +454,6 @@ public class BuildMasterApi {
         deployments.addAll(Arrays.asList(getDeployments(applicationId, releaseNumber, buildNumber, null, DeploymentStatus.EXECUTING)));
 
         return deployments.toArray(new ApiDeployment[0]);
-    }
-
-    /**
-     * Gets the variable values for the build scope.
-     * 
-     * @throws IOException
-     * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/variables">Variables Management</a>
-     */
-    public ApiVariable[] getBuildVariables(String applicationName, String releaseNumber, String buildNumber) throws IOException {
-        // if (applicationId == null)
-        // return new ApiVariable[0];
-        if (releaseNumber == null || releaseNumber.isEmpty())
-            return new ApiVariable[0];
-        if (buildNumber == null || buildNumber.isEmpty())
-            return new ApiVariable[0];
-
-        JsonReader reader = HttpEasy.request()
-                .path("/api/variables/builds/{application-name}/{release-number}/{build-number}")
-                .urlParameters(applicationName, releaseNumber, buildNumber)
-                .queryParam("key", config.apiKey)
-                .get()
-                .getJsonReader();
-
-        if (recordJson) {
-            jsonString = reader.asPrettyString();
-        }
-
-        List<ApiVariable> variables = new ArrayList<>();
-
-        for (Map.Entry<String, JsonElement> entry : reader.asJson().getAsJsonObject().entrySet()) {
-            ApiVariable var = new ApiVariable();
-            var.name = entry.getKey();
-            if (entry.getValue().isJsonObject()) {
-                for (Map.Entry<String, JsonElement> value : entry.getValue().getAsJsonObject().entrySet()) {
-                    switch (value.getKey()) {
-                    case "value":
-                        var.value = value.getValue().getAsString();
-                        break;
-                    case "sensitive":
-                        var.sensitive = value.getValue().getAsBoolean();
-                        break;
-                    }
-                }
-            } else {
-                var.value = entry.getValue().getAsString();
-            }
-
-            variables.add(var);
-        }
-
-        return variables.toArray(new ApiVariable[variables.size()]);
     }
 
     /**
