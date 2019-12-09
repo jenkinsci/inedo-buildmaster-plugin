@@ -4,6 +4,4 @@ public interface BuildMasterSelectApplication {
     String getApplicationId();
 
     String getReleaseNumber();
-
-    String getPackageNumberSource();
 }

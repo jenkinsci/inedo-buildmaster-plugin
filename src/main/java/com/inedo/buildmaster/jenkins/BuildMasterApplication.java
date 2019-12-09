@@ -4,7 +4,6 @@ public class BuildMasterApplication {
     public int applicationId;
     public String releaseNumber;
     public String packageNumber;
-    public String packageNumberSource;
 
     @Override
     public String toString() {

@@ -27,9 +27,5 @@
       <j:otherwise><f:textbox default="LATEST" /></j:otherwise>
     </j:choose>
   </f:entry>
-  
-  <f:entry title="Build Number Source" field="packageNumberSource">
-    <f:select default="NOT_REQUIRED"/>
-  </f:entry>
-  
+
 </j:jelly>

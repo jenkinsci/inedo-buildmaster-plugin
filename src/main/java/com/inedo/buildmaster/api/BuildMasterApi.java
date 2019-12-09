@@ -129,7 +129,7 @@ public class BuildMasterApi {
 
     /**
      * Gets the applications pipelines
-     * 
+     *
      * @throws IOException Http request exception
      */
     public List<String> getPipelinesStages(int pipelineId) throws IOException {
@@ -300,22 +300,7 @@ public class BuildMasterApi {
     }
 
     /**
-     * Creates a new build of an application and promote it to the
-     * first environment. Error thrown on failure.
-     * 
-     * @return ApiReleaseBuild
-     * 
-     * @throws IOException Http request exception
-     */
-    public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, Map<String, String> variablesList)
-            throws IOException {
-        return createBuild(applicationId, releaseNumber, null, variablesList);
-    }
-
-    /**
-     * Creates a new build for an application requesting it use a specific build
-     * number and returns the build number of the new build. Error thrown on
-     * failure.
+     * Creates a new build for an application.
      * 
      * @return ApiReleaseBuild
      * 
@@ -323,14 +308,13 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#create-package">Endpoint Specification</a>
      */
-    public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList)
+    public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, Map<String, String> variablesList)
             throws IOException {
         HttpEasy request = HttpEasy.request()
                 .path("/api/releases/builds/create")
                 .field("key", config.apiKey)
                 .field("applicationId", applicationId) 
-                .field("releaseNumber", releaseNumber)
-                .field("buildNumber", buildNumber);
+                .field("releaseNumber", releaseNumber);
 
         for (Map.Entry<String, String> variable : variablesList.entrySet()) {
             request.field("$" + variable.getKey(), variable.getValue());

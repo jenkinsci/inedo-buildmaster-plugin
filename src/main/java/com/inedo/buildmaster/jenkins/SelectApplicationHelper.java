@@ -14,7 +14,6 @@ import hudson.model.TaskListener;
 
 public class SelectApplicationHelper {
     public static final String LATEST_RELEASE = "LATEST";
-    public static final String NOT_REQUIRED = "NOT_REQUIRED";
 
     private final JenkinsHelper helper;
     private final BuildMasterApi buildmaster;
@@ -44,31 +43,7 @@ public class SelectApplicationHelper {
             }
         }
 
-        // Populate BUILDMASTER_PACKAGE_NUMBER variable
-        switch (source.getPackageNumberSource()) {
-        case "BUILDMASTER":
-            application.packageNumber = buildmaster.getReleaseNextBuildNumber(application.applicationId, application.releaseNumber);
-            application.packageNumberSource = "BuildMaster";
-
-            break;
-
-        case "JENKINS":
-            application.packageNumber = helper.getEnvironmentVariable("BUILD_NUMBER");
-
-            break;
-
-        case "NOT_REQUIRED":
-            application.packageNumber = null;
-
-            break;
-
-        default:
-            if (source.getPackageNumberSource() == null || source.getPackageNumberSource().isEmpty()) {
-                application.packageNumber = null;
-            } else {
-                throw new AbortException("Unknown packageNumberSource " + source.getPackageNumberSource());
-            }
-        }
+        application.packageNumber = buildmaster.getReleaseNextBuildNumber(application.applicationId, application.releaseNumber);
 
         return application;
     }

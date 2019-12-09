@@ -50,22 +50,8 @@ public class BuildHelper {
             variablesList = getVariablesListExpanded(run, listener, trigger.getPackageVariables().getVariables());
         }
 
-        ApiReleaseBuild releasePackage;
-
-        if (buildNumber != null && !buildNumber.equalsIgnoreCase("null") && !buildNumber.isEmpty() && !DEFAULT_PACKAGE_NUMBER.equals(buildNumber)) {
-            helper.getLogWriter().info("Create build %s for the %s application, release %s", buildNumber, application.Application_Name, releaseNumber);
-            releasePackage = buildmaster.createBuild(applicationId, releaseNumber, buildNumber, variablesList);
-
-            if (!releasePackage.number.equals(buildNumber)) {
-                helper.getLogWriter().info("Warning, requested build number '%s' does not match that returned from BuildMaster '%s'.",
-                        buildNumber,
-                        releasePackage.number);
-            }
-        } else {
-            helper.getLogWriter().info("Create build for the %s application, release %s", application.Application_Name, releaseNumber);
-            releasePackage = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
-        }
-
+        helper.getLogWriter().info("Create build for the %s application, release %s", application.Application_Name, releaseNumber);
+        ApiReleaseBuild releasePackage = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
         helper.getLogWriter().info("Build %s has been created", releasePackage.number);
 
         if (trigger.isDeployToFirstStage()) {

@@ -64,17 +64,11 @@ See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster
 // Declarative pipeline example
 pipeline {
   agent any
-  environment {
-	// Prevents echo statement from breaking if packageNumberSource not supplied in 
-	// buildMasterWithApplicationRelease step below leaving BUILDMASTER_PACKAGE_NUMBER 
-	// variable undefined
-    BUILDMASTER_PACKAGE_NUMBER = null
-  }
   
   stages {
     stage('Main') {
       steps {
-        buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
+        buildMasterWithApplicationRelease(applicationId: '1') {
             echo """
     			Application id = $BUILDMASTER_APPLICATION_ID
     			Release Number = $BUILDMASTER_RELEASE_NUMBER
@@ -103,7 +97,7 @@ pipeline {
 /*
 // Scripted pipeline example
 node {
-    buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
+    buildMasterWithApplicationRelease(applicationId: '1') {
 		echo """
 		Application id = $BUILDMASTER_APPLICATION_ID
 		Release Number = $BUILDMASTER_RELEASE_NUMBER

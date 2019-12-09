@@ -178,7 +178,7 @@ public class BuildMasterApiTest {
 		variablesList.put("hello", "world");
         variablesList.put("cause", "unit test");
 		
-        ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationId(), releaseNumber, buildNumber, variablesList);
+        ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationId(), releaseNumber, variablesList);
         if (compareJson) {
             JsonCompare.assertFieldsIdentical("API Structure has not changed",
                     MockData.API_RELEASE_BUILD.getAsString(), buildmaster.getJsonString(), ApiReleaseBuild.class);

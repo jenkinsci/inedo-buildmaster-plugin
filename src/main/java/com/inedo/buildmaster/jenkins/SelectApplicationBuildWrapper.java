@@ -33,7 +33,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 {
     private final String applicationId;
     private String releaseNumber = SelectApplicationHelper.LATEST_RELEASE;
-    private String packageNumberSource = SelectApplicationHelper.NOT_REQUIRED;
 
     @DataBoundConstructor
     public SelectApplicationBuildWrapper(String applicationId) {
@@ -45,21 +44,12 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         this.releaseNumber = releaseNumber;
     }
 
-    @DataBoundSetter
-    public final void setPackageNumberSource(String packageNumberSource) {
-        this.packageNumberSource = packageNumberSource;
-    }
-
     public String getApplicationId() {
         return applicationId;
     }
 
     public String getReleaseNumber() {
         return releaseNumber;
-    }
-
-    public String getPackageNumberSource() {
-        return packageNumberSource;
     }
 
     @Override
@@ -78,7 +68,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 
         if (application.packageNumber != null) {
             helper.getLogWriter()
-                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=%s, sourced from %s", application.packageNumber, application.packageNumberSource));
+                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=%s", application.packageNumber));
             context.env("BUILDMASTER_PACKAGE_NUMBER", application.packageNumber);
         }
     }
@@ -200,16 +190,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
                     items.add(release.number);
                 }
             }
-
-            return items;
-        }
-
-        public ListBoxModel doFillPackageNumberSourceItems() {
-            ListBoxModel items = new ListBoxModel();
-
-            items.add("BuildMaster", "BUILDMASTER");
-            items.add("Jenkins", "JENKINS");
-            items.add("Not Required", "NOT_REQUIRED");
 
             return items;
         }
