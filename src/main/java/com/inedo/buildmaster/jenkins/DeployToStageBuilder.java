@@ -19,6 +19,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 
+import javax.annotation.Nonnull;
+
 /**
  * Deploy a package to the requested stage in BuildMaster.
  *
@@ -109,7 +111,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
         if (!BuildHelper.deployToStage(run, listener, this)) {
             throw new AbortException("Deployment failed");
         }

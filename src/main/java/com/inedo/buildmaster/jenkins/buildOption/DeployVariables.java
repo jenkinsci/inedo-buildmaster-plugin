@@ -8,6 +8,8 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
+import javax.annotation.Nonnull;
+
 public class DeployVariables extends AbstractDescribableImpl<DeployVariables> implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -24,6 +26,7 @@ public class DeployVariables extends AbstractDescribableImpl<DeployVariables> im
 
     @Extension
     public static class DescriptorImpl extends Descriptor<DeployVariables> {
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "";

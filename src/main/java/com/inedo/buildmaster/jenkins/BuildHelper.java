@@ -16,7 +16,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 
 /**
- * Does the real work of Trigger a BuildMaster build, has been seperated out from the Builder and Publisher actions
+ * Does the real work of Trigger a BuildMaster build, has been separated out from the Builder and Publisher actions
  * so that the code can be shared between them. 
  * 
  * @author Andrew Sumner

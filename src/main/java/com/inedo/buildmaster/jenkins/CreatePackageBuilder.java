@@ -23,6 +23,8 @@ import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import jenkins.tasks.SimpleBuildStep;
 
+import javax.annotation.Nonnull;
+
 /**
  * Create a package in BuildMaster for the specified application and release and optionally deploy it to the first stage.
  *
@@ -97,7 +99,7 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
         ApiReleaseBuild releasePackage = BuildHelper.createPackage(run, listener, this);
 
         if (releasePackage == null) {
@@ -106,7 +108,7 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
 
         JenkinsHelper helper = new JenkinsHelper(run, listener);
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + releasePackage.number);
-        helper.injectEnvrionmentVariable("BUILDMASTER_PACKAGE_NUMBER", releasePackage.number);
+        helper.injectEnvironmentVariable("BUILDMASTER_PACKAGE_NUMBER", releasePackage.number);
     }
 
     @Extension

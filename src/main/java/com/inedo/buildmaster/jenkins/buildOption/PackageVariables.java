@@ -3,7 +3,6 @@ package com.inedo.buildmaster.jenkins.buildOption;
 import java.io.Serializable;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;

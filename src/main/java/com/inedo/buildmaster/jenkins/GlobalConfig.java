@@ -4,6 +4,8 @@ import com.inedo.buildmaster.api.BuildMasterConfig;
 
 import jenkins.model.Jenkins;
 
+import java.util.Objects;
+
 public class GlobalConfig {
     private static BuildMasterConfig config = null;
 
@@ -34,7 +36,7 @@ public class GlobalConfig {
     }
 
     private static BuildMasterConfiguration.DescriptorImpl getSharedDescriptor() {
-        return (BuildMasterConfiguration.DescriptorImpl) Jenkins.getInstanceOrNull().getDescriptorOrDie(BuildMasterConfiguration.class);
+        return (BuildMasterConfiguration.DescriptorImpl) Objects.requireNonNull(Jenkins.getInstanceOrNull()).getDescriptorOrDie(BuildMasterConfiguration.class);
     }
 
 }

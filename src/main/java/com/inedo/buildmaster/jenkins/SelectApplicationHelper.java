@@ -53,7 +53,7 @@ public class SelectApplicationHelper {
             break;
 
         case "JENKINS":
-            application.packageNumber = helper.getEnvrionmentVariable("BUILD_NUMBER");
+            application.packageNumber = helper.getEnvironmentVariable("BUILD_NUMBER");
 
             break;
 

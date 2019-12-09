@@ -159,7 +159,7 @@ public class TestConfig {
         return config;
     }
     
-    public static int getApplicationid() {
+    public static int getApplicationId() {
     	return applicationId;
     }
 }

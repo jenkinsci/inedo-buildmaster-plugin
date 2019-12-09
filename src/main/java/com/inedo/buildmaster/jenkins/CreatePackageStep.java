@@ -25,6 +25,8 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 
+import javax.annotation.Nonnull;
+
 /**
  * Create a package in BuildMaster for the specified application and release and optionally deploy it to the first stage.
  *
@@ -117,6 +119,7 @@ public class CreatePackageStep extends Step implements ICreatePackage, Serializa
             return "buildMasterCreatePackage";
         }
 
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "Create BuildMaster Build";

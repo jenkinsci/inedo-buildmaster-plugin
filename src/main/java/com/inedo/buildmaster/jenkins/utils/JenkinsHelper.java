@@ -6,6 +6,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 
+import java.util.Objects;
+
 /**
  * Common Jenkins tasks. 
  * 
@@ -14,7 +16,7 @@ import hudson.model.TaskListener;
 public class JenkinsHelper {
     private final Run<?, ?> run;
     private final TaskListener listener;
-    private JenkinsLogWriter logWriter;
+    private final JenkinsLogWriter logWriter;
 
     /**
      * For unit tests as they don't have access to the build or listener
@@ -45,7 +47,7 @@ public class JenkinsHelper {
         try {
             // Pipeline script doesn't support getting environment variables
             if (run instanceof AbstractBuild) {
-                expanded = run.getEnvironment(listener).expand(variable);
+                expanded = run.getEnvironment(Objects.requireNonNull(listener)).expand(variable);
             }
         } catch (Exception e) {
             getLogWriter().info("Exception thrown expanding '" + variable + "' : " + e.getClass().getName() + " " + e.getMessage());
@@ -54,7 +56,7 @@ public class JenkinsHelper {
         return expanded;
     }
 
-    public void injectEnvrionmentVariable(String key, String value) {
+    public void injectEnvironmentVariable(String key, String value) {
         if (run == null) {
             return;
         }
@@ -70,11 +72,11 @@ public class JenkinsHelper {
         throw new RuntimeException(value);
     }
 
-    public String getEnvrionmentVariable(String variable) throws AbortException {
+    public String getEnvironmentVariable(String variable) throws AbortException {
         EnvVars envVars;
 
         try {
-            envVars = run.getEnvironment(listener);
+            envVars = Objects.requireNonNull(run).getEnvironment(Objects.requireNonNull(listener));
         } catch (Exception e) {
             throw new AbortException(e.getMessage());
         }

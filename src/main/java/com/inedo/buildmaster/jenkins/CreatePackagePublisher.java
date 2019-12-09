@@ -104,7 +104,7 @@ public class CreatePackagePublisher extends Recorder implements ICreatePackage {
 
         JenkinsHelper helper = new JenkinsHelper(build, listener);
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + releasePackage.number);
-        helper.injectEnvrionmentVariable("BUILDMASTER_PACKAGE_NUMBER", releasePackage.number);
+        helper.injectEnvironmentVariable("BUILDMASTER_PACKAGE_NUMBER", releasePackage.number);
 
         return true;
     }

@@ -9,10 +9,12 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
+import javax.annotation.Nonnull;
+
 public class DeployToFirstStage extends AbstractDescribableImpl<DeployToFirstStage> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private boolean waitUntilDeploymentCompleted;
+    private final boolean waitUntilDeploymentCompleted;
     private boolean printLogOnFailure = false;
 
     @DataBoundConstructor
@@ -36,6 +38,7 @@ public class DeployToFirstStage extends AbstractDescribableImpl<DeployToFirstSta
 
     @Extension
     public static class DescriptorImpl extends Descriptor<DeployToFirstStage> {
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "";

@@ -87,8 +87,8 @@ public class PluginTests {
 		
         BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
 		
-		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		this.packageNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
+		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
+		this.packageNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationId(), releaseNumber);
         this.deployToFirstStage = new DeployToFirstStage(true);
 	}
 	
@@ -101,7 +101,7 @@ public class PluginTests {
 	
 	@Test
 	public void perform() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, packageNumber, deployToFirstStage);
 	
 		restLog();
 		
@@ -111,12 +111,12 @@ public class PluginTests {
 
 		String[] log = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
-        assertThat("Waiting for deployemnt to stage should be the last actioned performed.", log[log.length - 1], containsString("Waiting for deployment to"));
+        assertThat("Waiting for deployment to stage should be the last actioned performed.", log[log.length - 1], containsString("Waiting for deployment to"));
 	}
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, packageNumber, deployToFirstStage);
 		
 		restLog();
         assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
@@ -127,7 +127,7 @@ public class PluginTests {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, new DeployToFirstStage(true))
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, packageNumber, new DeployToFirstStage(true))
                 .setSetBuildVariables(new PackageVariables("hello=performSetVariables"));
 		
 		restLog();

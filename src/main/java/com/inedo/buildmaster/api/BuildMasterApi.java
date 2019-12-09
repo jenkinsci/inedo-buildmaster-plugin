@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.*;
 
+import javax.annotation.Nonnull;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -16,7 +17,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.google.common.base.Strings;
-import com.google.gson.JsonElement;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
@@ -50,7 +50,7 @@ public class BuildMasterApi {
         }
     }
 
-    public BuildMasterApi(BuildMasterConfig config, JenkinsLogWriter logWriter) {
+    public BuildMasterApi(@Nonnull BuildMasterConfig config, JenkinsLogWriter logWriter) {
         this.config = config;
         this.logWriter = logWriter;
 
@@ -75,7 +75,7 @@ public class BuildMasterApi {
     /**
      * Ensure can call the BuildMaster api. An exception will be thrown if cannot.
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      */
     public void checkConnection() throws IOException {
         HttpEasy.request()
@@ -90,7 +90,7 @@ public class BuildMasterApi {
     /**
      * Gets a list of all applications in the system.
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      */
     public Application[] getApplications() throws IOException {
         JsonReader reader = HttpEasy.request()
@@ -118,10 +118,10 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        ApplicationDetail applicaton = reader.fromJson(ApplicationDetail.class);
+        ApplicationDetail application = reader.fromJson(ApplicationDetail.class);
 
-        if (applicaton != null && applicaton.Applications_Extended.length > 0) {
-            return applicaton.Applications_Extended[0];
+        if (application != null && application.Applications_Extended.length > 0) {
+            return application.Applications_Extended[0];
         }
 
         return null;
@@ -130,7 +130,7 @@ public class BuildMasterApi {
     /**
      * Gets the applications pipelines
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      */
     public List<String> getPipelinesStages(int pipelineId) throws IOException {
         JsonReader reader = HttpEasy.request()
@@ -171,7 +171,7 @@ public class BuildMasterApi {
     /**
      * Gets the release details
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-releases">Endpoint Specification</a>
      */
@@ -200,7 +200,7 @@ public class BuildMasterApi {
     /**
      * Gets list of number of active releases
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-releases">Endpoint Specification</a>
      */
@@ -224,7 +224,7 @@ public class BuildMasterApi {
      * Gets the next available build number for the given release, if no builds
      * have been performed will return 1
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      */
     public String getReleaseNextBuildNumber(int applicationId, String releaseNumber) throws IOException {
         ApiRelease release = getRelease(applicationId, releaseNumber);
@@ -240,7 +240,7 @@ public class BuildMasterApi {
      * Gets the most recent build number for the given release, if no builds
      * have been performed will return null
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      */
     public String getReleaseCurrentBuildNumber(int applicationId, String releaseNumber) throws IOException {
         ApiRelease release = getRelease(applicationId, releaseNumber);
@@ -256,7 +256,7 @@ public class BuildMasterApi {
      * Gets release number of newest active release, if no active releases will
      * return an empty string
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      */
     public String getLatestActiveReleaseNumber(Integer applicationId) throws IOException {
         ApiRelease[] releases = getActiveReleases(applicationId);
@@ -272,7 +272,7 @@ public class BuildMasterApi {
     /**
      * Gets the details for a specified build.
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-packages">Endpoint Specification</a>
      */
@@ -305,7 +305,7 @@ public class BuildMasterApi {
      * 
      * @return ApiReleaseBuild
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      */
     public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, Map<String, String> variablesList)
             throws IOException {
@@ -319,7 +319,7 @@ public class BuildMasterApi {
      * 
      * @return ApiReleaseBuild
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#create-package">Endpoint Specification</a>
      */
@@ -354,8 +354,8 @@ public class BuildMasterApi {
      * @param stage Optional. If not supplied, the next stage in the pipeline will be used.
      * @return ApiDeployment[]
      * 
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException Http request exception
+     * @throws InterruptedException Failed while waiting for action
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#deploy-package">Endpoint Specification</a>
      */
@@ -394,7 +394,7 @@ public class BuildMasterApi {
     /**
      * Gets all executions in the executing, optionally limiting to a particular state.
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
@@ -422,7 +422,7 @@ public class BuildMasterApi {
      * 
      * @return Latest execution or empty object if no executions have occurred yet
      * 
-     * @throws IOException
+     * @throws IOException Http request exception
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
      */
@@ -459,8 +459,8 @@ public class BuildMasterApi {
     /**
      * Checks to see deployments are running for a release, if so will wait for them to complete.
      * 
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException Http request exception
+     * @throws InterruptedException Failed why waiting for action
      */
     public boolean waitForActiveDeploymentsToComplete(int applicationId, String releaseNumber) throws IOException, InterruptedException {
         ApiDeployment[] deployments = getActiveDeployments(applicationId, releaseNumber, null);
@@ -504,10 +504,9 @@ public class BuildMasterApi {
         return true;
     }
 
-    private static final List<String> executing = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText(), DeploymentStatus.EXECUTING.getText() });
-    private static final List<String> pending = Arrays.asList(new String[] { null, "", DeploymentStatus.PENDING.getText() });
+    private static final List<String> executing = Arrays.asList(null, "", DeploymentStatus.PENDING.getText(), DeploymentStatus.EXECUTING.getText());
+    private static final List<String> pending = Arrays.asList(null, "", DeploymentStatus.PENDING.getText());
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean waitForDeploymentToComplete(int applicationId, String releaseNumber, String buildNumber, Integer deploymentId, boolean printLogOnFailure,
                                                 boolean includeBuildNumberInLog)
             throws IOException, InterruptedException {
@@ -525,7 +524,7 @@ public class BuildMasterApi {
             // TODO HttpEasy.withDefaults().logRequest(false);
 
             long startTime = new Date().getTime();
-            Integer envrionmentId = deployment.environmentId;
+            Integer environmentId = deployment.environmentId;
 
             // TODO Originally waited for any automatic promotions to complete, should we? Would need to wait an extra few seconds to ensure that a new build had not started.
             // Don't have Build_AutoPromote_Indicator anymore to help with this
@@ -537,8 +536,8 @@ public class BuildMasterApi {
                 deployment = getDeployment(applicationId, releaseNumber, buildNumber, deploymentId);
 
                 // Restart counter if now deploying to new environment
-                if (!Objects.equals(envrionmentId, deployment.environmentId)) {
-                    envrionmentId = deployment.environmentId;
+                if (!Objects.equals(environmentId, deployment.environmentId)) {
+                    environmentId = deployment.environmentId;
                     startTime = new Date().getTime();
                 }
 
