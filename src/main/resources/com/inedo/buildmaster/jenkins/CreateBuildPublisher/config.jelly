@@ -4,7 +4,7 @@
     This jelly script is used for per-project configuration.
     See global.jelly for a general discussion about jelly script.
   -->
-    
+
   <!-- f:optionalProperty title="Automatically advance to first stage" field="deployToFirstStage" / -->
   <!-- Duplicating optionalBlock so can default to checked when first created -->
   <f:optionalBlock title="Automatically deploy to first stage" field="deployToFirstStage" checked="${instance==null ? true : instance.deployToFirstStage!=null}" >
@@ -13,7 +13,7 @@
     <st:include from="${descriptor}" page="${descriptor.configPage}" />
   </f:optionalBlock>
   
-  <f:optionalProperty title="Set build variables" field="packageVariables" />
+  <f:optionalProperty title="Set build variables" field="buildVariables" />
   
   <f:advanced title="Advanced Settings">
     <f:entry title="Application" field="applicationId" >
@@ -22,8 +22,8 @@
     <f:entry title="Release" field="releaseNumber" >
       <f:textbox default="$${BUILDMASTER_RELEASE_NUMBER}" />
     </f:entry>
-    <f:entry title="Build Number" field="packageNumber" >
-      <f:textbox default="${descriptor.defaultPackageNumber}" />
+    <f:entry title="Build Number" field="buildNumber" >
+      <f:textbox default="${descriptor.defaultBuildNumber}" />
     </f:entry>
   </f:advanced>
 </j:jelly>

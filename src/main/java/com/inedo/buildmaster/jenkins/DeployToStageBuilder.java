@@ -22,7 +22,7 @@ import jenkins.tasks.SimpleBuildStep;
 import javax.annotation.Nonnull;
 
 /**
- * Deploy a package to the requested stage in BuildMaster.
+ * Deploy a build to the requested stage in BuildMaster.
  *
  * See https://github.com/jenkinsci/pipeline-plugin/blob/master/DEVGUIDE.md#user-content-build-wrappers-1 for tips on 
  * Jenkins pipeline support 
@@ -36,7 +36,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     private DeployVariables deployVariables = null;
     private String applicationId = DescriptorImpl.defaultApplicationId;
     private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
-    private String packageNumber = DescriptorImpl.defaultPackageNumber;
+    private String buildNumber = DescriptorImpl.defaultBuildNumber;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
@@ -74,8 +74,8 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     }
 
     @DataBoundSetter
-    public final void setPackageNumber(String packageNumber) {
-        this.packageNumber = packageNumber;
+    public final void setBuildNumber(String buildNumber) {
+        this.buildNumber = buildNumber;
     }
 
     public String getStage() {
@@ -106,8 +106,8 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         return releaseNumber;
     }
 
-    public String getPackageNumber() {
-        return packageNumber;
+    public String getBuildNumber() {
+        return buildNumber;
     }
 
     @Override
@@ -117,14 +117,14 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         }
     }
 
-    @Symbol("buildMasterDeployPackageToStage")
+    @Symbol("buildMasterDeployBuildToStage")
     @Extension
     // This indicates to Jenkins that this is an implementation of an extension
     // point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         public static final String defaultApplicationId = "${BUILDMASTER_APPLICATION_ID}";
         public static final String defaultReleaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-        public static final String defaultPackageNumber = BuildHelper.DEFAULT_PACKAGE_NUMBER;
+        public static final String defaultBuildNumber = BuildHelper.DEFAULT_BUILD_NUMBER;
 
         public DescriptorImpl() {
             super(DeployToStageBuilder.class);

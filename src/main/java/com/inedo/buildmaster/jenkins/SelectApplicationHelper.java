@@ -43,7 +43,7 @@ public class SelectApplicationHelper {
             }
         }
 
-        application.packageNumber = buildmaster.getReleaseNextBuildNumber(application.applicationId, application.releaseNumber);
+        application.buildNumber = buildmaster.getReleaseNextBuildNumber(application.applicationId, application.releaseNumber);
 
         return application;
     }

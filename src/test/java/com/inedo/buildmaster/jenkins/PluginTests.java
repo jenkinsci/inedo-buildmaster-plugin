@@ -27,7 +27,7 @@ import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
+import com.inedo.buildmaster.jenkins.buildOption.BuildVariables;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
@@ -56,7 +56,7 @@ public class PluginTests {
 	public final PrintStream logger = new PrintStream(outContent);
 	
 	public String releaseNumber;
-	public String packageNumber;
+	public String buildNumber;
     public DeployToFirstStage deployToFirstStage = null;
 			
 	@Before
@@ -88,7 +88,7 @@ public class PluginTests {
         BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-		this.packageNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationId(), releaseNumber);
+		this.buildNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationId(), releaseNumber);
         this.deployToFirstStage = new DeployToFirstStage(true);
 	}
 	
@@ -101,13 +101,13 @@ public class PluginTests {
 	
 	@Test
 	public void perform() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, packageNumber, deployToFirstStage);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, buildNumber, deployToFirstStage);
 	
 		restLog();
 		
-        ApiReleaseBuild releasePackage = BuildHelper.createPackage(build, listener, data);
+        ApiReleaseBuild releaseBuild = BuildHelper.createBuild(build, listener, data);
 
-        assertThat("Result should be successful", releasePackage, is(notNullValue()));
+        assertThat("Result should be successful", releaseBuild, is(notNullValue()));
 
 		String[] log = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
@@ -116,10 +116,10 @@ public class PluginTests {
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, packageNumber, deployToFirstStage);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, buildNumber, deployToFirstStage);
 		
 		restLog();
-        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
+        assertThat("Result should be successful", BuildHelper.createBuild(build, listener, data), is(notNullValue()));
 		
         String[] log = extractLogLinesRemovingApiCall();
         assertThat("Wait step should be the last actioned performed for successful build.", log[log.length - 1], containsString("Waiting for deployment to"));
@@ -127,23 +127,23 @@ public class PluginTests {
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, packageNumber, new DeployToFirstStage(true))
-                .setSetBuildVariables(new PackageVariables("hello=performSetVariables"));
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, buildNumber, new DeployToFirstStage(true))
+                .setSetBuildVariables(new BuildVariables("hello=performSetVariables"));
 		
 		restLog();
-        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
+        assertThat("Result should be successful", BuildHelper.createBuild(build, listener, data), is(notNullValue()));
 		
 		String log = extractLog();
 		assertThat("Variable passed", log, containsString("performSetVariables"));
 		assertThat("Variable passed", log, not(containsString("trying")));
 		
 		
-        PackageVariables vars = new PackageVariables("trying=again");
+        BuildVariables vars = new BuildVariables("trying=again");
 
         data.setSetBuildVariables(vars);
 
 		restLog();
-        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
+        assertThat("Result should be successful", BuildHelper.createBuild(build, listener, data), is(notNullValue()));
 		
 		log = extractLog();		
 		assertThat("Variable passed", log, containsString("hello"));

@@ -66,10 +66,10 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + application.releaseNumber);
         context.env("BUILDMASTER_RELEASE_NUMBER", application.releaseNumber);
 
-        if (application.packageNumber != null) {
+        if (application.buildNumber != null) {
             helper.getLogWriter()
-                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=%s", application.packageNumber));
-            context.env("BUILDMASTER_PACKAGE_NUMBER", application.packageNumber);
+                    .info(String.format("Inject environment variable BUILDMASTER_BUILD_NUMBER=%s", application.buildNumber));
+            context.env("BUILDMASTER_BUILD_NUMBER", application.buildNumber);
         }
     }
 

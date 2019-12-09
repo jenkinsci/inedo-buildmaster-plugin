@@ -1,7 +1,7 @@
 <div>
   <p>Deploys (or re-deploys) a build to a particular stage.<p>
   
-  <p><b>Note</b> that when used in a pipeline step that the applicationId, releaseNumber, and packageNumber fields are required:</p>
-  <div style="margin-left:40px;"><code>buildMasterDeployPackageToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])</code></div>
+  <p><b>Note</b> that when used in a pipeline step that the applicationId, releaseNumber, and buildNumber fields are required:</p>
+  <div style="margin-left:40px;"><code>buildMasterDeployBuildToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])</code></div>
    
 </div>

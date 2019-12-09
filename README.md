@@ -72,22 +72,22 @@ pipeline {
             echo """
     			Application id = $BUILDMASTER_APPLICATION_ID
     			Release Number = $BUILDMASTER_RELEASE_NUMBER
-    			Package Number = $BUILDMASTER_PACKAGE_NUMBER
+    			Build Number = $BUILDMASTER_BUILD_NUMBER
             """
 
-            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return package 
+            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return build 
             // number you need to wrap this in a script block
             // See: https://jenkins.io/doc/book/pipeline/syntax/#script
             script {
-                BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])
+                BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])
             }
             
-            echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
+            echo "BUILDMASTER_BUILD_NUMBER = $BUILDMASTER_BUILD_NUMBER"
 
-            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+            buildMasterDeployBuildToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
             
             echo "Redeploy to Integration"
-            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+            buildMasterDeployBuildToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
         }
       }
     }
@@ -101,14 +101,14 @@ node {
 		echo """
 		Application id = $BUILDMASTER_APPLICATION_ID
 		Release Number = $BUILDMASTER_RELEASE_NUMBER
-		Package Number = $BUILDMASTER_PACKAGE_NUMBER
+		Build Number = $BUILDMASTER_BUILD_NUMBER
 		"""
 		
-		BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER)
+		BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER)
 		
-		echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
+		echo "BUILDMASTER_BUILD_NUMBER = $BUILDMASTER_BUILD_NUMBER"
 		
-		buildMasterDeployPackageToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+		buildMasterDeployBuildToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
 		
     }
 }

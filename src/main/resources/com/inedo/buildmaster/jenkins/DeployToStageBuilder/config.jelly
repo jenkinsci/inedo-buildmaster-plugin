@@ -30,8 +30,8 @@
     <f:entry title="Release" field="releaseNumber" >
       <f:textbox default="${descriptor.defaultReleaseNumber}" />
     </f:entry>
-    <f:entry title="Build Number" field="packageNumber" >
-      <f:textbox default="${descriptor.defaultPackageNumber}" />
+    <f:entry title="Build Number" field="buildNumber" >
+      <f:textbox default="${descriptor.defaultBuildNumber}" />
     </f:entry>
   </f:advanced>
 </j:jelly>

@@ -22,9 +22,9 @@ import hudson.model.TaskListener;
  * @author Andrew Sumner
  */
 public class BuildHelper {
-    public static final String DEFAULT_PACKAGE_NUMBER = "${BUILDMASTER_PACKAGE_NUMBER}";
+    public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}";
 
-    public static ApiReleaseBuild createPackage(Run<?, ?> run, TaskListener listener, ICreatePackage trigger) throws IOException, InterruptedException {
+    public static ApiReleaseBuild createBuild(Run<?, ?> run, TaskListener listener, ICreateBuild trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
 
         if (!GlobalConfig.isRequiredFieldsConfigured()) {
@@ -35,7 +35,7 @@ public class BuildHelper {
 
         int applicationId = Integer.parseInt(helper.expandVariable(trigger.getApplicationId()));
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
-        String buildNumber = helper.expandVariable(trigger.getPackageNumber());
+        String buildNumber = helper.expandVariable(trigger.getBuildNumber());
 
         Application application = buildmaster.getApplication(applicationId);
 
@@ -46,17 +46,17 @@ public class BuildHelper {
 
         Map<String, String> variablesList = new HashMap<>();
 
-        if (trigger.isPackageVariables()) {
-            variablesList = getVariablesListExpanded(run, listener, trigger.getPackageVariables().getVariables());
+        if (trigger.isBuildVariables()) {
+            variablesList = getVariablesListExpanded(run, listener, trigger.getBuildVariables().getVariables());
         }
 
         helper.getLogWriter().info("Create build for the %s application, release %s", application.Application_Name, releaseNumber);
-        ApiReleaseBuild releasePackage = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
-        helper.getLogWriter().info("Build %s has been created", releasePackage.number);
+        ApiReleaseBuild releaseBuild = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
+        helper.getLogWriter().info("Build %s has been created", releaseBuild.number);
 
         if (trigger.isDeployToFirstStage()) {
-            helper.getLogWriter().info("Deploy build %s to the first stage", releasePackage.number);
-            ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, releasePackage.number, null, null);
+            helper.getLogWriter().info("Deploy build %s to the first stage", releaseBuild.number);
+            ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, releaseBuild.number, null, null);
 
             if (trigger.getDeployToFirstStage().isWaitUntilDeploymentCompleted()) {
                 if (!buildmaster.waitForDeploymentToComplete(deployments, trigger.getDeployToFirstStage().isPrintLogOnFailure())) {
@@ -65,7 +65,7 @@ public class BuildHelper {
             }
         }
 
-        return releasePackage;
+        return releaseBuild;
     }
 
     public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) {
@@ -116,7 +116,7 @@ public class BuildHelper {
         
         int applicationId = Integer.parseInt(helper.expandVariable(builder.getApplicationId()));
         String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
-        String buildNumber = helper.expandVariable(builder.getPackageNumber());
+        String buildNumber = helper.expandVariable(builder.getBuildNumber());
         String stage = helper.expandVariable(builder.getStage());
 
         if (buildmaster.getApplication(applicationId) == null) {

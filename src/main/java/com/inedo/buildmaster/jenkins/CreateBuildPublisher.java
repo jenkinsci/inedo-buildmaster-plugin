@@ -8,41 +8,37 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
+import com.inedo.buildmaster.jenkins.buildOption.BuildVariables;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
 import hudson.AbortException;
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Builder;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-import jenkins.tasks.SimpleBuildStep;
-
-import javax.annotation.Nonnull;
 
 /**
- * Create a package in BuildMaster for the specified application and release and optionally deploy it to the first stage.
- *
- * <p>
- * <i>This has been duplicated by {@link CreatePackageStep} to support Jenkins pipeline script.</i>
- * </p>
  * 
- * @author Andrew Sumner
+ * The TriggerBuildPostBuildStep will trigger a build in BuildMaster for a selected application and release
+ * as a post-build action, after the build has completed.
+ * 
+ * @author Andrew Sumner 
  */
-public class CreatePackageBuilder extends Builder implements SimpleBuildStep, ICreatePackage {
+public class CreateBuildPublisher extends Recorder implements ICreateBuild {
     private DeployToFirstStage deployToFirstStage = null;
-    private PackageVariables packageVariables = null;
+    private BuildVariables buildVariables = null;
     private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
     private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-    private String packageNumber = "${BUILDMASTER_PACKAGE_NUMBER}";
+    private String buildNumber = "${BUILDMASTER_BUILD_NUMBER}";
 
     @DataBoundConstructor
-    public CreatePackageBuilder() {
+    public CreateBuildPublisher() {
     }
 
     @DataBoundSetter
@@ -51,8 +47,8 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
     }
 
     @DataBoundSetter
-    public final void setPackageVariables(PackageVariables packageVariables) {
-        this.packageVariables = packageVariables;
+    public final void setBuildVariables(BuildVariables buildVariables) {
+        this.buildVariables = buildVariables;
     }
 
     @DataBoundSetter
@@ -66,8 +62,8 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
     }
 
     @DataBoundSetter
-    public final void setPackageNumber(String packageNumber) {
-        this.packageNumber = packageNumber;
+    public final void setBuildNumber(String buildNumber) {
+        this.buildNumber = buildNumber;
     }
 
     public boolean isDeployToFirstStage() {
@@ -78,12 +74,12 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
         return deployToFirstStage;
     }
 
-    public boolean isPackageVariables() {
-        return packageVariables != null;
+    public boolean isBuildVariables() {
+        return buildVariables != null;
     }
 
-    public PackageVariables getPackageVariables() {
-        return packageVariables;
+    public BuildVariables getBuildVariables() {
+        return buildVariables;
     }
 
     public String getApplicationId() {
@@ -94,30 +90,38 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
         return releaseNumber;
     }
 
-    public String getPackageNumber() {
-        return packageNumber;
+    public String getBuildNumber() {
+        return buildNumber;
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
-        ApiReleaseBuild releasePackage = BuildHelper.createPackage(run, listener, this);
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        ApiReleaseBuild releaseBuild = BuildHelper.createBuild(build, listener, this);
 
-        if (releasePackage == null) {
+        if (releaseBuild == null) {
             throw new AbortException("Deployment failed");
         }
 
-        JenkinsHelper helper = new JenkinsHelper(run, listener);
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=" + releasePackage.number);
-        helper.injectEnvironmentVariable("BUILDMASTER_PACKAGE_NUMBER", releasePackage.number);
+        JenkinsHelper helper = new JenkinsHelper(build, listener);
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_BUILD_NUMBER=" + releaseBuild.number);
+        helper.injectEnvironmentVariable("BUILDMASTER_BUILD_NUMBER", releaseBuild.number);
+
+        return true;
     }
 
-    @Extension
-    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+    @Override
+    public BuildStepMonitor getRequiredMonitorService() {
+        return BuildStepMonitor.NONE;
+    }
+
+    @Extension // This indicates to Jenkins that this is an implementation of an extension point.
+    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         public DescriptorImpl() {
-            super(CreatePackageBuilder.class);
+            super(CreateBuildPublisher.class);
         }
 
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            // Indicates that this builder can be used with all kinds of project types
             return true;
         }
 
@@ -138,8 +142,8 @@ public class CreatePackageBuilder extends Builder implements SimpleBuildStep, IC
             return FormValidation.ok();
         }
 
-        public String getDefaultPackageNumber() {
-            return BuildHelper.DEFAULT_PACKAGE_NUMBER;
+        public String getDefaultBuildNumber() {
+            return BuildHelper.DEFAULT_BUILD_NUMBER;
         }
     }
 }
