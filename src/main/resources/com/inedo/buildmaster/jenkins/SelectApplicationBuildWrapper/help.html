@@ -1,12 +1,11 @@
 <div>
     <p>Obtains the Release and Build numbers for the selected BuildMaster application from BuildMaster and injects the following environment
-        variables into the build job:
-        <ul>
-	        <li>BUILDMASTER_APPLICATION_ID</li>
-	        <li>BUILDMASTER_RELEASE_NUMBER</li>
-	        <li>BUILDMASTER_BUILD_NUMBER</li>
-  	    </ul>
-    </p>
+        variables into the build job:</p>
+    <ul>
+        <li>BUILDMASTER_APPLICATION_ID</li>
+        <li>BUILDMASTER_RELEASE_NUMBER</li>
+        <li>BUILDMASTER_BUILD_NUMBER</li>
+    </ul>
 
     <p>If you do not use these values in your build steps there is no requirement to use this task.</p>
 
@@ -14,8 +13,8 @@
         triggering a build at the same time.</i></p>
 
     <p>When used within pipeline script this wraps a block and injects the above variables. Note that the applicationId parameter can contain either the id or name of a
-        BuildMaster application.
-        <pre>
+        BuildMaster application.</p>
+ <pre>
 buildMasterWithApplicationRelease('TestApplication') {
   echo """
     Application id = $BUILDMASTER_APPLICATION_ID
@@ -23,6 +22,5 @@ buildMasterWithApplicationRelease('TestApplication') {
     Build Number = $BUILDMASTER_BUILD_NUMBER
   """
 }
-        </pre>
-    </p>
+</pre>
 </div>
