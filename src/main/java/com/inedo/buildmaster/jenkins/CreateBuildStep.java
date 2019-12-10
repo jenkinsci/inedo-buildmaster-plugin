@@ -1,10 +1,12 @@
 package com.inedo.buildmaster.jenkins;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -16,7 +18,6 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.BuildVariables;
 
 import hudson.AbortException;
 import hudson.Extension;
@@ -38,14 +39,15 @@ import javax.annotation.Nonnull;
 public class CreateBuildStep extends Step implements ICreateBuild, Serializable {
     private static final long serialVersionUID = 1L;
 
+    private final String applicationId;
+    private final String releaseNumber;
     private DeployToFirstStage deployToFirstStage = null;
-    private BuildVariables buildVariables = null;
-    private String applicationId;
-    private String releaseNumber;
-    private String buildNumber;
+    private String buildVariables = "";
 
     @DataBoundConstructor
-    public CreateBuildStep() {
+    public CreateBuildStep(String applicationId, String releaseNumber) {
+        this.applicationId = applicationId;
+        this.releaseNumber = releaseNumber;
     }
 
     @DataBoundSetter
@@ -54,23 +56,16 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
     }
 
     @DataBoundSetter
-    public final void setBuildVariables(BuildVariables buildVariables) {
+    public final void setBuildVariables(String buildVariables) {
         this.buildVariables = buildVariables;
     }
 
-    @DataBoundSetter
-    public final void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
+    public String getApplicationId() {
+        return applicationId;
     }
 
-    @DataBoundSetter
-    public final void setReleaseNumber(String releaseNumber) {
-        this.releaseNumber = releaseNumber;
-    }
-
-    @DataBoundSetter
-    public final void setBuildNumber(String buildNumber) {
-        this.buildNumber = buildNumber;
+    public String getReleaseNumber() {
+        return releaseNumber;
     }
 
     public boolean isDeployToFirstStage() {
@@ -85,20 +80,8 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
         return buildVariables != null;
     }
 
-    public BuildVariables getBuildVariables() {
+    public String getBuildVariables() {
         return buildVariables;
-    }
-
-    public String getApplicationId() {
-        return applicationId;
-    }
-
-    public String getReleaseNumber() {
-        return releaseNumber;
-    }
-
-    public String getBuildNumber() {
-        return buildNumber;
     }
 
     @Override
@@ -108,6 +91,11 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
 
     @Extension
     public static class DescriptorImpl extends StepDescriptor {
+        private BuildMasterSelector buildmaster = new BuildMasterSelector();
+
+        public BuildMasterSelector getBuildmaster() {
+            return buildmaster;
+        }
 
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
@@ -125,18 +113,28 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
             return "Create BuildMaster Build";
         }
 
-        public FormValidation doCheckVariables(@QueryParameter String value) {
-            try {
-                BuildHelper.getVariablesList(value);
-            } catch (Exception e) {
-                return FormValidation.error(e.getMessage());
-            }
+        public ListBoxModel doFillApplicationIdItems() throws IOException {
+            return buildmaster.doFillApplicationIdItems("BUILDMASTER_APPLICATION_ID");
+        }
 
-            return FormValidation.ok();
+        public FormValidation doCheckApplicationId(@QueryParameter String value) {
+            return buildmaster.doCheckApplicationId(value);
+        }
+
+        public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
+            return buildmaster.doCheckReleaseNumber(value, applicationId);
+        }
+
+        public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
+            return buildmaster.doFillReleaseNumberItems(applicationId, "BUILDMASTER_RELEASE_NUMBER");
+        }
+
+        public FormValidation doCheckVariables(@QueryParameter String value) {
+            return buildmaster.doCheckVariables(value);
         }
 
         public String getDefaultBuildNumber() {
-            return BuildHelper.DEFAULT_BUILD_NUMBER;
+            return buildmaster.getDefaultBuildNumber();
         }
     }
 

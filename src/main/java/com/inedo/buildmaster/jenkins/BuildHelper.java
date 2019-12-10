@@ -22,7 +22,7 @@ import hudson.model.TaskListener;
  * @author Andrew Sumner
  */
 public class BuildHelper {
-    public static final String DEFAULT_BUILD_NUMBER = "${BUILDMASTER_BUILD_NUMBER}";
+    public static final String DEFAULT_BUILD_NUMBER = "$BUILDMASTER_BUILD_NUMBER";
 
     public static ApiReleaseBuild createBuild(Run<?, ?> run, TaskListener listener, ICreateBuild trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
@@ -35,7 +35,6 @@ public class BuildHelper {
 
         int applicationId = Integer.parseInt(helper.expandVariable(trigger.getApplicationId()));
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
-        String buildNumber = helper.expandVariable(trigger.getBuildNumber());
 
         Application application = buildmaster.getApplication(applicationId);
 
@@ -47,7 +46,7 @@ public class BuildHelper {
         Map<String, String> variablesList = new HashMap<>();
 
         if (trigger.isBuildVariables()) {
-            variablesList = getVariablesListExpanded(run, listener, trigger.getBuildVariables().getVariables());
+            variablesList = getVariablesListExpanded(run, listener, trigger.getBuildVariables());
         }
 
         helper.getLogWriter().info("Create build for the %s application, release %s", application.Application_Name, releaseNumber);
@@ -58,7 +57,7 @@ public class BuildHelper {
             helper.getLogWriter().info("Deploy build %s to the first stage", releaseBuild.number);
             ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, releaseBuild.number, null, null);
 
-            if (trigger.getDeployToFirstStage().isWaitUntilDeploymentCompleted()) {
+            if (trigger.getDeployToFirstStage().isWaitUntilCompleted()) {
                 if (!buildmaster.waitForDeploymentToComplete(deployments, trigger.getDeployToFirstStage().isPrintLogOnFailure())) {
                     return null;
                 }

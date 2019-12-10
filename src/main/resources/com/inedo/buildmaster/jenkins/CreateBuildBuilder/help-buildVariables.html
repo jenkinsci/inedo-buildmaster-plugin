@@ -1,5 +1,14 @@
 <div>
-	<p>
-	Set build level variables.
-	</p>
+	<p>Provide a list of variables to pass to the build.</p>
+	<ul>
+		<li>A variable must be in the format "variable=value"</li>
+		<li>Additional variables must be declared on separate lines</li>
+		<li>Lines starting with # are treated as comments</li>
+		<li>When using pipeline script and you want to pass several variables use one of these formats:
+			<ul>
+				<li>Separate variables using newline character. Generated script will resemble: <i>variables: 'var1=one\nvar2=two'</i></li>
+				<li>Separate variables using multi-line string. Generated script will resemble: <i>variables: '''var1=one<br>var2=two'''</i></li>
+			</ul>
+		</li>
+	</ul>
 </div>

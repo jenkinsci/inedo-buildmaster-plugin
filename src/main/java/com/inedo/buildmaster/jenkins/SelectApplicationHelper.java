@@ -49,24 +49,10 @@ public class SelectApplicationHelper {
     }
 
     private int getApplicationId(String applicationId) throws AbortException {
-        if (applicationId.matches("[0-9]{1,}")) {
-            return Integer.parseInt(applicationId);
-        }
-        
-        Optional<Application> application;
         try {
-            application = Arrays.stream(buildmaster.getApplications()).filter(a -> a.Application_Name.equalsIgnoreCase(applicationId)).findFirst();
-
-            if (application.isPresent()) {
-                return application.get().Application_Id;
-            }
-
+            return buildmaster.getApplicationIdFrom(applicationId);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             throw new AbortException(e.getMessage());
         }
-        
-        throw new AbortException("Application " + applicationId + "was not found");
     }
-
 }

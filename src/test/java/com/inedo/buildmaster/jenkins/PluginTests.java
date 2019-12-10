@@ -27,7 +27,6 @@ import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.BuildVariables;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
@@ -128,7 +127,7 @@ public class PluginTests {
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
         TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, buildNumber, new DeployToFirstStage(true))
-                .setSetBuildVariables(new BuildVariables("hello=performSetVariables"));
+                .setSetBuildVariables("hello=performSetVariables");
 		
 		restLog();
         assertThat("Result should be successful", BuildHelper.createBuild(build, listener, data), is(notNullValue()));
@@ -137,10 +136,9 @@ public class PluginTests {
 		assertThat("Variable passed", log, containsString("performSetVariables"));
 		assertThat("Variable passed", log, not(containsString("trying")));
 		
-		
-        BuildVariables vars = new BuildVariables("trying=again");
 
-        data.setSetBuildVariables(vars);
+
+        data.setSetBuildVariables("trying=again");
 
 		restLog();
         assertThat("Result should be successful", BuildHelper.createBuild(build, listener, data), is(notNullValue()));

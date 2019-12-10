@@ -60,15 +60,14 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 
         JenkinsHelper helper = execute.getJenkinsHelper();
 
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + application.applicationId);
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=%s", application.applicationId);
         context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(application.applicationId));
 
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + application.releaseNumber);
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=%s", application.releaseNumber);
         context.env("BUILDMASTER_RELEASE_NUMBER", application.releaseNumber);
 
         if (application.buildNumber != null) {
-            helper.getLogWriter()
-                    .info(String.format("Inject environment variable BUILDMASTER_BUILD_NUMBER=%s", application.buildNumber));
+            helper.getLogWriter().info(String.format("Inject environment variable BUILDMASTER_BUILD_NUMBER=%s", application.buildNumber));
             context.env("BUILDMASTER_BUILD_NUMBER", application.buildNumber);
         }
     }
@@ -76,16 +75,14 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
     @Extension
     @Symbol("buildMasterWithApplicationRelease")
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
-        private BuildMasterApi buildmaster = null;
-        private Boolean isBuildMasterAvailable = null;
-        private String connectionError = "";
-
         public DescriptorImpl() {
         }
 
+        private BuildMasterSelector buildmaster = new BuildMasterSelector();
+
         @Override
         public String getDisplayName() {
-            return "Select BuildMaster Application";
+            return "Inject environment variables with BuildMaster release details";
         }
 
         @Override
@@ -93,105 +90,24 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
             return true;
         }
 
-        /**
-         * Check if can connect to BuildMaster - if not prevent any more calls
-         */
-        public boolean getIsBuildMasterAvailable() {
-            if (isBuildMasterAvailable == null) {
-                try {
-                    buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());
-                    buildmaster.checkConnection();
-                    isBuildMasterAvailable = true;
-                } catch (Exception ex) {
-                    isBuildMasterAvailable = false;
-                    connectionError = ex.getClass().getName() + ": " + ex.getMessage();
-
-                    System.err.println(connectionError);
-                }
-            }
-
-            return isBuildMasterAvailable;
-        }
-
-        public String getConnectionError() {
-            return connectionError;
+        public BuildMasterSelector getBuildmaster() {
+            return buildmaster;
         }
 
         public ListBoxModel doFillApplicationIdItems() throws IOException {
-            ListBoxModel items = new ListBoxModel();
-
-            items.add("", "");
-
-            if (!getIsBuildMasterAvailable()) {
-                return items;
-            }
-
-            Application[] applications = buildmaster.getApplications();
-
-            for (Application application : applications) {
-                items.add((application.ApplicationGroup_Name != null ? application.ApplicationGroup_Name + " > " : "") + application.Application_Name,
-                        String.valueOf(application.Application_Id));
-            }
-
-            return items;
+            return buildmaster.doFillApplicationIdItems(null);
         }
 
         public FormValidation doCheckApplicationId(@QueryParameter String value) {
-            if (value.length() == 0)
-                return FormValidation.error("Please set an application id");
-
-            return FormValidation.ok();
-        }
-
-        public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
-            if (value.length() == 0)
-                return FormValidation.error("Please set a release");
-
-            if (!getIsBuildMasterAvailable()) {
-                return FormValidation.ok();
-            }
-
-            // Validate release is still active
-            if (!SelectApplicationHelper.LATEST_RELEASE.equals(value) && applicationId != null && !applicationId.isEmpty()) {
-                try {
-                    ApiRelease releaseDetails = buildmaster.getRelease(Integer.parseInt(applicationId), value);
-
-                    if (releaseDetails == null) {
-                        return FormValidation.error("The release " + value + " does not exist for this application");
-                    }
-
-                    String status = releaseDetails.status;
-
-                    if (!ReleaseStatus.ACTIVE.getText().equalsIgnoreCase(status)) {
-                        return FormValidation.error(String.format("The release status for release %s must be Active, the actual status is %s", value, status));
-                    }
-                } catch (Exception ex) {
-                    return FormValidation.error(ex.getClass().getName() + ": " + ex.getMessage());
-                }
-            }
-
-            return FormValidation.ok();
+            return buildmaster.doCheckApplicationId(value);
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            ListBoxModel items = new ListBoxModel();
+            return buildmaster.doFillReleaseNumberItems(applicationId,null);
+        }
 
-            // items.add("", "");
-            items.add("Latest Active Release", SelectApplicationHelper.LATEST_RELEASE);
-
-            if (!getIsBuildMasterAvailable()) {
-                return items;
-            }
-
-            if (applicationId != null && !applicationId.isEmpty()) {
-                ApiRelease[] releases = buildmaster.getActiveReleases(Integer.parseInt(applicationId));
-
-                for (ApiRelease release : releases) {
-                    items.add(release.number);
-                }
-            }
-
-            return items;
+        public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
+            return buildmaster.doCheckReleaseNumber(value, applicationId);
         }
     }
 

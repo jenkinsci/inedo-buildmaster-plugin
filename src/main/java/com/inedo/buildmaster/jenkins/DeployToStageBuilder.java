@@ -31,7 +31,7 @@ import javax.annotation.Nonnull;
  */
 public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     private String stage = "";
-    private boolean waitUntilDeploymentCompleted = true;
+    private boolean waitUntilDeploymentCompleted;
     private boolean printLogOnFailure = true;
     private DeployVariables deployVariables = null;
     private String applicationId = DescriptorImpl.defaultApplicationId;

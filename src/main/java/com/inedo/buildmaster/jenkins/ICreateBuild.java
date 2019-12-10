@@ -1,7 +1,6 @@
 package com.inedo.buildmaster.jenkins;
 
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.BuildVariables;
 
 public interface ICreateBuild {
     boolean isDeployToFirstStage();
@@ -10,11 +9,9 @@ public interface ICreateBuild {
 
     DeployToFirstStage getDeployToFirstStage();
 
-    BuildVariables getBuildVariables();
+    String getBuildVariables();
 
     String getApplicationId();
 
     String getReleaseNumber();
-
-    String getBuildNumber();
 }

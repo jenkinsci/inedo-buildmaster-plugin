@@ -5,16 +5,24 @@
     See global.jelly for a general discussion about jelly script.
   -->
 
-   <f:block>
-	<f:entry title="Application Id" field="applicationId" >
-	  <f:textbox default="BUILDMASTER_APPLICATION_ID" />
-	</f:entry>
-	<f:entry title="Release Number" field="releaseNumber" >
-	  <f:textbox default="BUILDMASTER_RELEASE_NUMBER" />
-	</f:entry>
-	<f:entry title="Build Number" field="buildNumber" >
-	  <f:textbox default="BUILDMASTER_BUILD_NUMBER" />
-	</f:entry>
+  <j:if test="${!descriptor.buildmaster.available}">
+  	<f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${descriptor.buildmaster.connectionError}</span><br /><br /></f:block>
+  </j:if>
+
+  <f:block>
+    <f:entry title="Application" field="applicationId">
+   	  <j:choose>
+        <j:when test="${descriptor.buildmaster.available}"><f:select /></j:when>
+        <j:otherwise><f:textbox default="BUILDMASTER_APPLICATION_ID"/></j:otherwise>
+      </j:choose>
+    </f:entry>
+
+    <f:entry title="Release Number" field="releaseNumber">
+      <j:choose>
+        <j:when test="${descriptor.buildmaster.available}"><f:select default="BUILDMASTER_RELEASE_NUMBER"/></j:when>
+        <j:otherwise><f:textbox default="BUILDMASTER_RELEASE_NUMBER" /></j:otherwise>
+      </j:choose>
+    </f:entry>
   </f:block>
   
   <!-- f:optionalProperty title="Automatically advance to first stage" field="deployToFirstStage" / -->
@@ -25,5 +33,7 @@
     <st:include from="${descriptor}" page="${descriptor.configPage}" />
   </f:optionalBlock>
   
-  <f:optionalProperty title="Set build variables" field="buildVariables" />
+  <f:entry title="Build variables" field="buildVariables" >
+    <f:expandableTextbox />
+  </f:entry>
 </j:jelly>

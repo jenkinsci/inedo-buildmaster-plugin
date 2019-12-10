@@ -2,13 +2,13 @@ package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
+import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.BuildVariables;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
 import hudson.AbortException;
@@ -31,14 +31,15 @@ import hudson.util.FormValidation;
  * @author Andrew Sumner 
  */
 public class CreateBuildPublisher extends Recorder implements ICreateBuild {
+    private final String applicationId;
+    private final String releaseNumber;
     private DeployToFirstStage deployToFirstStage = null;
-    private BuildVariables buildVariables = null;
-    private String applicationId = "${BUILDMASTER_APPLICATION_ID}";
-    private String releaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-    private String buildNumber = "${BUILDMASTER_BUILD_NUMBER}";
+    private String buildVariables = "";
 
     @DataBoundConstructor
-    public CreateBuildPublisher() {
+    public CreateBuildPublisher(String applicationId, String releaseNumber) {
+        this.applicationId = applicationId;
+        this.releaseNumber = releaseNumber;
     }
 
     @DataBoundSetter
@@ -47,23 +48,8 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
     }
 
     @DataBoundSetter
-    public final void setBuildVariables(BuildVariables buildVariables) {
+    public final void setBuildVariables(String buildVariables) {
         this.buildVariables = buildVariables;
-    }
-
-    @DataBoundSetter
-    public final void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
-    }
-
-    @DataBoundSetter
-    public final void setReleaseNumber(String releaseNumber) {
-        this.releaseNumber = releaseNumber;
-    }
-
-    @DataBoundSetter
-    public final void setBuildNumber(String buildNumber) {
-        this.buildNumber = buildNumber;
     }
 
     public boolean isDeployToFirstStage() {
@@ -78,7 +64,7 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
         return buildVariables != null;
     }
 
-    public BuildVariables getBuildVariables() {
+    public String getBuildVariables() {
         return buildVariables;
     }
 
@@ -88,10 +74,6 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
 
     public String getReleaseNumber() {
         return releaseNumber;
-    }
-
-    public String getBuildNumber() {
-        return buildNumber;
     }
 
     @Override
@@ -120,6 +102,12 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
             super(CreateBuildPublisher.class);
         }
 
+        private BuildMasterSelector buildmaster = new BuildMasterSelector();
+
+        public BuildMasterSelector getBuildmaster() {
+            return buildmaster;
+        }
+
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             // Indicates that this builder can be used with all kinds of project types
             return true;
@@ -130,20 +118,28 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
             return "Create BuildMaster Build";
         }
 
-        // TODO jelly expandableTextbox does not support form validation currently so this does nothing:
-        // https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/lib/form/expandableTextbox.jelly
+        public ListBoxModel doFillApplicationIdItems() throws IOException {
+            return buildmaster.doFillApplicationIdItems("$BUILDMASTER_APPLICATION_ID");
+        }
+
+        public FormValidation doCheckApplicationId(@QueryParameter String value) {
+            return buildmaster.doCheckApplicationId(value);
+        }
+
+        public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
+            return buildmaster.doFillReleaseNumberItems(applicationId, "$BUILDMASTER_RELEASE_NUMBER");
+        }
+
+        public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
+            return buildmaster.doCheckReleaseNumber(value, applicationId);
+        }
+
         public FormValidation doCheckVariables(@QueryParameter String value) {
-            try {
-                BuildHelper.getVariablesList(value);
-            } catch (Exception e) {
-                return FormValidation.error(e.getMessage());
-            }
-            
-            return FormValidation.ok();
+            return buildmaster.doCheckVariables(value);
         }
 
         public String getDefaultBuildNumber() {
-            return BuildHelper.DEFAULT_BUILD_NUMBER;
+            return buildmaster.getDefaultBuildNumber();
         }
     }
 }

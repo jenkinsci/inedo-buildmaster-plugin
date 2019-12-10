@@ -9,6 +9,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
+import hudson.AbortException;
 import org.concordion.cubano.driver.http.HttpEasy;
 import org.concordion.cubano.driver.http.JsonReader;
 import org.concordion.cubano.driver.http.XmlReader;
@@ -104,6 +105,26 @@ public class BuildMasterApi {
         }
 
         return reader.fromJson(Application[].class);
+    }
+
+    /**
+     * Get applicationId from application name or id.
+     * @param identifier Application Name or Id.
+     * @return applicationId
+     * @throws IOException
+     */
+    public int getApplicationIdFrom(String identifier) throws IOException {
+        if (identifier.matches("[0-9]{1,}")) {
+            return Integer.parseInt(identifier);
+        }
+
+        Optional<Application> application = Arrays.stream(getApplications()).filter(a -> a.Application_Name.equalsIgnoreCase(identifier)).findFirst();
+
+        if (application.isPresent()) {
+            return application.get().Application_Id;
+        }
+
+        throw new IOException("Application '" + identifier + "' was not found");
     }
 
     public Application getApplication(int applicationId) throws IOException {

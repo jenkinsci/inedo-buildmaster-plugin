@@ -1,7 +1,6 @@
 package com.inedo.buildmaster.jenkins;
 
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.BuildVariables;
 
 /**
  * Data to inject into TriggerBuildHelper for testing
@@ -10,7 +9,7 @@ import com.inedo.buildmaster.jenkins.buildOption.BuildVariables;
  */
 public class TriggerableData implements ICreateBuild {
     public DeployToFirstStage deployToFirstStage;
-	public BuildVariables setBuildVariables = null;
+	public String setBuildVariables = null;
 	public String applicationId;
 	public String releaseNumber;
     public String buildNumber;
@@ -35,7 +34,7 @@ public class TriggerableData implements ICreateBuild {
 		return setBuildVariables != null;
 	}
 
-	public BuildVariables getBuildVariables() {
+	public String getBuildVariables() {
 		return setBuildVariables;
 	}
 	
@@ -57,7 +56,7 @@ public class TriggerableData implements ICreateBuild {
 		return this;
 	}
 
-	public TriggerableData setSetBuildVariables(BuildVariables value) {
+	public TriggerableData setSetBuildVariables(String value) {
 		setBuildVariables = value;
 		return this;
 	}

@@ -1,19 +1,22 @@
 <div>
-  <p>Creates a new build for the selected BuildMaster application and sets the BUILDMASTER_BUILD_NUMBER script and environment variables.</p>
-  
-  <p>Unlike the FreeStyle plugins, this script plugin can be used for both build and post build actions.
-     The choice of executing this plugin as a build step or post build action will be largely dependent on how you import the build artifacts into BuildMaster:  
-	  <ol type="a">  
-		  <li>You are using the BuildMaster Jenkins Build Importer Build Step which imports build artifacts from Jenkins: the post build action is required.</li>
-		  
-		  <li>You are using a standard BuildMaster build step and importing files from a folder that you've placed the artifacts into from the Jenkins build 
-		  (eg using <a href="https://wiki.jenkins-ci.org/display/JENKINS/ArtifactDeployer+Plugin">ArtifactDeployer Plugin</a>): either the post build or build step actions will be fine.</li>
-		  
-		  <li>You use an external artifact repository such as Nexus, Artifactory or ProGet: either the post build or build step actions will be fine.</li>
-	  </ol>
-  </p>
-  
-  <p><b>Note</b> that pipeline steps are unable to set variables directly so must be called in this format:</p>
-  <div style="margin-left:40px;"><code>BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: '${BUILDMASTER_APPLICATION_ID}', buildNumber: '${BUILDMASTER_BUILD_NUMBER}', releaseNumber: '${BUILDMASTER_RELEASE_NUMBER}', deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])</code></div>
-   
+    <p>Creates a new build for the selected BuildMaster application and sets the BUILDMASTER_BUILD_NUMBER environment variable with the value returned from BuildMaster for the new build.</p>
+
+    <p>The choice of using the build step or post build action to trigger a BuildMaster build will be largely dependent on how you import the build artifacts into BuildMaster:</p>
+    <ol type="a">
+        <li>You are using the BuildMaster Jenkins Build Importer Build Step which imports build artifacts from Jenkins: the post build action is required.</li>
+
+        <li>You are using a standard BuildMaster build step and importing files from a folder that you've placed the artifacts into from the Jenkins build
+            (eg using <a href="https://wiki.jenkins-ci.org/display/JENKINS/ArtifactDeployer+Plugin">ArtifactDeployer Plugin</a>): either the post build or build step actions will be fine.</li>
+
+        <li>You use an external artifact repository such as Nexus, Artifactory or ProGet: either the post build or build step actions will be fine.</li>
+    </ol>
+
+<p><b>Note:</b> Jenkins declarative pipeline script has a somewhat restricted syntax, so to return the build number you need to wrap this in a script block. You only need to do this
+    if you wish to use the build number in a later step. For more information see: <a href="https://jenkins.io/doc/book/pipeline/syntax/#script">https://jenkins.io/doc/book/pipeline/syntax/#script</a></p>
+  <div style="margin-left:40px;"><pre>
+script {
+    BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID', releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildVariables: 'hello=world', deployToFirstStage: [waitUntilCompleted: true])
+}
+</pre>
+</div>
 </div>
