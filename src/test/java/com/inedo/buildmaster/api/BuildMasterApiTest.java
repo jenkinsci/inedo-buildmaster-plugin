@@ -186,7 +186,7 @@ public class BuildMasterApiTest {
 
         assertThat("Expect returned buildNumber to be the same as requested", buildNumber, is(releaseBuild.number));
 		
-        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, releaseBuild.number, null, null);
+        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, releaseBuild.number, null, null,false);
 
         if (compareJson) {
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
@@ -203,7 +203,7 @@ public class BuildMasterApiTest {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
         String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationId(), releaseNumber)) - 1);
 
-        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, buildNumber, null, "Integration");
+        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, buildNumber, null, "Integration", false);
 
         assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
         assertThat("Environment is what was asked for", deployments[0].environmentName, is("Integration"));
@@ -281,7 +281,7 @@ public class BuildMasterApiTest {
             ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationId(), releaseNumber, variablesList);
             System.out.println("BuildNumber=" + releaseBuild.number);
 
-            ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, releaseBuild.number, null, null);
+            ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, releaseBuild.number, null, null, false);
 
             String currentBuildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationId(), releaseNumber);
             System.out.println("CurrentBuildNumber=" + currentBuildNumber);

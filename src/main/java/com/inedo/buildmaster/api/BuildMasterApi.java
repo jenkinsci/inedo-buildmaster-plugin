@@ -364,7 +364,7 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#deploy-package">Endpoint Specification</a>
      */
-    public ApiDeployment[] deployBuildToStage(int applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList, String stage)
+    public ApiDeployment[] deployBuildToStage(int applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList, String stage, boolean forceDeployment)
             throws IOException, InterruptedException {
         // This is a fail safe step - BuildMaster can tie itself in knots if a new build is created while and existing one is being performed.
         waitForActiveDeploymentsToComplete(applicationId, releaseNumber);
@@ -381,6 +381,10 @@ public class BuildMasterApi {
             for (Map.Entry<String, String> variable : variablesList.entrySet()) {
                 request.field("$" + variable.getKey(), variable.getValue());
             }
+        }
+
+        if (forceDeployment) {
+            request.field("force", forceDeployment);
         }
 
         JsonReader reader = request

@@ -22,7 +22,7 @@ import hudson.model.TaskListener;
  * @author Andrew Sumner
  */
 public class BuildHelper {
-    public static final String DEFAULT_BUILD_NUMBER = "$BUILDMASTER_BUILD_NUMBER";
+    //public static final String DEFAULT_BUILD_NUMBER = "$BUILDMASTER_BUILD_NUMBER";
 
     public static ApiReleaseBuild createBuild(Run<?, ?> run, TaskListener listener, ICreateBuild trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
@@ -33,7 +33,7 @@ public class BuildHelper {
 
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
-        int applicationId = Integer.parseInt(helper.expandVariable(trigger.getApplicationId()));
+        int applicationId = buildmaster.getApplicationIdFrom(helper.expandVariable(trigger.getApplicationId()));
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
 
         Application application = buildmaster.getApplication(applicationId);
@@ -55,7 +55,7 @@ public class BuildHelper {
 
         if (trigger.isDeployToFirstStage()) {
             helper.getLogWriter().info("Deploy build %s to the first stage", releaseBuild.number);
-            ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, releaseBuild.number, null, null);
+            ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, releaseBuild.number, null, null, false);
 
             if (trigger.getDeployToFirstStage().isWaitUntilCompleted()) {
                 if (!buildmaster.waitForDeploymentToComplete(deployments, trigger.getDeployToFirstStage().isPrintLogOnFailure())) {
@@ -112,8 +112,8 @@ public class BuildHelper {
         }
         
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
-        
-        int applicationId = Integer.parseInt(helper.expandVariable(builder.getApplicationId()));
+
+        int applicationId = buildmaster.getApplicationIdFrom(helper.expandVariable(builder.getApplicationId()));
         String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
         String buildNumber = helper.expandVariable(builder.getBuildNumber());
         String stage = helper.expandVariable(builder.getStage());
@@ -124,7 +124,7 @@ public class BuildHelper {
         
         Map<String, String> variablesList = new HashMap<>();
 
-        if (builder.isDeployVariables()) {
+        if (builder.getVariables()) {
             variablesList = getVariablesListExpanded(run, listener, builder.getDeployVariables().getVariables());
         }
 
@@ -141,9 +141,9 @@ public class BuildHelper {
             helper.getLogWriter().info("Deploy build %s to the '" + stage + "' stage for the %s application, release %s", buildNumber, application.Application_Name,
                     releaseNumber);
         }
-        ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, buildNumber, variablesList, stage);
+        ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, buildNumber, variablesList, stage, builder.isForce());
 
-        if (builder.isWaitUntilDeploymentCompleted()) {
+        if (builder.isWaitUntilCompleted()) {
             return buildmaster.waitForDeploymentToComplete(deployments, builder.isPrintLogOnFailure());
         }
 

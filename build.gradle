@@ -51,10 +51,12 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
+/*
 configurations.all {
     // Check for updates every build
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
+*/
 
 dependencies {
 	jenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.15@jar'

@@ -148,6 +148,6 @@ public class BuildMasterSelector {
     }
 
     public String getDefaultBuildNumber() {
-        return BuildHelper.DEFAULT_BUILD_NUMBER;
+        return ""; // BuildHelper.DEFAULT_BUILD_NUMBER;
     }
 }
