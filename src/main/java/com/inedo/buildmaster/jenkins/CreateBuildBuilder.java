@@ -2,6 +2,9 @@ package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
+import com.inedo.buildmaster.jenkins.utils.BuildHelper;
+import com.inedo.buildmaster.jenkins.utils.BuildMasterSelector;
+import com.inedo.buildmaster.jenkins.utils.ICreateBuild;
 import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -62,10 +65,6 @@ public class CreateBuildBuilder extends Builder implements SimpleBuildStep, ICre
 
     public DeployToFirstStage getDeployToFirstStage() {
         return deployToFirstStage;
-    }
-
-    public boolean isBuildVariables() {
-        return buildVariables != null;
     }
 
     public String getBuildVariables() {

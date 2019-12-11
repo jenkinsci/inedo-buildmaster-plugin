@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import com.inedo.buildmaster.jenkins.utils.BuildHelper;
+import com.inedo.buildmaster.jenkins.utils.GlobalConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

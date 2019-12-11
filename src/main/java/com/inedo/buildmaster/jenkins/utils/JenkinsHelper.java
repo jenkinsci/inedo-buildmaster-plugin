@@ -68,10 +68,6 @@ public class JenkinsHelper {
         return logWriter;
     }
 
-    public static void fail(String value) {
-        throw new RuntimeException(value);
-    }
-
     public String getEnvironmentVariable(String variable) throws AbortException {
         EnvVars envVars;
 

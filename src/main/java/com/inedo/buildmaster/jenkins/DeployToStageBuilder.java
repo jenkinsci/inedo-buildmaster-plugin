@@ -2,13 +2,13 @@ package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
+import com.inedo.buildmaster.jenkins.utils.BuildHelper;
+import com.inedo.buildmaster.jenkins.utils.BuildMasterSelector;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import com.inedo.buildmaster.jenkins.buildOption.DeployVariables;
 
 import hudson.AbortException;
 import hudson.Extension;
@@ -37,7 +37,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     private final String releaseNumber;
     private final String buildNumber;
     private String stage = "";
-    private DeployVariables variables = null;
+    private String variables = null;
     private boolean waitUntilCompleted = true;
     private boolean printLogOnFailure = true;
     private boolean force = false;
@@ -56,6 +56,16 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     }
 
     @DataBoundSetter
+    public final void setVariables(String variables) {
+        this.variables = variables;
+    }
+
+    @DataBoundSetter
+    public void setForce(boolean force) {
+        this.force = force;
+    }
+
+    @DataBoundSetter
     public final void setWaitUntilCompleted(boolean waitUntilCompleted) {
         this.waitUntilCompleted = waitUntilCompleted;
     }
@@ -63,16 +73,6 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     @DataBoundSetter
     public final void setPrintLogOnFailure(boolean printLogOnFailure) {
         this.printLogOnFailure = printLogOnFailure;
-    }
-
-    @DataBoundSetter
-    public final void setVariables(DeployVariables variables) {
-        this.variables = variables;
-    }
-
-    @DataBoundSetter
-    public void setForce(boolean force) {
-        this.force = force;
     }
 
     public String getApplicationId() {
@@ -91,24 +91,20 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         return stage;
     }
 
+    public String getVariables() {
+        return variables;
+    }
+
+    public boolean isForce() {
+        return force;
+    }
+
     public boolean isWaitUntilCompleted() {
         return waitUntilCompleted;
     }
 
     public boolean isPrintLogOnFailure() {
         return printLogOnFailure;
-    }
-
-    public boolean getVariables() {
-        return variables != null;
-    }
-
-    public DeployVariables getDeployVariables() {
-        return variables;
-    }
-
-    public boolean isForce() {
-        return force;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.inedo.buildmaster.jenkins;
+package com.inedo.buildmaster.jenkins.utils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -9,7 +9,7 @@ import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
+import com.inedo.buildmaster.jenkins.DeployToStageBuilder;
 
 import hudson.AbortException;
 import hudson.model.Run;
@@ -34,20 +34,14 @@ public class BuildHelper {
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
         int applicationId = buildmaster.getApplicationIdFrom(helper.expandVariable(trigger.getApplicationId()));
-        String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
-
         Application application = buildmaster.getApplication(applicationId);
 
         if (application == null) {
-            JenkinsHelper.fail("Unknown application id " + applicationId);
-            return null;
+            throw new AbortException("Unknown application id " + applicationId);
         }
 
-        Map<String, String> variablesList = new HashMap<>();
-
-        if (trigger.isBuildVariables()) {
-            variablesList = getVariablesListExpanded(run, listener, trigger.getBuildVariables());
-        }
+        String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
+        Map<String, String> variablesList = getVariablesListExpanded(run, listener, trigger.getBuildVariables());
 
         helper.getLogWriter().info("Create build for the %s application, release %s", application.Application_Name, releaseNumber);
         ApiReleaseBuild releaseBuild = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
@@ -67,7 +61,7 @@ public class BuildHelper {
         return releaseBuild;
     }
 
-    public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) {
+    public static Map<String, String> getVariablesListExpanded(Run<?, ?> run, TaskListener listener, String variables) throws AbortException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
         Map<String, String> variablesList = getVariablesList(variables);
 
@@ -78,10 +72,10 @@ public class BuildHelper {
         return variablesList;
     }
 
-    public static Map<String, String> getVariablesList(String variables) {
+    public static Map<String, String> getVariablesList(String variables) throws AbortException {
         Map<String, String> variablesList = new HashMap<>();
 
-        if (variables != null) {
+        if (variables != null && !variables.isEmpty()) {
             String[] variablesArray = variables.split("\n");
 
             for (String value : variablesArray) {
@@ -94,7 +88,7 @@ public class BuildHelper {
                 int pos = value.indexOf("=");
 
                 if (pos < 0) {
-                    JenkinsHelper.fail(value + " is not in the format 'variable=value'");
+                    throw new AbortException(value + " is not in the format 'variable=value'");
                 }
 
                 variablesList.put(value.substring(0, pos).trim(), value.substring(pos + 1).trim());
@@ -114,26 +108,16 @@ public class BuildHelper {
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
         int applicationId = buildmaster.getApplicationIdFrom(helper.expandVariable(builder.getApplicationId()));
-        String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
-        String buildNumber = helper.expandVariable(builder.getBuildNumber());
-        String stage = helper.expandVariable(builder.getStage());
-
-        if (buildmaster.getApplication(applicationId) == null) {
-            throw new AbortException("Unknown application id " + applicationId);
-        }
-        
-        Map<String, String> variablesList = new HashMap<>();
-
-        if (builder.getVariables()) {
-            variablesList = getVariablesListExpanded(run, listener, builder.getDeployVariables().getVariables());
-        }
-
         Application application = buildmaster.getApplication(applicationId);
 
         if (application == null) {
-            JenkinsHelper.fail("Unknown application id " + applicationId);
-            return false;
+            throw new AbortException("Unknown application id " + applicationId);
         }
+
+        String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
+        String buildNumber = helper.expandVariable(builder.getBuildNumber());
+        String stage = helper.expandVariable(builder.getStage());
+        Map<String, String> variablesList = getVariablesListExpanded(run, listener, builder.getVariables());
 
         if (Strings.isNullOrEmpty(stage)) {
             helper.getLogWriter().info("Deploy build %s to the next stage for the %s application, release %s", buildNumber, application.Application_Name, releaseNumber);

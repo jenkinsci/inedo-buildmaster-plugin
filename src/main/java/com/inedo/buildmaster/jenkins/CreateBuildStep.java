@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.inedo.buildmaster.jenkins.utils.BuildHelper;
+import com.inedo.buildmaster.jenkins.utils.BuildMasterSelector;
+import com.inedo.buildmaster.jenkins.utils.ICreateBuild;
 import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -74,10 +77,6 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
 
     public DeployToFirstStage getDeployToFirstStage() {
         return deployToFirstStage;
-    }
-
-    public boolean isBuildVariables() {
-        return buildVariables != null;
     }
 
     public String getBuildVariables() {

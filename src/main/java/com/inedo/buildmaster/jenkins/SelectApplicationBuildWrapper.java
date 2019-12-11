@@ -2,17 +2,11 @@ package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
+import com.inedo.buildmaster.jenkins.utils.*;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
-import com.inedo.buildmaster.api.BuildMasterApi;
-import com.inedo.buildmaster.domain.ApiRelease;
-import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.domain.ReleaseStatus;
-import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
-import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
 import hudson.EnvVars;
 import hudson.Extension;

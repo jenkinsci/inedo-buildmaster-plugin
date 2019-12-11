@@ -1,18 +1,13 @@
-package com.inedo.buildmaster.jenkins;
+package com.inedo.buildmaster.jenkins.utils;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ReleaseStatus;
-import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
-import hudson.AbortException;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
 
 public class BuildMasterSelector {
     private BuildMasterApi buildmaster = null;

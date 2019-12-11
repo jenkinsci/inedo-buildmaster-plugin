@@ -1,11 +1,9 @@
-package com.inedo.buildmaster.jenkins;
+package com.inedo.buildmaster.jenkins.utils;
 
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 
 public interface ICreateBuild {
     boolean isDeployToFirstStage();
-
-    boolean isBuildVariables();
 
     DeployToFirstStage getDeployToFirstStage();
 

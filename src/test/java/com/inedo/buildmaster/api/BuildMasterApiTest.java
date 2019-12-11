@@ -20,7 +20,7 @@ import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.jenkins.GlobalConfig;
+import com.inedo.buildmaster.jenkins.utils.GlobalConfig;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.JsonCompare;
 import com.inedo.utils.MockData;

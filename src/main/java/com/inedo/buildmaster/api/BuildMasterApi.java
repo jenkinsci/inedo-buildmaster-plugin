@@ -9,7 +9,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
-import hudson.AbortException;
 import org.concordion.cubano.driver.http.HttpEasy;
 import org.concordion.cubano.driver.http.JsonReader;
 import org.concordion.cubano.driver.http.XmlReader;
@@ -25,7 +24,7 @@ import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ApplicationDetail;
 import com.inedo.buildmaster.domain.DeploymentStatus;
 import com.inedo.buildmaster.domain.ReleaseStatus;
-import com.inedo.buildmaster.jenkins.GlobalConfig;
+import com.inedo.buildmaster.jenkins.utils.GlobalConfig;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 import com.inedo.buildmaster.jenkins.utils.JenkinsLogWriter;
 
@@ -47,7 +46,7 @@ public class BuildMasterApi {
         this(GlobalConfig.getBuildMasterConfig(), listener);
 
         if (!GlobalConfig.isRequiredFieldsConfigured()) {
-            JenkinsHelper.fail("Please configure BuildMaster Plugin global settings");
+            throw new IllegalStateException("Please configure BuildMaster Plugin global settings");
         }
     }
 
