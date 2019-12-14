@@ -69,9 +69,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
     @Extension
     @Symbol("buildMasterWithApplicationRelease")
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
-        public DescriptorImpl() {
-        }
-
         private BuildMasterSelector buildmaster = new BuildMasterSelector();
 
         @Override
