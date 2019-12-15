@@ -125,7 +125,7 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            return buildmaster.doFillReleaseNumberItems(applicationId, "BUILDMASTER_RELEASE_NUMBER");
+            return buildmaster.doFillReleaseNumberItems(applicationId, "BUILDMASTER_RELEASE_NUMBER", true);
         }
 
         public FormValidation doCheckVariables(@QueryParameter String value) {

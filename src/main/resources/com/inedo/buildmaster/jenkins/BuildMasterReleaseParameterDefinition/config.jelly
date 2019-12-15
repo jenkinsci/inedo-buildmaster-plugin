@@ -31,9 +31,9 @@ THE SOFTWARE.
   	<f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${descriptor.buildmaster.connectionError}</span><br /><br /></f:block>
   </j:if>
 
-  <f:entry title="${%Name}" help="/help/parameter/name.html">
+  <!-- f:entry title="${%Name}" help="/help/parameter/name.html">
 	<f:textbox name="parameter.name" value="${instance.name}" />
-  </f:entry>
+  </f:entry -->
   <f:entry title="${%Description}" help="/help/parameter/description.html">
     <f:textarea name="parameter.description" value="${instance.description}" codemirror-mode="${app.markupFormatter.codeMirrorMode}" codemirror-config="${app.markupFormatter.codeMirrorConfig}" previewEndpoint="/markupFormatter/previewDescription" />
   </f:entry>

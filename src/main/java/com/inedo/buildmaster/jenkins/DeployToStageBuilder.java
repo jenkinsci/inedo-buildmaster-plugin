@@ -152,7 +152,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            return buildmaster.doFillReleaseNumberItems(applicationId, "$BUILDMASTER_RELEASE_NUMBER");
+            return buildmaster.doFillReleaseNumberItems(applicationId, "$BUILDMASTER_RELEASE_NUMBER", true);
         }
 
         public FormValidation doCheckVariables(@QueryParameter String value) {

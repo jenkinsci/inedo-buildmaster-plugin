@@ -10,9 +10,17 @@ import hudson.util.ListBoxModel;
 import java.io.IOException;
 
 public class BuildMasterSelector {
-    private BuildMasterApi buildmaster = null;
+    private BuildMasterApi buildmaster;
     private Boolean isBuildMasterAvailable = null;
     private String connectionError = "";
+
+    public BuildMasterApi getBuildMasterApi() {
+        if (buildmaster == null) {
+            buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());
+        }
+
+        return buildmaster;
+    }
 
     /**
      * Check if can connect to BuildMaster - if not prevent any more calls
@@ -20,8 +28,7 @@ public class BuildMasterSelector {
     public boolean isAvailable() {
         if (isBuildMasterAvailable == null) {
             try {
-                buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());
-                buildmaster.checkConnection();
+                getBuildMasterApi().checkConnection();
                 isBuildMasterAvailable = true;
             } catch (Exception ex) {
                 isBuildMasterAvailable = false;
@@ -53,7 +60,7 @@ public class BuildMasterSelector {
             return items;
         }
 
-        Application[] applications = buildmaster.getApplications();
+        Application[] applications = getBuildMasterApi().getApplications();
 
         for (Application application : applications) {
             items.add((application.ApplicationGroup_Name != null ? application.ApplicationGroup_Name + " > " : "") + application.Application_Name,
@@ -70,21 +77,27 @@ public class BuildMasterSelector {
         return FormValidation.ok();
     }
 
-    public ListBoxModel doFillReleaseNumberItems(String applicationId, String firstItem) throws IOException {
+    public ListBoxModel doFillReleaseNumberItems(String applicationId) throws IOException {
+        return doFillReleaseNumberItems(applicationId, null, false);
+    }
+
+    public ListBoxModel doFillReleaseNumberItems(String applicationId, String firstItem, boolean includeLatestOption) throws IOException {
         ListBoxModel items = new ListBoxModel();
 
         if (firstItem != null) {
             items.add(firstItem);
         }
 
-        items.add("Latest Active Release", SelectApplicationHelper.LATEST_RELEASE);
+        if (includeLatestOption) {
+            items.add("Latest Active Release", SelectApplicationHelper.LATEST_RELEASE);
+        }
 
         if (!isAvailable()) {
             return items;
         }
 
         if (applicationId != null && !applicationId.isEmpty() && !applicationId.startsWith("$")) {
-            ApiRelease[] releases = buildmaster.getActiveReleases(Integer.parseInt(applicationId));
+            ApiRelease[] releases = getBuildMasterApi().getActiveReleases(Integer.parseInt(applicationId));
 
             for (ApiRelease release : releases) {
                 items.add(release.number);
@@ -112,7 +125,7 @@ public class BuildMasterSelector {
         }
 
         try {
-            ApiRelease releaseDetails = buildmaster.getRelease(buildmaster.getApplicationIdFrom(applicationId), releaseNumber);
+            ApiRelease releaseDetails = getBuildMasterApi().getRelease(getBuildMasterApi().getApplicationIdFrom(applicationId), releaseNumber);
 
             if (releaseDetails == null) {
                 return FormValidation.error("The release " + releaseNumber + " does not exist for this application");
@@ -144,5 +157,15 @@ public class BuildMasterSelector {
 
     public String getDefaultBuildNumber() {
         return ""; // BuildHelper.DEFAULT_BUILD_NUMBER;
+    }
+
+    public Application getApplication(String identifier) throws IOException {
+        if (identifier == null) {
+            return null;
+        }
+
+        int applicationId = getBuildMasterApi().getApplicationIdFrom(identifier);
+
+        return getBuildMasterApi().getApplication(applicationId);
     }
 }

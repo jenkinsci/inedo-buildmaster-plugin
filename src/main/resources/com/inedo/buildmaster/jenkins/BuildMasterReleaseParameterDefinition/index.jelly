@@ -26,16 +26,28 @@ THE SOFTWARE.
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
 	xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
 
-        <j:if test="${!descriptor.buildmaster.available}">
-       	  <f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${descriptor.buildmaster.connectionError}</span><br /><br /></f:block>
+        <j:if test="${!it.descriptor.buildmaster.available}">
+       	  <f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${it.descriptor.buildmaster.connectionError}</span><br /><br /></f:block>
         </j:if>
 
         <j:set var="escapeEntryTitleAndDescription" value="false"/>
-        <f:entry title="${h.escape(it.name)}" description="${it.formattedDescription}">
+        <!-- f:entry title="${h.escape(it.name)}" description="${it.formattedDescription}" -->
+        <f:entry title="${h.escape(it.applicationName)}" description="${it.formattedDescription}">
 		<div name="parameter">
 			<input type="hidden" name="name" value="${it.name}" />
 			<input type="hidden" name="applicationId" value="${it.applicationId}" />
-            <j:choose><j:when test="${descriptor.buildmaster.available}"><f:select name="releaseNumber"/></j:when><j:otherwise><f:textbox name="releaseNumber"/></j:otherwise></j:choose>
+            <j:choose>
+              <j:when test="${it.descriptor.buildmaster.available}">
+                <select name="releaseNumber">
+                  <j:forEach var="release" items="${it.releases}">
+                    <option value="${release.value}">${release.name}</option>
+                  </j:forEach>
+                </select>
+              </j:when>
+              <j:otherwise>
+                <f:textbox name="releaseNumber"/>
+              </j:otherwise>
+            </j:choose>
 		</div>
 	</f:entry>
 </j:jelly>

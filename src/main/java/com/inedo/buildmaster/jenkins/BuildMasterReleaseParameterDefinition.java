@@ -36,7 +36,9 @@ import org.kohsuke.stapler.export.Exported;
  */
 public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefinition {
     private static final long serialVersionUID = 1L;
-    private BuildMasterSelector buildmaster = new BuildMasterSelector();
+
+    private BuildMasterSelector buildmaster = null;
+
 
     private final String applicationId;
     private final String releaseNumber;
@@ -54,13 +56,36 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         this.releaseNumber = releaseNumber;
     }
 
-    public BuildMasterSelector getBuildmaster() {
-        return buildmaster;
-    }
-
     @Exported
     public String getApplicationId() {
         return applicationId;
+    }
+
+    @Exported
+    public String getApplicationName() throws IOException {
+
+        if (applicationId == null || applicationId.isEmpty()) {
+            return null;
+        }
+
+        Application app = getBuildMaster().getApplication(applicationId);
+        if(app == null) {
+            return "Unknown - " + applicationId;
+        } else {
+            return app.Application_Name;
+        }
+    }
+
+    private BuildMasterSelector getBuildMaster() {
+        if (buildmaster == null) {
+            buildmaster = new BuildMasterSelector();
+        }
+
+        return buildmaster;
+    }
+
+    public ListBoxModel getReleases() throws IOException {
+        return getBuildMaster().doFillReleaseNumberItems(getApplicationId());
     }
 
     @Override
@@ -92,14 +117,6 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), value, getDescription());
     }
 
-//    public Application[] getApplications() throws IOException {
-//        BuildMasterApi buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());
-//
-//        Application[] applications = buildmaster.getApplications();
-//
-//        return applications;
-//    }
-
     @Extension
     @Symbol("buildMasterRelease")
     public static class DescriptorImpl extends ParameterDescriptor {
@@ -128,7 +145,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            return buildmaster.doFillReleaseNumberItems(applicationId,null);
+            return buildmaster.doFillReleaseNumberItems(applicationId, null, true);
         }
 
         public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {

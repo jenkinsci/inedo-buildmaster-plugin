@@ -94,7 +94,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            return buildmaster.doFillReleaseNumberItems(applicationId,null);
+            return buildmaster.doFillReleaseNumberItems(applicationId, null, true);
         }
 
         public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
