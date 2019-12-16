@@ -5,21 +5,21 @@
     See global.jelly for a general discussion about jelly script.
   -->
 
-  <j:if test="${!descriptor.buildmaster.available}">
-  	<f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${descriptor.buildmaster.connectionError}</span><br /><br /></f:block>
+  <j:if test="${!descriptor.configHelper.available}">
+  	<f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${descriptor.configHelper.connectionError}</span><br /><br /></f:block>
   </j:if>
 
   <f:block>
     <f:entry title="Application" field="applicationId">
    	  <j:choose>
-        <j:when test="${descriptor.buildmaster.available}"><f:select /></j:when>
+        <j:when test="${descriptor.configHelper.available}"><f:select /></j:when>
         <j:otherwise><f:textbox default="$BUILDMASTER_APPLICATION_ID"/></j:otherwise>
       </j:choose>
     </f:entry>
 
     <f:entry title="Release Number" field="releaseNumber">
       <j:choose>
-        <j:when test="${descriptor.buildmaster.available}"><f:select default="$BUILDMASTER_RELEASE_NUMBER"/></j:when>
+        <j:when test="${descriptor.configHelper.available}"><f:select default="$BUILDMASTER_RELEASE_NUMBER"/></j:when>
         <j:otherwise><f:textbox default="$BUILDMASTER_RELEASE_NUMBER" /></j:otherwise>
       </j:choose>
     </f:entry>

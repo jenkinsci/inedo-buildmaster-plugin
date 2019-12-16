@@ -85,7 +85,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
     @Extension
     @Symbol("buildMasterWithApplicationRelease")
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
-        private ConfigHelper buildmaster = new ConfigHelper();
+        private ConfigHelper configHelper = new ConfigHelper();
 
         @Override
         public String getDisplayName() {
@@ -97,24 +97,24 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
             return true;
         }
 
-        public ConfigHelper getBuildmaster() {
-            return buildmaster;
+        public ConfigHelper getConfigHelper() {
+            return configHelper;
         }
 
         public ListBoxModel doFillApplicationIdItems() throws IOException {
-            return buildmaster.doFillApplicationIdItems(null);
+            return configHelper.doFillApplicationIdItems(null);
         }
 
         public FormValidation doCheckApplicationId(@QueryParameter String value) {
-            return buildmaster.doCheckApplicationId(value);
+            return configHelper.doCheckApplicationId(value);
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            return buildmaster.doFillReleaseNumberItems(applicationId, null, true);
+            return configHelper.doFillReleaseNumberItems(applicationId, null, true);
         }
 
         public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
-            return buildmaster.doCheckReleaseNumber(value, applicationId);
+            return configHelper.doCheckReleaseNumber(value, applicationId);
         }
     }
 

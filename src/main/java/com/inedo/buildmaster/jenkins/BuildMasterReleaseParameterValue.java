@@ -15,9 +15,9 @@ import java.util.logging.Logger;
  * @since 1.0
  */
 public class BuildMasterReleaseParameterValue extends ParameterValue {
-    private String applicationId;
-    private String applicationName;
-    private String releaseNumber;
+    private final String applicationId;
+    private final String applicationName;
+    private final String releaseNumber;
 
     private static final Logger LOGGER = Logger.getLogger(BuildMasterReleaseParameterValue.class.getName());
 

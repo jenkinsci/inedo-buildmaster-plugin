@@ -119,10 +119,10 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     // This indicates to Jenkins that this is an implementation of an extension
     // point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        private ConfigHelper buildmaster = new ConfigHelper();
+        private ConfigHelper configHelper = new ConfigHelper();
 
-        public ConfigHelper getBuildmaster() {
-            return buildmaster;
+        public ConfigHelper getConfigHelper() {
+            return configHelper;
         }
 
         public DescriptorImpl() {
@@ -140,27 +140,27 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         }
 
         public ListBoxModel doFillApplicationIdItems() throws IOException {
-            return buildmaster.doFillApplicationIdItems("$BUILDMASTER_APPLICATION_ID");
+            return configHelper.doFillApplicationIdItems("$BUILDMASTER_APPLICATION_ID");
         }
 
         public FormValidation doCheckApplicationId(@QueryParameter String value) {
-            return buildmaster.doCheckApplicationId(value);
+            return configHelper.doCheckApplicationId(value);
         }
 
         public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
-            return buildmaster.doCheckReleaseNumber(value, applicationId);
+            return configHelper.doCheckReleaseNumber(value, applicationId);
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            return buildmaster.doFillReleaseNumberItems(applicationId, "$BUILDMASTER_RELEASE_NUMBER", true);
+            return configHelper.doFillReleaseNumberItems(applicationId, "$BUILDMASTER_RELEASE_NUMBER", true);
         }
 
         public FormValidation doCheckVariables(@QueryParameter String value) {
-            return buildmaster.doCheckVariables(value);
+            return configHelper.doCheckVariables(value);
         }
 
         public String getDefaultBuildNumber() {
-            return buildmaster.getDefaultBuildNumber();
+            return configHelper.getDefaultBuildNumber();
         }
 
     }

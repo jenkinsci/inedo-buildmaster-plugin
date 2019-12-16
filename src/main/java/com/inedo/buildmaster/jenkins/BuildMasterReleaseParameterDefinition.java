@@ -116,7 +116,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     @Extension
     @Symbol("buildMasterRelease")
     public static class DescriptorImpl extends ParameterDescriptor {
-        private ConfigHelper configHelper = new ConfigHelper();
+        private final ConfigHelper configHelper = new ConfigHelper();
 
         @Override
         public String getDisplayName() {
