@@ -3,7 +3,7 @@ package com.inedo.buildmaster.jenkins;
 import java.io.IOException;
 
 import com.inedo.buildmaster.jenkins.utils.BuildHelper;
-import com.inedo.buildmaster.jenkins.utils.BuildMasterSelector;
+import com.inedo.buildmaster.jenkins.utils.ConfigHelper;
 import com.inedo.buildmaster.jenkins.utils.ICreateBuild;
 import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -98,9 +98,9 @@ public class CreateBuildBuilder extends Builder implements SimpleBuildStep, ICre
             super(CreateBuildBuilder.class);
         }
 
-        private BuildMasterSelector buildmaster = new BuildMasterSelector();
+        private ConfigHelper buildmaster = new ConfigHelper();
 
-        public BuildMasterSelector getBuildmaster() {
+        public ConfigHelper getBuildmaster() {
             return buildmaster;
         }
 

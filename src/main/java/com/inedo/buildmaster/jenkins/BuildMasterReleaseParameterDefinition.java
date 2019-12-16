@@ -1,7 +1,7 @@
 package com.inedo.buildmaster.jenkins;
 
 import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.jenkins.utils.BuildMasterSelector;
+import com.inedo.buildmaster.jenkins.utils.ConfigHelper;
 import hudson.Extension;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -30,7 +30,7 @@ import java.io.IOException;
 public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefinition {
     private static final long serialVersionUID = 1L;
 
-    private BuildMasterSelector buildmaster = null;
+    private ConfigHelper configHelper = null;
     private final String applicationId;
     private final String releaseNumber;
 
@@ -60,7 +60,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         }
 
         try {
-            Application app = getBuildMaster().getApplication(applicationId);
+            Application app = getConfigHelper().getApplication(applicationId);
 
             if(app == null) {
                 return "Unknown - " + applicationId;
@@ -72,16 +72,16 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         }
     }
 
-    private BuildMasterSelector getBuildMaster() {
-        if (buildmaster == null) {
-            buildmaster = new BuildMasterSelector();
+    private ConfigHelper getConfigHelper() {
+        if (configHelper == null) {
+            configHelper = new ConfigHelper();
         }
 
-        return buildmaster;
+        return configHelper;
     }
 
     public ListBoxModel getReleases() throws IOException {
-        return getBuildMaster().doFillReleaseNumberItems(getApplicationId());
+        return getConfigHelper().doFillReleaseNumberItems(getApplicationId());
     }
 
     @Override
@@ -116,7 +116,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     @Extension
     @Symbol("buildMasterRelease")
     public static class DescriptorImpl extends ParameterDescriptor {
-        private BuildMasterSelector buildmaster = new BuildMasterSelector();
+        private ConfigHelper configHelper = new ConfigHelper();
 
         @Override
         public String getDisplayName() {
@@ -128,24 +128,24 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
             return req.bindJSON(BuildMasterReleaseParameterDefinition.class, formData);
         }
 
-        public BuildMasterSelector getBuildmaster() {
-            return buildmaster;
+        public ConfigHelper getBuildmaster() {
+            return configHelper;
         }
 
         public ListBoxModel doFillApplicationIdItems() throws IOException {
-            return buildmaster.doFillApplicationIdItems(null);
+            return configHelper.doFillApplicationIdItems(null);
         }
 
         public FormValidation doCheckApplicationId(@QueryParameter String value) {
-            return buildmaster.doCheckApplicationId(value);
+            return configHelper.doCheckApplicationId(value);
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            return buildmaster.doFillReleaseNumberItems(applicationId, null, true);
+            return configHelper.doFillReleaseNumberItems(applicationId, null, true);
         }
 
         public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
-            return buildmaster.doCheckReleaseNumber(value, applicationId);
+            return configHelper.doCheckReleaseNumber(value, applicationId);
         }
     }
 }

@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.inedo.buildmaster.jenkins.utils.BuildHelper;
-import com.inedo.buildmaster.jenkins.utils.BuildMasterSelector;
+import com.inedo.buildmaster.jenkins.utils.ConfigHelper;
 import com.inedo.buildmaster.jenkins.utils.ICreateBuild;
 import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
@@ -90,9 +90,9 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
 
     @Extension
     public static class DescriptorImpl extends StepDescriptor {
-        private BuildMasterSelector buildmaster = new BuildMasterSelector();
+        private ConfigHelper buildmaster = new ConfigHelper();
 
-        public BuildMasterSelector getBuildmaster() {
+        public ConfigHelper getBuildmaster() {
             return buildmaster;
         }
 

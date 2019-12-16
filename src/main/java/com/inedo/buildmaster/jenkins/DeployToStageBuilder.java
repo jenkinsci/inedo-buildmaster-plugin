@@ -3,7 +3,7 @@ package com.inedo.buildmaster.jenkins;
 import java.io.IOException;
 
 import com.inedo.buildmaster.jenkins.utils.BuildHelper;
-import com.inedo.buildmaster.jenkins.utils.BuildMasterSelector;
+import com.inedo.buildmaster.jenkins.utils.ConfigHelper;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import org.jenkinsci.Symbol;
@@ -119,9 +119,9 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     // This indicates to Jenkins that this is an implementation of an extension
     // point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        private BuildMasterSelector buildmaster = new BuildMasterSelector();
+        private ConfigHelper buildmaster = new ConfigHelper();
 
-        public BuildMasterSelector getBuildmaster() {
+        public ConfigHelper getBuildmaster() {
             return buildmaster;
         }
 

@@ -9,7 +9,9 @@ import hudson.util.ListBoxModel;
 
 import java.io.IOException;
 
-public class BuildMasterSelector {
+public class ConfigHelper {
+    public static final String LATEST_RELEASE = "LATEST";
+
     private BuildMasterApi buildmaster;
     private Boolean isBuildMasterAvailable = null;
     private String connectionError = "";
@@ -89,7 +91,7 @@ public class BuildMasterSelector {
         }
 
         if (includeLatestOption) {
-            items.add("Latest Active Release", SelectApplicationHelper.LATEST_RELEASE);
+            items.add("Latest Active Release", LATEST_RELEASE);
         }
 
         if (!isAvailable()) {
@@ -115,7 +117,7 @@ public class BuildMasterSelector {
             return FormValidation.ok();
         }
 
-        if (SelectApplicationHelper.LATEST_RELEASE.equalsIgnoreCase(releaseNumber)) {
+        if (LATEST_RELEASE.equalsIgnoreCase(releaseNumber)) {
             return FormValidation.ok();
         } else if (releaseNumber.startsWith("$")) {
             // Is a variable reference

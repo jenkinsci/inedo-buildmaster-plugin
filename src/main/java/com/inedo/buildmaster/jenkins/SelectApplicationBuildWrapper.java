@@ -2,16 +2,14 @@ package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
+import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.jenkins.utils.*;
+import hudson.*;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Resource;
 import hudson.model.ResourceActivity;
@@ -23,10 +21,10 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.tasks.SimpleBuildWrapper;
 
-public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements ResourceActivity, BuildMasterSelectApplication
+public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements ResourceActivity
 {
     private final String applicationId;
-    private String releaseNumber = SelectApplicationHelper.LATEST_RELEASE;
+    private String releaseNumber = ConfigHelper.LATEST_RELEASE;
 
     @DataBoundConstructor
     public SelectApplicationBuildWrapper(String applicationId) {
@@ -48,28 +46,46 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 
     @Override
     public void setUp(Context context, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars initialEnvironment) throws IOException {
-        SelectApplicationHelper execute = new SelectApplicationHelper(build, listener);
+        JenkinsHelper helper = new JenkinsHelper(build, listener);
+        BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
-        BuildMasterApplication application = execute.selectApplication(this);
+        int actualApplicationId = getApplicationIdFrom(buildmaster, applicationId);
+        String actualReleaseNumber = releaseNumber;
 
-        JenkinsHelper helper = execute.getJenkinsHelper();
+        if (ConfigHelper.LATEST_RELEASE.equals(releaseNumber)) {
+            actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(actualApplicationId);
 
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=%s", application.applicationId);
-        context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(application.applicationId));
+            if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
+                throw new AbortException("No active releases found in BuildMaster for applicationId " + actualApplicationId);
+            }
+        }
 
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=%s", application.releaseNumber);
-        context.env("BUILDMASTER_RELEASE_NUMBER", application.releaseNumber);
+        String actualBuildNumber = buildmaster.getReleaseNextBuildNumber(actualApplicationId, actualReleaseNumber);
 
-        if (application.buildNumber != null) {
-            helper.getLogWriter().info(String.format("Inject environment variable BUILDMASTER_BUILD_NUMBER=%s", application.buildNumber));
-            context.env("BUILDMASTER_BUILD_NUMBER", application.buildNumber);
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=%s", actualApplicationId);
+        context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(actualApplicationId));
+
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=%s", actualReleaseNumber);
+        context.env("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
+
+        if (actualBuildNumber != null) {
+            helper.getLogWriter().info(String.format("Inject environment variable BUILDMASTER_BUILD_NUMBER=%s", actualBuildNumber));
+            context.env("BUILDMASTER_BUILD_NUMBER", actualBuildNumber);
+        }
+    }
+
+    private int getApplicationIdFrom(BuildMasterApi buildmaster, String applicationId) throws AbortException {
+        try {
+            return buildmaster.getApplicationIdFrom(applicationId);
+        } catch (IOException e) {
+            throw new AbortException(e.getMessage());
         }
     }
 
     @Extension
     @Symbol("buildMasterWithApplicationRelease")
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
-        private BuildMasterSelector buildmaster = new BuildMasterSelector();
+        private ConfigHelper buildmaster = new ConfigHelper();
 
         @Override
         public String getDisplayName() {
@@ -81,7 +97,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
             return true;
         }
 
-        public BuildMasterSelector getBuildmaster() {
+        public ConfigHelper getBuildmaster() {
             return buildmaster;
         }
 
