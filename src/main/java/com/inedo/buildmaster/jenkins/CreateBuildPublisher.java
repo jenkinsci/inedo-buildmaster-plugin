@@ -136,9 +136,5 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
         public FormValidation doCheckVariables(@QueryParameter String value) {
             return configHelper.doCheckVariables(value);
         }
-
-        public String getDefaultBuildNumber() {
-            return configHelper.getDefaultBuildNumber();
-        }
     }
 }

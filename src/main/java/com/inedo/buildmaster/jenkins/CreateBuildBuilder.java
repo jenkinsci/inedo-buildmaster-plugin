@@ -132,9 +132,5 @@ public class CreateBuildBuilder extends Builder implements SimpleBuildStep, ICre
         public FormValidation doCheckVariables(@QueryParameter String value) {
             return configHelper.doCheckVariables(value);
         }
-
-        public String getDefaultBuildNumber() {
-            return configHelper.getDefaultBuildNumber();
-        }
     }
 }

@@ -158,10 +158,5 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         public FormValidation doCheckVariables(@QueryParameter String value) {
             return configHelper.doCheckVariables(value);
         }
-
-        public String getDefaultBuildNumber() {
-            return configHelper.getDefaultBuildNumber();
-        }
-
     }
 }

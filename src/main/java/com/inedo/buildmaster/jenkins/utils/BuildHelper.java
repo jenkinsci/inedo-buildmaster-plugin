@@ -22,7 +22,6 @@ import hudson.model.TaskListener;
  * @author Andrew Sumner
  */
 public class BuildHelper {
-    //public static final String DEFAULT_BUILD_NUMBER = "$BUILDMASTER_BUILD_NUMBER";
 
     public static ApiReleaseBuild createBuild(Run<?, ?> run, TaskListener listener, ICreateBuild trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);

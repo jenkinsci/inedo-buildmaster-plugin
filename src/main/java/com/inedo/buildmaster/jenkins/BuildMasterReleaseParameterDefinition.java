@@ -124,7 +124,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         }
 
         @Override
-        public ParameterDefinition newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public ParameterDefinition newInstance(StaplerRequest req, JSONObject formData) {
             return req.bindJSON(BuildMasterReleaseParameterDefinition.class, formData);
         }
 

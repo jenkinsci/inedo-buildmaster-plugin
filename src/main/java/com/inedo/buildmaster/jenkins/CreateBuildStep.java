@@ -131,10 +131,6 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
         public FormValidation doCheckVariables(@QueryParameter String value) {
             return configHelper.doCheckVariables(value);
         }
-
-        public String getDefaultBuildNumber() {
-            return configHelper.getDefaultBuildNumber();
-        }
     }
 
     private static class Execution extends SynchronousNonBlockingStepExecution<String> {

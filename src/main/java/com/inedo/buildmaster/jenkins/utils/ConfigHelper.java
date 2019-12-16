@@ -157,10 +157,6 @@ public class ConfigHelper {
         return FormValidation.ok();
     }
 
-    public String getDefaultBuildNumber() {
-        return ""; // BuildHelper.DEFAULT_BUILD_NUMBER;
-    }
-
     public Application getApplication(String identifier) throws IOException {
         if (identifier == null) {
             return null;

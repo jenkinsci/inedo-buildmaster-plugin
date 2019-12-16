@@ -25,7 +25,6 @@ import com.inedo.buildmaster.domain.ApplicationDetail;
 import com.inedo.buildmaster.domain.DeploymentStatus;
 import com.inedo.buildmaster.domain.ReleaseStatus;
 import com.inedo.buildmaster.jenkins.utils.GlobalConfig;
-import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 import com.inedo.buildmaster.jenkins.utils.JenkinsLogWriter;
 
 /**
@@ -110,7 +109,7 @@ public class BuildMasterApi {
      * Get applicationId from application name or id.
      * @param identifier Application Name or Id.
      * @return applicationId
-     * @throws IOException
+     * @throws IOException Http request exception
      */
     public int getApplicationIdFrom(String identifier) throws IOException {
         if (identifier.matches("[0-9]{1,}")) {
