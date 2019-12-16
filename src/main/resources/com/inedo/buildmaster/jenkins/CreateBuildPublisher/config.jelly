@@ -23,17 +23,17 @@
         <j:otherwise><f:textbox default="$BUILDMASTER_RELEASE_NUMBER" /></j:otherwise>
       </j:choose>
     </f:entry>
-  </f:block>
 
-  <!-- f:optionalProperty title="Automatically advance to first stage" field="deployToFirstStage" / -->
-  <!-- Duplicating optionalBlock so can default to checked when first created -->
-  <f:optionalBlock title="Automatically deploy to first stage" field="deployToFirstStage" checked="${instance==null ? true : instance.deployToFirstStage!=null}" >
-    <j:set var="descriptor" value="${app.getDescriptorOrDie(descriptor.getPropertyTypeOrDie(instance,field).clazz)}" />
-    <j:set var="instance" value="${instance[field]}"/>
-    <st:include from="${descriptor}" page="${descriptor.configPage}" />
-  </f:optionalBlock>
-  
-  <f:entry title="Build variables" field="buildVariables" >
-    <f:expandableTextbox />
-  </f:entry>
+    <!-- f:optionalProperty title="Automatically advance to first stage" field="deployToFirstStage" / -->
+    <!-- Duplicating optionalBlock so can default to checked when first created -->
+    <f:optionalBlock title="Automatically deploy to first stage" field="deployToFirstStage" checked="${instance==null ? true : instance.deployToFirstStage!=null}" >
+      <j:set var="descriptor" value="${app.getDescriptorOrDie(descriptor.getPropertyTypeOrDie(instance,field).clazz)}" />
+      <j:set var="instance" value="${instance[field]}"/>
+      <st:include from="${descriptor}" page="${descriptor.configPage}" />
+    </f:optionalBlock>
+
+    <f:entry title="Build variables" field="buildVariables" >
+      <f:expandableTextbox />
+    </f:entry>
+  </f:block>
 </j:jelly>

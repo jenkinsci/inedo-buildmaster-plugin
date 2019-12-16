@@ -1,13 +1,14 @@
 <div>
 	<p>Creates a new build for the selected BuildMaster application and sets the BUILDMASTER_BUILD_NUMBER environment variable with the value returned from BuildMaster for the new build.</p>
 
-	<p>The choice of using the build step or post build action to trigger a BuildMaster build will be largely dependent on how you import the build artifacts into BuildMaster:</p>
+	<p>If your Jenkins job has produced artifacts to be loaded into BuildMaster, you have the following options. The
+		choice is largely dependent on how you import the build artifacts into BuildMaster:</p>
 	<ol type="a">
-		<li>You are using the BuildMaster Jenkins Build Importer Build Step which imports build artifacts from Jenkins: the post build action is required.</li>
+		<li>Use BuildMasters Jenkins Extensions 'Jenkins::Import-Artifact' statement to import artifacts directly from Jenkins: <i>the post build action is required</i></li>
 
-		<li>You are using a standard BuildMaster build step and importing files from a folder that you've placed the artifacts into from the Jenkins build
-			(eg using <a href="https://wiki.jenkins-ci.org/display/JENKINS/ArtifactDeployer+Plugin">ArtifactDeployer Plugin</a>): either the post build or build step actions will be fine.</li>
+		<li>Use BuildMasters 'Create-Artifact' statement to import files from a folder that you've placed the artifacts into from the Jenkins build
+			(eg using <a href="https://wiki.jenkins-ci.org/display/JENKINS/ArtifactDeployer+Plugin">ArtifactDeployer Plugin</a>): <i>either the post build or build step actions will be fine</i></li>
 
-		<li>You use an external artifact repository such as Nexus, Artifactory or ProGet: either the post build or build step actions will be fine.</li>
+		<li>Use an external artifact repository such as Nexus, Artifactory or ProGet: <i>either the post build or build step actions will be fine</i></li>
 	</ol>
 </div>

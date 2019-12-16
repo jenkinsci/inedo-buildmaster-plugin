@@ -1,28 +1,21 @@
 package com.inedo.buildmaster.jenkins;
 
-import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.BuildMasterSelector;
-import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
-import com.inedo.buildmaster.jenkins.utils.SelectApplicationHelper;
 import hudson.Extension;
-import hudson.model.*;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
+import hudson.model.SimpleParameterDefinition;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 import hudson.util.ListBoxModel;
-import hudson.util.RunList;
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
+
+import java.io.IOException;
 
 //https://github.com/jenkinsci/validating-string-parameter-plugin/blob/master/src/main/resources/hudson/plugins/validating_string_parameter/ValidatingStringParameterDefinition/index.jelly
 
@@ -38,8 +31,6 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     private static final long serialVersionUID = 1L;
 
     private BuildMasterSelector buildmaster = null;
-
-
     private final String applicationId;
     private final String releaseNumber;
 
@@ -62,17 +53,22 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     }
 
     @Exported
-    public String getApplicationName() throws IOException {
+    public String getApplicationName() {
 
         if (applicationId == null || applicationId.isEmpty()) {
             return null;
         }
 
-        Application app = getBuildMaster().getApplication(applicationId);
-        if(app == null) {
-            return "Unknown - " + applicationId;
-        } else {
-            return app.Application_Name;
+        try {
+            Application app = getBuildMaster().getApplication(applicationId);
+
+            if(app == null) {
+                return "Unknown - " + applicationId;
+            } else {
+                return app.Application_Name;
+            }
+        } catch (Exception ex) {
+            return null;
         }
     }
 
@@ -100,7 +96,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
 
     @Override
     public ParameterValue getDefaultParameterValue() {
-        if (releaseNumber !=null && !releaseNumber.isEmpty()) {
+        if (releaseNumber != null && !releaseNumber.isEmpty()) {
             return createValue(releaseNumber);
         }
 
@@ -114,7 +110,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     }
 
     public BuildMasterReleaseParameterValue createValue(String value) {
-        return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), value, getDescription());
+        return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), getApplicationName(), value, getDescription());
     }
 
     @Extension
