@@ -67,7 +67,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=%s", actualApplicationId);
         context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(actualApplicationId));
 
-
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_NAME=%s", applicationName);
         context.env("BUILDMASTER_APPLICATION_NAME", applicationName);
 
@@ -109,7 +108,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
 
         @Override
         public String getDisplayName() {
-            return "Inject environment variables with BuildMaster release details";
+            return "Inject BuildMaster release details as environment variables";
         }
 
         @Override
