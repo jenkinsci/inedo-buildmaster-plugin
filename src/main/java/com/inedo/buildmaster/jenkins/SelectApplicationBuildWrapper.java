@@ -3,6 +3,7 @@ package com.inedo.buildmaster.jenkins;
 import java.io.IOException;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
+import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.*;
 import hudson.*;
 import org.jenkinsci.Symbol;
@@ -50,6 +51,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
         int actualApplicationId = getApplicationIdFrom(buildmaster, applicationId);
+        String applicationName = getApplicationName(buildmaster, actualApplicationId);
         String actualReleaseNumber = releaseNumber;
 
         if (ConfigHelper.LATEST_RELEASE.equals(releaseNumber)) {
@@ -65,6 +67,10 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=%s", actualApplicationId);
         context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(actualApplicationId));
 
+
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_NAME=%s", applicationName);
+        context.env("BUILDMASTER_APPLICATION_NAME", applicationName);
+
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=%s", actualReleaseNumber);
         context.env("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
 
@@ -77,6 +83,20 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
     private int getApplicationIdFrom(BuildMasterApi buildmaster, String applicationId) throws AbortException {
         try {
             return buildmaster.getApplicationIdFrom(applicationId);
+        } catch (IOException e) {
+            throw new AbortException(e.getMessage());
+        }
+    }
+
+    private String getApplicationName(BuildMasterApi buildmaster, int applicationId) throws AbortException {
+        try {
+            Application app =  buildmaster.getApplication(applicationId);
+
+            if (app == null) {
+                throw new AbortException("Application Id " + applicationId + " was not found.");
+            }
+
+            return app.Application_Name;
         } catch (IOException e) {
             throw new AbortException(e.getMessage());
         }
