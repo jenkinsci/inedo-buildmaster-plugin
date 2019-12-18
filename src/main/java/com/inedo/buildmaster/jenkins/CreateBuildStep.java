@@ -45,7 +45,7 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
     private final String applicationId;
     private final String releaseNumber;
     private DeployToFirstStage deployToFirstStage = null;
-    private String buildVariables = "";
+    private String variables = "";
 
     @DataBoundConstructor
     public CreateBuildStep(String applicationId, String releaseNumber) {
@@ -59,8 +59,8 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
     }
 
     @DataBoundSetter
-    public final void setBuildVariables(String buildVariables) {
-        this.buildVariables = buildVariables;
+    public final void setVariables(String variables) {
+        this.variables = variables;
     }
 
     public String getApplicationId() {
@@ -79,8 +79,8 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
         return deployToFirstStage;
     }
 
-    public String getBuildVariables() {
-        return buildVariables;
+    public String getVariables() {
+        return variables;
     }
 
     @Override

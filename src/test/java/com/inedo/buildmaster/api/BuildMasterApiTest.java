@@ -6,7 +6,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +162,7 @@ public class BuildMasterApiTest {
 	@Test
     public void getNextBuildNumber() throws NumberFormatException, IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        Integer nextBuildNumber = Integer.parseInt(buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationId(), releaseNumber));
+        Integer nextBuildNumber = Integer.parseInt(buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).next);
 		
         assertThat("Expect nextBuildNumber to be greater than zero", nextBuildNumber, is(greaterThan(0)));
 
@@ -173,10 +175,12 @@ public class BuildMasterApiTest {
 	@Test
     public void createBuild() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        String buildNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationId(), releaseNumber);
+        String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).next;
 		Map<String, String> variablesList = new HashMap<>();
 		variablesList.put("hello", "world");
-        variablesList.put("cause", "unit test");
+        //variablesList.put("cause", "unit test");
+		//variablesList.put("cause","$BUILD_NUMBER");
+		variablesList.put("cause","http://inedo:8080/");
 		
         ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationId(), releaseNumber, variablesList);
         if (compareJson) {
@@ -201,9 +205,12 @@ public class BuildMasterApiTest {
     @Test
     public void deployBuildToStage() throws IOException, InterruptedException {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        String buildNumber = String.valueOf(Integer.parseInt(buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationId(), releaseNumber)) - 1);
+        String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
+		Map<String, String> variablesList = new HashMap<>();
+		variablesList.put("hello", "world");
+		variablesList.put("cause","$BUILD_NUMBER");
 
-        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, buildNumber, null, "Integration", false);
+        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, buildNumber, variablesList, "Integration", false);
 
         assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
         assertThat("Environment is what was asked for", deployments[0].environmentName, is("Integration"));
@@ -217,7 +224,7 @@ public class BuildMasterApiTest {
 	@Test
     public void getBuild() throws IOException {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        String buildNumber = String.valueOf(buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationId(), releaseNumber));
+        String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
 		
         ApiReleaseBuild releaseBuild = buildmaster.getBuild(TestConfig.getApplicationId(), releaseNumber, buildNumber);
 		
@@ -233,7 +240,7 @@ public class BuildMasterApiTest {
 	@Test
 	public void getWaitForBuildCompletion() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        String buildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationId(), releaseNumber);
+        String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
 		
         boolean result = buildmaster.waitForActiveDeploymentsToComplete(TestConfig.getApplicationId(), releaseNumber);
 		
@@ -243,7 +250,7 @@ public class BuildMasterApiTest {
 	@Test
     public void printExecutionLog() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        String buildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationId(), releaseNumber);
+        String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
 
         ApiDeployment deployment = buildmaster.getLatestDeployment(TestConfig.getApplicationId(), releaseNumber, buildNumber);
 		
@@ -283,7 +290,7 @@ public class BuildMasterApiTest {
 
             ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, releaseBuild.number, null, null, false);
 
-            String currentBuildNumber = buildmaster.getReleaseCurrentBuildNumber(TestConfig.getApplicationId(), releaseNumber);
+            String currentBuildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
             System.out.println("CurrentBuildNumber=" + currentBuildNumber);
 
             buildmaster.waitForDeploymentToComplete(deployments, false);

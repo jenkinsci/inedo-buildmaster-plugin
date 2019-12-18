@@ -89,7 +89,7 @@ public class PluginTests {
         BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
 		
 		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-		this.buildNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationId(), releaseNumber);
+		this.buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).next;
         this.deployToFirstStage = new DeployToFirstStage(true);
 	}
 	

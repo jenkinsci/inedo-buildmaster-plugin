@@ -240,35 +240,24 @@ public class BuildMasterApi {
     }
 
     /**
-     * Gets the next available build number for the given release, if no builds
-     * have been performed will return 1
-     * 
-     * @throws IOException Http request exception
-     */
-    public String getReleaseNextBuildNumber(int applicationId, String releaseNumber) throws IOException {
-        ApiRelease release = getRelease(applicationId, releaseNumber);
-
-        if (release != null && release.latestBuildNumber != null) {
-            return String.valueOf(Integer.parseInt(release.latestBuildNumber) + 1);
-        }
-
-        return "1";
-    }
-
-    /**
      * Gets the most recent build number for the given release, if no builds
      * have been performed will return null
-     * 
+     *
      * @throws IOException Http request exception
      */
-    public String getReleaseCurrentBuildNumber(int applicationId, String releaseNumber) throws IOException {
+    public BuildNumber getReleaseBuildNumber(int applicationId, String releaseNumber) throws IOException {
+        BuildNumber buildNumber = new BuildNumber();
         ApiRelease release = getRelease(applicationId, releaseNumber);
 
-        if (release != null) {
-            return release.latestBuildNumber;
+        if (release == null || release.latestBuildNumber == null || release.latestBuildNumber.isEmpty()) {
+            buildNumber.latest = "null";
+            buildNumber.next = "1";
+        } else {
+            buildNumber.latest = release.latestBuildNumber;
+            buildNumber.next = String.valueOf(Integer.parseInt(release.latestBuildNumber) + 1);
         }
 
-        return null;
+        return buildNumber;
     }
 
     /**
@@ -523,7 +512,7 @@ public class BuildMasterApi {
         try {
             deployment = getDeployment(applicationId, releaseNumber, buildNumber, deploymentId);
 
-            logWriter.info("Waiting for deployment to the %s stage to complete%s...",
+            logWriter.info("Waiting for deployment to the {0} stage to complete{1}...",
                     deployment.pipelineStageName,
                     (includeBuildNumberInLog ? " for build " + buildNumber : ""));
 
@@ -610,5 +599,10 @@ public class BuildMasterApi {
         } catch (Exception e) {
             logWriter.error(String.format("Unable to get BuildMaster deployment execution log: %s", e.getMessage()));
         }
+    }
+
+    public class BuildNumber {
+        public String latest;
+        public String next;
     }
 }

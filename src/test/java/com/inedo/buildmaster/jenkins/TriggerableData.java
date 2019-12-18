@@ -35,7 +35,7 @@ public class TriggerableData implements ICreateBuild {
 		return setBuildVariables != null;
 	}
 
-	public String getBuildVariables() {
+	public String getVariables() {
 		return setBuildVariables;
 	}
 	

@@ -24,6 +24,7 @@ public class TestConfig {
     private static String apiKey;
     private static String username;
     private static String password;
+    private static boolean logApiRequests;
     private static boolean trustAllCertificates;
     private static int applicationId;
 
@@ -46,6 +47,7 @@ public class TestConfig {
         apiKey = getOptionalProperty(prop, "apiKey");
         username = getOptionalProperty(prop, "username");
         password = getOptionalProperty(prop, "password");
+        logApiRequests = Boolean.parseBoolean(getOptionalProperty(prop, "logApiRequests"));
         trustAllCertificates = Boolean.parseBoolean(getOptionalProperty(prop, "trustAllCertificates"));
         applicationId = Integer.parseInt(getOptionalProperty(prop, "applicationId"));
     }
@@ -154,6 +156,7 @@ public class TestConfig {
         config.apiKey = apiKey;
         config.user = username;
         config.password = password;
+        config.logApiRequests = logApiRequests;
         config.trustAllCertificates = trustAllCertificates;
         
         return config;

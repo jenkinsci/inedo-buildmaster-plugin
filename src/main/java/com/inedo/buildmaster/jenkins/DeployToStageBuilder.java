@@ -37,7 +37,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     private final String releaseNumber;
     private final String buildNumber;
     private String stage = "";
-    private String variables = null;
+    private String variables = "";
     private boolean waitUntilCompleted = true;
     private boolean printLogOnFailure = true;
     private boolean force = false;
@@ -119,14 +119,14 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     // This indicates to Jenkins that this is an implementation of an extension
     // point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+        public DescriptorImpl() {
+            super(DeployToStageBuilder.class);
+        }
+
         private ConfigHelper configHelper = new ConfigHelper();
 
         public ConfigHelper getConfigHelper() {
             return configHelper;
-        }
-
-        public DescriptorImpl() {
-            super(DeployToStageBuilder.class);
         }
 
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {

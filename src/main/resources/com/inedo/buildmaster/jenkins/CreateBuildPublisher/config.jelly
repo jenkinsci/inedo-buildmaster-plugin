@@ -32,7 +32,7 @@
       <st:include from="${descriptor}" page="${descriptor.configPage}" />
     </f:optionalBlock>
 
-    <f:entry title="Build variables" field="buildVariables" >
+    <f:entry title="Build variables" field="variables" >
       <f:expandableTextbox />
     </f:entry>
   </f:block>

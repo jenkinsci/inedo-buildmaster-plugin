@@ -7,7 +7,7 @@ public interface ICreateBuild {
 
     DeployToFirstStage getDeployToFirstStage();
 
-    String getBuildVariables();
+    String getVariables();
 
     String getApplicationId();
 

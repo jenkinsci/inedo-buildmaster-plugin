@@ -41,7 +41,7 @@ public class CreateBuildBuilder extends Builder implements SimpleBuildStep, ICre
     private final String applicationId;
     private final String releaseNumber;
     private DeployToFirstStage deployToFirstStage = null;
-    private String buildVariables = "";
+    private String variables = "";
 
     @DataBoundConstructor
     public CreateBuildBuilder(String applicationId, String releaseNumber) {
@@ -55,8 +55,8 @@ public class CreateBuildBuilder extends Builder implements SimpleBuildStep, ICre
     }
 
     @DataBoundSetter
-    public final void setBuildVariables(String buildVariables) {
-        this.buildVariables = buildVariables;
+    public final void setVariables(String variables) {
+        this.variables = variables;
     }
 
     public boolean isDeployToFirstStage() {
@@ -67,8 +67,8 @@ public class CreateBuildBuilder extends Builder implements SimpleBuildStep, ICre
         return deployToFirstStage;
     }
 
-    public String getBuildVariables() {
-        return buildVariables;
+    public String getVariables() {
+        return variables;
     }
 
     public String getApplicationId() {

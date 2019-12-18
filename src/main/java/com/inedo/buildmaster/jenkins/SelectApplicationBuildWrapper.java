@@ -3,6 +3,7 @@ package com.inedo.buildmaster.jenkins;
 import java.io.IOException;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
+import com.inedo.buildmaster.api.BuildMasterApi.BuildNumber;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.*;
 import hudson.*;
@@ -50,55 +51,41 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         JenkinsHelper helper = new JenkinsHelper(build, listener);
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
-        int actualApplicationId = getApplicationIdFrom(buildmaster, applicationId);
-        String applicationName = getApplicationName(buildmaster, actualApplicationId);
+        // Application Id
+        Application application = buildmaster.getApplication(buildmaster.getApplicationIdFrom(applicationId));
+
+        if (application == null) {
+            throw new AbortException(String.format("Application not found for identifier '%s'", applicationId));
+        }
+
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID={0}", application.Application_Id);
+        context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(application.Application_Id));
+
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_NAME={0}", application.Application_Name);
+        context.env("BUILDMASTER_APPLICATION_NAME", application.Application_Name);
+
+        // Release Number
         String actualReleaseNumber = releaseNumber;
 
         if (ConfigHelper.LATEST_RELEASE.equals(releaseNumber)) {
-            actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(actualApplicationId);
+            actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(application.Application_Id);
 
             if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
-                throw new AbortException("No active releases found in BuildMaster for applicationId " + actualApplicationId);
+                throw new AbortException("No active releases found in BuildMaster for applicationId " + application.Application_Id);
             }
         }
 
-        String actualBuildNumber = buildmaster.getReleaseNextBuildNumber(actualApplicationId, actualReleaseNumber);
-
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=%s", actualApplicationId);
-        context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(actualApplicationId));
-
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_NAME=%s", applicationName);
-        context.env("BUILDMASTER_APPLICATION_NAME", applicationName);
-
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=%s", actualReleaseNumber);
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER={0}", actualReleaseNumber);
         context.env("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
 
-        if (actualBuildNumber != null) {
-            helper.getLogWriter().info(String.format("Inject environment variable BUILDMASTER_BUILD_NUMBER=%s", actualBuildNumber));
-            context.env("BUILDMASTER_BUILD_NUMBER", actualBuildNumber);
-        }
-    }
+        // Build Number
+        BuildNumber buildNumber = buildmaster.getReleaseBuildNumber(application.Application_Id, actualReleaseNumber);
 
-    private int getApplicationIdFrom(BuildMasterApi buildmaster, String applicationId) throws AbortException {
-        try {
-            return buildmaster.getApplicationIdFrom(applicationId);
-        } catch (IOException e) {
-            throw new AbortException(e.getMessage());
-        }
-    }
+        helper.getLogWriter().info(String.format("Inject environment variable BUILDMASTER_LATEST_BUILD_NUMBER=%s", buildNumber.latest));
+        context.env("BUILDMASTER_LATEST_BUILD_NUMBER", buildNumber.latest);
 
-    private String getApplicationName(BuildMasterApi buildmaster, int applicationId) throws AbortException {
-        try {
-            Application app =  buildmaster.getApplication(applicationId);
-
-            if (app == null) {
-                throw new AbortException("Application Id " + applicationId + " was not found.");
-            }
-
-            return app.Application_Name;
-        } catch (IOException e) {
-            throw new AbortException(e.getMessage());
-        }
+        helper.getLogWriter().info(String.format("Inject environment variable BUILDMASTER_NEXT_BUILD_NUMBER=%s", buildNumber.next));
+        context.env("BUILDMASTER_NEXT_BUILD_NUMBER", buildNumber.next);
     }
 
     @Extension

@@ -1,6 +1,7 @@
 package com.inedo.buildmaster.jenkins.utils;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
+import com.inedo.buildmaster.api.BuildMasterApi.BuildNumber;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ReleaseStatus;
@@ -12,7 +13,7 @@ import java.io.IOException;
 public class ConfigHelper {
     public static final String LATEST_RELEASE = "LATEST";
 
-    private BuildMasterApi buildmaster;
+    private BuildMasterApi buildmaster = null;
     private Boolean isBuildMasterAvailable = null;
     private String connectionError = "";
 
@@ -28,6 +29,13 @@ public class ConfigHelper {
      * Check if can connect to BuildMaster - if not prevent any more calls
      */
     public boolean isAvailable() {
+        if (!GlobalConfig.isRequiredFieldsConfigured()) {
+            isBuildMasterAvailable = null;
+            buildmaster = null;
+            connectionError = "Please configure BuildMaster Plugin global settings";
+            return false;
+        }
+
         if (isBuildMasterAvailable == null) {
             try {
                 getBuildMasterApi().checkConnection();
@@ -166,4 +174,8 @@ public class ConfigHelper {
 
         return getBuildMasterApi().getApplication(applicationId);
     }
+
+    public BuildNumber getBuildNumber(int applicationId, String releaseNumber) throws IOException {
+        return getBuildMasterApi().getReleaseBuildNumber(applicationId, releaseNumber);
+   }
 }

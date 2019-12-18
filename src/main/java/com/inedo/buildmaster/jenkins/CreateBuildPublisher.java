@@ -37,7 +37,7 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
     private final String applicationId;
     private final String releaseNumber;
     private DeployToFirstStage deployToFirstStage = null;
-    private String buildVariables = "";
+    private String variables = "";
 
     @DataBoundConstructor
     public CreateBuildPublisher(String applicationId, String releaseNumber) {
@@ -51,8 +51,8 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
     }
 
     @DataBoundSetter
-    public final void setBuildVariables(String buildVariables) {
-        this.buildVariables = buildVariables;
+    public final void setVariables(String variables) {
+        this.variables = variables;
     }
 
     public boolean isDeployToFirstStage() {
@@ -63,8 +63,8 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
         return deployToFirstStage;
     }
 
-    public String getBuildVariables() {
-        return buildVariables;
+    public String getVariables() {
+        return variables;
     }
 
     public String getApplicationId() {

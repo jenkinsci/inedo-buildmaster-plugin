@@ -40,14 +40,14 @@ public class BuildHelper {
         }
 
         String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
-        Map<String, String> variablesList = getVariablesListExpanded(run, listener, trigger.getBuildVariables());
+        Map<String, String> variablesList = getVariablesListExpanded(run, listener, trigger.getVariables());
 
-        helper.getLogWriter().info("Create build for the %s application, release %s", application.Application_Name, releaseNumber);
+        helper.getLogWriter().info("Create build for the {0} application, release {1}", application.Application_Name, releaseNumber);
         ApiReleaseBuild releaseBuild = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
-        helper.getLogWriter().info("Build %s has been created", releaseBuild.number);
+        helper.getLogWriter().info("Build {0} has been created", releaseBuild.number);
 
         if (trigger.isDeployToFirstStage()) {
-            helper.getLogWriter().info("Deploy build %s to the first stage", releaseBuild.number);
+            helper.getLogWriter().info("Deploy build {0} to the first stage", releaseBuild.number);
             ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, releaseBuild.number, null, null, false);
 
             if (trigger.getDeployToFirstStage().isWaitUntilCompleted()) {
@@ -119,10 +119,9 @@ public class BuildHelper {
         Map<String, String> variablesList = getVariablesListExpanded(run, listener, builder.getVariables());
 
         if (Strings.isNullOrEmpty(stage)) {
-            helper.getLogWriter().info("Deploy build %s to the next stage for the %s application, release %s", buildNumber, application.Application_Name, releaseNumber);
+            helper.getLogWriter().info("Deploy build {0} to the next stage for the {1} application, release {2}", buildNumber, application.Application_Name, releaseNumber);
         } else {
-            helper.getLogWriter().info("Deploy build %s to the '" + stage + "' stage for the %s application, release %s", buildNumber, application.Application_Name,
-                    releaseNumber);
+            helper.getLogWriter().info("Deploy build {0} to the '{1}' stage for the {2} application, release {3}", buildNumber, stage, application.Application_Name, releaseNumber);
         }
         ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, buildNumber, variablesList, stage, builder.isForce());
 

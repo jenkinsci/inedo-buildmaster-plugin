@@ -52,26 +52,6 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         return applicationId;
     }
 
-    @Exported
-    public String getApplicationName() {
-
-        if (applicationId == null || applicationId.isEmpty()) {
-            return null;
-        }
-
-        try {
-            Application app = getConfigHelper().getApplication(applicationId);
-
-            if(app == null) {
-                return "Unknown - " + applicationId;
-            } else {
-                return app.Application_Name;
-            }
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
     private ConfigHelper getConfigHelper() {
         if (configHelper == null) {
             configHelper = new ConfigHelper();
@@ -110,7 +90,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     }
 
     public BuildMasterReleaseParameterValue createValue(String value) {
-        return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), getApplicationName(), value, getDescription());
+        return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), value, getDescription());
     }
 
     @Extension
