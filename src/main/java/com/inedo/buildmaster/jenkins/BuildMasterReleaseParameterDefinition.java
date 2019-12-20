@@ -1,6 +1,5 @@
 package com.inedo.buildmaster.jenkins;
 
-import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.ConfigHelper;
 import hudson.Extension;
 import hudson.model.ParameterDefinition;

@@ -26,7 +26,7 @@ import jenkins.tasks.SimpleBuildWrapper;
 public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements ResourceActivity
 {
     private final String applicationId;
-    private String releaseNumber = ConfigHelper.LATEST_RELEASE;
+    private String releaseNumber = BuildMasterApi.LATEST_RELEASE;
 
     @DataBoundConstructor
     public SelectApplicationBuildWrapper(String applicationId) {
@@ -52,7 +52,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
         // Application Id
-        Application application = buildmaster.getApplication(buildmaster.getApplicationIdFrom(applicationId));
+        Application application = buildmaster.getApplication(applicationId);
 
         if (application == null) {
             throw new AbortException(String.format("Application not found for identifier '%s'", applicationId));
@@ -65,15 +65,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         context.env("BUILDMASTER_APPLICATION_NAME", application.Application_Name);
 
         // Release Number
-        String actualReleaseNumber = releaseNumber;
-
-        if (ConfigHelper.LATEST_RELEASE.equals(releaseNumber)) {
-            actualReleaseNumber = buildmaster.getLatestActiveReleaseNumber(application.Application_Id);
-
-            if (actualReleaseNumber == null || actualReleaseNumber.isEmpty()) {
-                throw new AbortException("No active releases found in BuildMaster for applicationId " + application.Application_Id);
-            }
-        }
+        String actualReleaseNumber = buildmaster.getReleaseNumber(application, releaseNumber);
 
         helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER={0}", actualReleaseNumber);
         context.env("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
@@ -91,7 +83,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
     @Extension
     @Symbol("buildMasterWithApplicationRelease")
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
-        private ConfigHelper configHelper = new ConfigHelper();
+        private final ConfigHelper configHelper = new ConfigHelper();
 
         @Override
         public String getDisplayName() {

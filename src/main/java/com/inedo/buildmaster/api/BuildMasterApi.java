@@ -35,6 +35,8 @@ import com.inedo.buildmaster.jenkins.utils.JenkinsLogWriter;
  * @author Andrew Sumner
  */
 public class BuildMasterApi {
+    public static final String LATEST_RELEASE = "LATEST";
+
     private final BuildMasterConfig config;
     private final JenkinsLogWriter logWriter;
     
@@ -105,14 +107,20 @@ public class BuildMasterApi {
         return reader.fromJson(Application[].class);
     }
 
+    private boolean isApplicationId(String identifier) {
+        return identifier.matches("[0-9]{1,}");
+    }
+
     /**
-     * Get applicationId from application name or id.
-     * @param identifier Application Name or Id.
-     * @return applicationId
+     * Get applicationId from identifier (name or id).
+     * @param identifier Name or Id of application
+     * @return applicationId or null if not found
      * @throws IOException Http request exception
      */
-    public int getApplicationIdFrom(String identifier) throws IOException {
-        if (identifier.matches("[0-9]{1,}")) {
+    public Integer getApplicationId(String identifier) throws IOException {
+        if (identifier == null || identifier.isEmpty()) return null;
+
+        if (isApplicationId(identifier)) {
             return Integer.parseInt(identifier);
         }
 
@@ -122,9 +130,31 @@ public class BuildMasterApi {
             return application.get().Application_Id;
         }
 
-        throw new IOException("Application '" + identifier + "' was not found");
+        return null;
     }
 
+    /**
+     * Get Application from application name or id.
+     * @param identifier Application Name or Id.
+     * @return Application or null if not found
+     * @throws IOException Http request exception
+     */
+    public Application getApplication(String identifier) throws IOException {
+        if (identifier == null || identifier.isEmpty()) return null;
+
+        if (isApplicationId(identifier)) {
+            return getApplication(Integer.parseInt(identifier));
+        }
+
+        return Arrays.stream(getApplications()).filter(a -> a.Application_Name.equalsIgnoreCase(identifier)).findFirst().orElse(null);
+    }
+
+    /**
+     * Get Application from or id.
+     * @param applicationId Application id
+     * @return Application or null if not found
+     * @throws IOException Http request exception
+     */
     public Application getApplication(int applicationId) throws IOException {
         JsonReader reader = HttpEasy.request()
                 .path("/api/json/Applications_GetApplication")
@@ -240,6 +270,43 @@ public class BuildMasterApi {
     }
 
     /**
+     * If releaseNumber is LATEST, returns latest active release number, else returns releaseNumber.
+     *
+     * @param application An application object for the requested application
+     * @param releaseNumber LATEST, anything else treated as valid release number
+     * @return releaseNumber
+     * @throws IOException Http request exception or not active release found
+     */
+    public String getReleaseNumber(Application application, String releaseNumber) throws IOException {
+        if (LATEST_RELEASE.equals(releaseNumber)) {
+            releaseNumber = getLatestActiveReleaseNumber(application.Application_Id);
+
+            if (releaseNumber == null || releaseNumber.isEmpty()) {
+                throw new IOException("No active releases found in BuildMaster for " + application.Application_Name);
+            }
+        }
+
+        return releaseNumber;
+    }
+
+    /**
+     * Gets release number of newest active release, if no active releases will
+     * return an empty string
+     *
+     * @throws IOException Http request exception
+     */
+    public String getLatestActiveReleaseNumber(Integer applicationId) throws IOException {
+        ApiRelease[] releases = getActiveReleases(applicationId);
+
+        // Assumes that order will always be newest first
+        if (releases.length > 0) {
+            return releases[0].number;
+        }
+
+        return "";
+    }
+
+    /**
      * Gets the most recent build number for the given release, if no builds
      * have been performed will return null
      *
@@ -258,23 +325,6 @@ public class BuildMasterApi {
         }
 
         return buildNumber;
-    }
-
-    /**
-     * Gets release number of newest active release, if no active releases will
-     * return an empty string
-     * 
-     * @throws IOException Http request exception
-     */
-    public String getLatestActiveReleaseNumber(Integer applicationId) throws IOException {
-        ApiRelease[] releases = getActiveReleases(applicationId);
-
-        // TODO Assumes that order will always be newest first
-        if (releases.length > 0) {
-            return releases[0].number;
-        }
-
-        return "";
     }
 
     /**
@@ -439,7 +489,6 @@ public class BuildMasterApi {
             return deployments[0];
         }
 
-        // TODO Set this to null?
         return new ApiDeployment();
     }
 
@@ -517,15 +566,12 @@ public class BuildMasterApi {
                     (includeBuildNumberInLog ? " for build " + buildNumber : ""));
 
             // Pause logging of API requests
-            // TODO HttpEasy.withDefaults().logRequest(false);
+            HttpEasy.withDefaults().logRequest(false);
 
             long startTime = new Date().getTime();
             Integer environmentId = deployment.environmentId;
 
-            // TODO Originally waited for any automatic promotions to complete, should we? Would need to wait an extra few seconds to ensure that a new build had not started.
-            // Don't have Build_AutoPromote_Indicator anymore to help with this
-
-            // Wait till both build step has completed
+            // Wait till build step and any automatic promotions have completed
             while (executing.contains(deployment.status)) { // && deployment.environmentId == null
                 Thread.sleep(7000);
 
@@ -562,7 +608,7 @@ public class BuildMasterApi {
 
         } finally {
             // Resume logging - if enabled
-            // TODO HttpEasy.withDefaults().logRequest(config.logApiRequests);
+            HttpEasy.withDefaults().logRequest(config.logApiRequests);
         }
     }
 
@@ -571,7 +617,7 @@ public class BuildMasterApi {
             throw new IOException("Unable to get BuildMaster execution logs - username and password must be configured in global settings");
         }
 
-        // TODO: This is the only API that requires username / password - put that into the documentation
+        // TODO This is the only API that requires username / password - would be good to get this changed at some stage
         String log = HttpEasy.request()
                 .path("/executions/logs?executionId={}&level=0")
                 .urlParameters(deploymentId)

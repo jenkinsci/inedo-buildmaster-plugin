@@ -90,7 +90,7 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
 
     @Extension
     public static class DescriptorImpl extends StepDescriptor {
-        private ConfigHelper configHelper = new ConfigHelper();
+        private final ConfigHelper configHelper = new ConfigHelper();
 
         public ConfigHelper getConfigHelper() {
             return configHelper;

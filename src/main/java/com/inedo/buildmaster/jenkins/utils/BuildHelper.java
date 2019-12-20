@@ -32,23 +32,23 @@ public class BuildHelper {
 
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
-        int applicationId = buildmaster.getApplicationIdFrom(helper.expandVariable(trigger.getApplicationId()));
-        Application application = buildmaster.getApplication(applicationId);
+        String applicationIdentifier = helper.expandVariable(trigger.getApplicationId());
+        Application application = buildmaster.getApplication(applicationIdentifier);
 
         if (application == null) {
-            throw new AbortException("Unknown application id " + applicationId);
+            throw new AbortException("Unknown application id " + applicationIdentifier);
         }
 
-        String releaseNumber = helper.expandVariable(trigger.getReleaseNumber());
+        String releaseNumber = buildmaster.getReleaseNumber(application, helper.expandVariable(trigger.getReleaseNumber()));
         Map<String, String> variablesList = getVariablesListExpanded(run, listener, trigger.getVariables());
 
         helper.getLogWriter().info("Create build for {0}, release {1}", application.Application_Name, releaseNumber);
-        ApiReleaseBuild releaseBuild = buildmaster.createBuild(applicationId, releaseNumber, variablesList);
+        ApiReleaseBuild releaseBuild = buildmaster.createBuild(application.Application_Id, releaseNumber, variablesList);
         helper.getLogWriter().info("Build {0} has been created", releaseBuild.number);
 
         if (trigger.isDeployToFirstStage()) {
             helper.getLogWriter().info("Deploy build {0} to the first stage", releaseBuild.number);
-            ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, releaseBuild.number, null, null, false);
+            ApiDeployment[] deployments = buildmaster.deployBuildToStage(application.Application_Id, releaseNumber, releaseBuild.number, null, null, false);
 
             if (trigger.getDeployToFirstStage().isWaitUntilCompleted()) {
                 if (!buildmaster.waitForDeploymentToComplete(deployments, trigger.getDeployToFirstStage().isPrintLogOnFailure())) {
@@ -106,14 +106,14 @@ public class BuildHelper {
         
         BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
-        int applicationId = buildmaster.getApplicationIdFrom(helper.expandVariable(builder.getApplicationId()));
-        Application application = buildmaster.getApplication(applicationId);
+        String applicationIdentifier = helper.expandVariable(builder.getApplicationId());
+        Application application = buildmaster.getApplication(applicationIdentifier);
 
         if (application == null) {
-            throw new AbortException("Unknown application id " + applicationId);
+            throw new AbortException("Unknown application id " + applicationIdentifier);
         }
 
-        String releaseNumber = helper.expandVariable(builder.getReleaseNumber());
+        String releaseNumber = buildmaster.getReleaseNumber(application, helper.expandVariable(builder.getReleaseNumber()));
         String buildNumber = helper.expandVariable(builder.getBuildNumber());
         String stage = helper.expandVariable(builder.getStage());
         Map<String, String> variablesList = getVariablesListExpanded(run, listener, builder.getVariables());
@@ -123,7 +123,7 @@ public class BuildHelper {
         } else {
             helper.getLogWriter().info("Deploy build {0} to the {1} stage for {2}, release {3}", buildNumber, stage, application.Application_Name, releaseNumber);
         }
-        ApiDeployment[] deployments = buildmaster.deployBuildToStage(applicationId, releaseNumber, buildNumber, variablesList, stage, builder.isForce());
+        ApiDeployment[] deployments = buildmaster.deployBuildToStage(application.Application_Id, releaseNumber, buildNumber, variablesList, stage, builder.isForce());
 
         if (builder.isWaitUntilCompleted()) {
             return buildmaster.waitForDeploymentToComplete(deployments, builder.isPrintLogOnFailure());

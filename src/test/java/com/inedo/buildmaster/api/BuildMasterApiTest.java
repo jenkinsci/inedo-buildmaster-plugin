@@ -3,12 +3,12 @@ package com.inedo.buildmaster.api;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,7 +128,15 @@ public class BuildMasterApiTest {
 		
 		assertThat("Expect Test Application to have an active release", release.length(), is(greaterThan(0)));
 	}
-	
+
+	@Test
+	public void getReleaseNumber() throws IOException {
+		Application application = buildmaster.getApplication(TestConfig.getApplicationId());
+		String releaseNumber = buildmaster.getReleaseNumber(application, "LATEST");
+
+		assertThat("Expect a releaseNumber to be returned", releaseNumber, is(not(equalTo("LATEST"))));
+	}
+
 	@Test
 	public void getRelease() throws IOException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
@@ -158,20 +166,20 @@ public class BuildMasterApiTest {
                     MockData.API_RELEASE.getAsString(), buildmaster.getJsonString(), "[0]", ApiRelease.class);
         }
 	}
-	
-	@Test
-    public void getNextBuildNumber() throws NumberFormatException, IOException {
-		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        Integer nextBuildNumber = Integer.parseInt(buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).next);
-		
-        assertThat("Expect nextBuildNumber to be greater than zero", nextBuildNumber, is(greaterThan(0)));
 
-        if (compareJson) {
-            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.API_RELEASE.getAsString(), buildmaster.getJsonString(), "[0]", ApiRelease.class);
-        }
+	@Test
+	public void getNextBuildNumber() throws NumberFormatException, IOException {
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
+		Integer nextBuildNumber = Integer.parseInt(buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).next);
+
+		assertThat("Expect nextBuildNumber to be greater than zero", nextBuildNumber, is(greaterThan(0)));
+
+		if (compareJson) {
+			JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+					MockData.API_RELEASE.getAsString(), buildmaster.getJsonString(), "[0]", ApiRelease.class);
+		}
 	}
-	
+
 	@Test
     public void createBuild() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());

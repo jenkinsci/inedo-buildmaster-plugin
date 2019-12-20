@@ -11,8 +11,6 @@ import hudson.util.ListBoxModel;
 import java.io.IOException;
 
 public class ConfigHelper {
-    public static final String LATEST_RELEASE = "LATEST";
-
     private BuildMasterApi buildmaster = null;
     private Boolean isBuildMasterAvailable = null;
     private String connectionError = "";
@@ -99,7 +97,7 @@ public class ConfigHelper {
         }
 
         if (includeLatestOption) {
-            items.add("Latest Active Release", LATEST_RELEASE);
+            items.add("Latest Active Release", BuildMasterApi.LATEST_RELEASE);
         }
 
         if (!isAvailable()) {
@@ -125,7 +123,7 @@ public class ConfigHelper {
             return FormValidation.ok();
         }
 
-        if (LATEST_RELEASE.equalsIgnoreCase(releaseNumber)) {
+        if (BuildMasterApi.LATEST_RELEASE.equalsIgnoreCase(releaseNumber)) {
             return FormValidation.ok();
         } else if (releaseNumber.startsWith("$")) {
             // Is a variable reference
@@ -135,7 +133,13 @@ public class ConfigHelper {
         }
 
         try {
-            ApiRelease releaseDetails = getBuildMasterApi().getRelease(getBuildMasterApi().getApplicationIdFrom(applicationId), releaseNumber);
+            Integer actualApplicationId =  getBuildMasterApi().getApplicationId(applicationId);
+
+            if (actualApplicationId == null) {
+                return FormValidation.error("The application " + applicationId + " does not exist");
+            }
+
+            ApiRelease releaseDetails = getBuildMasterApi().getRelease(actualApplicationId, releaseNumber);
 
             if (releaseDetails == null) {
                 return FormValidation.error("The release " + releaseNumber + " does not exist for this application");
@@ -170,9 +174,7 @@ public class ConfigHelper {
             return null;
         }
 
-        int applicationId = getBuildMasterApi().getApplicationIdFrom(identifier);
-
-        return getBuildMasterApi().getApplication(applicationId);
+        return getBuildMasterApi().getApplication(identifier);
     }
 
     public BuildNumber getBuildNumber(int applicationId, String releaseNumber) throws IOException {

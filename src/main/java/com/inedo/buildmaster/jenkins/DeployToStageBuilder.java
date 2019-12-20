@@ -123,7 +123,7 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
             super(DeployToStageBuilder.class);
         }
 
-        private ConfigHelper configHelper = new ConfigHelper();
+        private final ConfigHelper configHelper = new ConfigHelper();
 
         public ConfigHelper getConfigHelper() {
             return configHelper;

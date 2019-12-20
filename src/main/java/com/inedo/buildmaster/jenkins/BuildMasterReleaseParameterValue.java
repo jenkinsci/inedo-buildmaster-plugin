@@ -42,18 +42,21 @@ public class BuildMasterReleaseParameterValue extends ParameterValue {
     @Override
     public void buildEnvironment(Run<?, ?> build, EnvVars env) {
         Application application;
+        String actualReleaseNumber;
         BuildNumber buildNumber;
 
         try {
-            application = buildmaster.getApplication(buildmaster.getApplicationIdFrom(applicationId));
-            buildNumber = buildmaster.getReleaseBuildNumber(application.Application_Id, releaseNumber);
+            application = buildmaster.getApplication(applicationId);
+            actualReleaseNumber = buildmaster.getReleaseNumber(application, releaseNumber);
+            buildNumber = buildmaster.getReleaseBuildNumber(application.Application_Id, actualReleaseNumber);
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         env.put("BUILDMASTER_APPLICATION_ID", String.valueOf(application.Application_Id));
         env.put("BUILDMASTER_APPLICATION_NAME", application.Application_Name);
-        env.put("BUILDMASTER_RELEASE_NUMBER", releaseNumber);
+        env.put("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
         env.put("BUILDMASTER_LATEST_BUILD_NUMBER", buildNumber.latest);
         env.put("BUILDMASTER_NEXT_BUILD_NUMBER", buildNumber.next);
     }
