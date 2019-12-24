@@ -11,12 +11,6 @@ import org.kohsuke.stapler.export.Exported;
 
 import java.io.IOException;
 
-/**
- * {@link ParameterValue} created from {@link BuildMasterReleaseParameterDefinition}.
- *
- * @author Peter Hayes
- * @since 1.0
- */
 public class BuildMasterReleaseParameterValue extends ParameterValue {
     private final String applicationId;
     private final String releaseNumber;

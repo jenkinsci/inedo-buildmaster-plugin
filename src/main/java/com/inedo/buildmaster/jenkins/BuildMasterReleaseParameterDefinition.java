@@ -16,16 +16,6 @@ import org.kohsuke.stapler.export.Exported;
 
 import java.io.IOException;
 
-//https://github.com/jenkinsci/validating-string-parameter-plugin/blob/master/src/main/resources/hudson/plugins/validating_string_parameter/ValidatingStringParameterDefinition/index.jelly
-
-/**
- * String based parameter that supports setting a regular expression to validate the
- * user's entered value, giving real-time feedback on the value.
- *
- * @author Peter Hayes
- * @since 1.0
- * @see {@link ParameterDefinition}
- */
 public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefinition {
     private static final long serialVersionUID = 1L;
 
