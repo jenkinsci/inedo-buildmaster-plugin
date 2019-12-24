@@ -60,7 +60,7 @@ dependencies {
 	jenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.15@jar'
     	    	
 	//compile ('org.concordion:cubano-httpeasy:0.3.5') {
-	compile ('com.github.concordion.cubano:cubano-httpeasy:Logging-SNAPSHOT') {
+	compile ('com.github.concordion.cubano:cubano-httpeasy:master-SNAPSHOT') {
 		exclude group: 'com.github.markusbernhardt', module: 'proxy-vole' 
 	}
 	
