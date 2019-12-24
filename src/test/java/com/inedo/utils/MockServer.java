@@ -6,7 +6,6 @@ import java.net.URI;
 
 import com.inedo.buildmaster.api.BuildMasterConfig;
 
-import hidden.jth.org.apache.http.HttpException;
 import hidden.jth.org.apache.http.HttpRequest;
 import hidden.jth.org.apache.http.HttpResponse;
 import hidden.jth.org.apache.http.HttpStatus;
@@ -23,13 +22,12 @@ import hidden.jth.org.apache.http.protocol.HttpRequestHandler;
  */
 public class MockServer {
 	// Required for mocking via test server
-	private HttpServer server = null;
-	private HttpRequestHandler handler;
+	private HttpServer server;
 
 	private BuildMasterConfig config;
 
 	public MockServer() throws IOException {
-        handler = new HttpHandler();
+		HttpRequestHandler handler = new HttpHandler();
 		server = ServerBootstrap.bootstrap()
 					.setLocalAddress(InetAddress.getLocalHost())
 					.setListenerPort(0)	// Any free port
@@ -54,37 +52,37 @@ public class MockServer {
 	}
 	
 	// Handler for the test server that returns responses based on the requests.
-	public class HttpHandler implements HttpRequestHandler {
+	public static class HttpHandler implements HttpRequestHandler {
 
 		@Override
-		public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+		public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws IOException {
 			URI uri = URI.create(request.getRequestLine().getUri());
 			
 			String method = uri.getPath().replace("/api/json/", "");
 			
 			switch (method) {
-            case "/api/releases/packages":
+            case "/api/releases/builds":
                 response.setEntity(MockData.API_RELEASE_BUILDS.getInputSteam());
 
-            case "/api/releases/packages/deploy":
+            case "/api/releases/builds/deploy":
                 response.setEntity(MockData.API_DEPLOYMENT.getInputSteam());
                 break;
 
-            case "/api/releases/packages/deployments":
+            case "/api/releases/builds/deployments":
                 response.setEntity(MockData.API_DEPLOYMENT.getInputSteam());
 
-            case "/api/variables/packages/TestApplication/0.0.0/29":
+            case "/api/variables/builds/TestApplication/0.0.0/29":
                 response.setEntity(MockData.BUILD_VARIABLES.getInputSteam());
 
             case "/api/releases":
                 response.setEntity(MockData.API_RELEASE.getInputSteam());
                 break;
 
-            case "/api/releases/packages/create":
+            case "/api/releases/builds/create":
                 response.setEntity(MockData.API_RELEASE_BUILD.getInputSteam());
                 break;
 
-            case "/api/variables/packages/TestApplication/0.0.0/16":
+            case "/api/variables/builds/TestApplication/0.0.0/16":
                 response.setEntity(MockData.BUILD_VARIABLES.getInputSteam());
                 break;
 
@@ -96,15 +94,6 @@ public class MockServer {
                 response.setEntity(MockData.APPLICATION.getInputSteam());
                 break;
 
-			case "Applications_GetDeployables":
-                response.setEntity(MockData.DEPLOYABLES.getInputSteam());
-				break;
-				
-			case "Applications_GetDeployable":
-                response.setEntity(MockData.DEPLOYABLE.getInputSteam());
-				break;	
-				
-			
 			case "Releases_GetRelease": 
                 response.setEntity(MockData.RELEASE.getInputSteam());
 				break;

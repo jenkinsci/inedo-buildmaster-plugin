@@ -1,0 +1,19 @@
+<div>
+    <p>Defines a parameter where users can pick an active release from a BuildMaster application. The following environment variables will be injected
+        into the build job:</p>
+    <ul>
+        <li>BUILDMASTER_APPLICATION_ID</li>
+        <li>BUILDMASTER_APPLICATION_NAME</li>
+        <li>BUILDMASTER_RELEASE_NUMBER</li>
+        <li>BUILDMASTER_LATEST_BUILD_NUMBER</li>
+        <li>BUILDMASTER_NEXT_BUILD_NUMBER</li>
+    </ul>
+
+    <p>When used within pipeline script the applicationId parameter can contain either the id or name of a
+        BuildMaster application.</p>
+ <pre>
+parameters {
+  buildMasterRelease applicationId: 'TestApplication', description: '', name: 'BuildMaster Release'
+}
+</pre>
+</div>

@@ -2,11 +2,13 @@ package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
+import com.inedo.buildmaster.jenkins.utils.BuildHelper;
+import com.inedo.buildmaster.jenkins.utils.ConfigHelper;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import com.inedo.buildmaster.jenkins.buildOption.DeployVariables;
 
 import hudson.AbortException;
 import hudson.Extension;
@@ -18,9 +20,12 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
+import org.kohsuke.stapler.QueryParameter;
+
+import javax.annotation.Nonnull;
 
 /**
- * Deploy a package to the requested stage in BuildMaster.
+ * Deploy a build to the requested stage in BuildMaster.
  *
  * See https://github.com/jenkinsci/pipeline-plugin/blob/master/DEVGUIDE.md#user-content-build-wrappers-1 for tips on 
  * Jenkins pipeline support 
@@ -28,17 +33,21 @@ import jenkins.tasks.SimpleBuildStep;
  * @author Andrew Sumner
  */
 public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
+    private final String applicationId;
+    private final String releaseNumber;
+    private final String buildNumber;
     private String stage = "";
-    private boolean waitUntilDeploymentCompleted = true;
+    private String variables = "";
+    private boolean waitUntilCompleted = true;
     private boolean printLogOnFailure = true;
-    private DeployVariables deployVariables = null;
-    private String applicationId = DescriptorImpl.defaultApplicationId;
-    private String releaseNumber = DescriptorImpl.defaultReleaseNumber;
-    private String packageNumber = DescriptorImpl.defaultPackageNumber;
+    private boolean force = false;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public DeployToStageBuilder() {
+    public DeployToStageBuilder(String applicationId, String releaseNumber, String buildNumber) {
+        this.applicationId = applicationId;
+        this.releaseNumber = releaseNumber;
+        this.buildNumber = buildNumber;
     }
 
     @DataBoundSetter
@@ -47,53 +56,23 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
     }
 
     @DataBoundSetter
-    public final void setWaitUntilDeploymentCompleted(boolean waitUntilDeploymentCompleted) {
-        this.waitUntilDeploymentCompleted = waitUntilDeploymentCompleted;
+    public final void setVariables(String variables) {
+        this.variables = variables;
+    }
+
+    @DataBoundSetter
+    public void setForce(boolean force) {
+        this.force = force;
+    }
+
+    @DataBoundSetter
+    public final void setWaitUntilCompleted(boolean waitUntilCompleted) {
+        this.waitUntilCompleted = waitUntilCompleted;
     }
 
     @DataBoundSetter
     public final void setPrintLogOnFailure(boolean printLogOnFailure) {
         this.printLogOnFailure = printLogOnFailure;
-    }
-
-    @DataBoundSetter
-    public final void setDeployVariables(DeployVariables deployVariables) {
-        this.deployVariables = deployVariables;
-    }
-
-    @DataBoundSetter
-    public final void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
-    }
-
-    @DataBoundSetter
-    public final void setReleaseNumber(String releaseNumber) {
-        this.releaseNumber = releaseNumber;
-    }
-
-    @DataBoundSetter
-    public final void setPackageNumber(String packageNumber) {
-        this.packageNumber = packageNumber;
-    }
-
-    public String getStage() {
-        return stage;
-    }
-
-    public boolean isWaitUntilDeploymentCompleted() {
-        return waitUntilDeploymentCompleted;
-    }
-
-    public boolean isPrintLogOnFailure() {
-        return printLogOnFailure;
-    }
-
-    public boolean isDeployVariables() {
-        return deployVariables != null;
-    }
-
-    public DeployVariables getDeployVariables() {
-        return deployVariables;
     }
 
     public String getApplicationId() {
@@ -104,31 +83,52 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         return releaseNumber;
     }
 
-    public String getPackageNumber() {
-        return packageNumber;
+    public String getBuildNumber() {
+        return buildNumber;
+    }
+
+    public String getStage() {
+        return stage;
+    }
+
+    public String getVariables() {
+        return variables;
+    }
+
+    public boolean isForce() {
+        return force;
+    }
+
+    public boolean isWaitUntilCompleted() {
+        return waitUntilCompleted;
+    }
+
+    public boolean isPrintLogOnFailure() {
+        return printLogOnFailure;
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
         if (!BuildHelper.deployToStage(run, listener, this)) {
             throw new AbortException("Deployment failed");
         }
     }
 
-    @Symbol("buildMasterDeployPackageToStage")
+    @Symbol("buildMasterDeployBuildToStage")
     @Extension
     // This indicates to Jenkins that this is an implementation of an extension
     // point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        public static final String defaultApplicationId = "${BUILDMASTER_APPLICATION_ID}";
-        public static final String defaultReleaseNumber = "${BUILDMASTER_RELEASE_NUMBER}";
-        public static final String defaultPackageNumber = BuildHelper.DEFAULT_PACKAGE_NUMBER;
-
         public DescriptorImpl() {
             super(DeployToStageBuilder.class);
         }
 
-        @SuppressWarnings("rawtypes")
+        private final ConfigHelper configHelper = new ConfigHelper();
+
+        public ConfigHelper getConfigHelper() {
+            return configHelper;
+        }
+
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             // Indicates that this builder can be used with all kinds of project types
             return true;
@@ -137,6 +137,26 @@ public class DeployToStageBuilder extends Builder implements SimpleBuildStep {
         @Override
         public String getDisplayName() {
             return "Deploy BuildMaster Build To Stage";
+        }
+
+        public ListBoxModel doFillApplicationIdItems() throws IOException {
+            return configHelper.doFillApplicationIdItems("$BUILDMASTER_APPLICATION_ID");
+        }
+
+        public FormValidation doCheckApplicationId(@QueryParameter String value) {
+            return configHelper.doCheckApplicationId(value);
+        }
+
+        public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
+            return configHelper.doCheckReleaseNumber(value, applicationId);
+        }
+
+        public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
+            return configHelper.doFillReleaseNumberItems(applicationId, "$BUILDMASTER_RELEASE_NUMBER", true);
+        }
+
+        public FormValidation doCheckVariables(@QueryParameter String value) {
+            return configHelper.doCheckVariables(value);
         }
     }
 }

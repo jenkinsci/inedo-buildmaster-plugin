@@ -4,9 +4,9 @@ public enum DeploymentStatus {
 
     PENDING("pending"), EXECUTING("executing"), SUCCEEDED("succeeded"), WARNED("warned"), FAILED("failed");
 
-    private String text;
+    private final String text;
 
-    private DeploymentStatus(String text) {
+    DeploymentStatus(String text) {
         this.text = text;
     }
 

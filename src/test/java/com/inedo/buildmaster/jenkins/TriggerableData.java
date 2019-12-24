@@ -1,26 +1,24 @@
 package com.inedo.buildmaster.jenkins;
 
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
+import com.inedo.buildmaster.jenkins.utils.ICreateBuild;
 
 /**
  * Data to inject into TriggerBuildHelper for testing
  * 
  * @author Andrew Sumner
  */
-public class TriggerableData implements ICreatePackage {
-    public DeployToFirstStage deployToFirstStage = null;
-	public PackageVariables setBuildVariables = null;
-	public EnableReleaseDeployable enableReleaseDeployable = null;
+public class TriggerableData implements ICreateBuild {
+    public DeployToFirstStage deployToFirstStage;
+	public String setBuildVariables = null;
 	public String applicationId;
 	public String releaseNumber;
-    public String packageNumber;
+    public String buildNumber;
 
-    public TriggerableData(String applicationId, String releaseNumber, String packageNumber, DeployToFirstStage deployToFirstStage) {
+    public TriggerableData(String applicationId, String releaseNumber, String buildNumber, DeployToFirstStage deployToFirstStage) {
 		this.applicationId = applicationId;
 		this.releaseNumber = releaseNumber;
-		this.packageNumber = packageNumber;
+		this.buildNumber = buildNumber;
         this.deployToFirstStage = deployToFirstStage;
 	}
 	
@@ -33,20 +31,12 @@ public class TriggerableData implements ICreatePackage {
         return deployToFirstStage;
 	}
 
-	public boolean isPackageVariables() {
+	public boolean hasBuildVariables() {
 		return setBuildVariables != null;
 	}
 
-	public PackageVariables getPackageVariables() {
+	public String getVariables() {
 		return setBuildVariables;
-	}
-	
-	public boolean isEnableReleaseDeployable() {
-		return enableReleaseDeployable != null;
-	}
-
-	public EnableReleaseDeployable getEnableReleaseDeployable() {
-		return enableReleaseDeployable;
 	}
 	
 	public String getApplicationId() {
@@ -57,8 +47,8 @@ public class TriggerableData implements ICreatePackage {
 		return releaseNumber;
 	}
 	
-	public String getPackageNumber() {
-		return packageNumber;
+	public String getBuildNumber() {
+		return buildNumber;
 	}
 
 	// Setters
@@ -67,16 +57,11 @@ public class TriggerableData implements ICreatePackage {
 		return this;
 	}
 
-	public TriggerableData setSetBuildVariables(PackageVariables value) {
+	public TriggerableData setSetBuildVariables(String value) {
 		setBuildVariables = value;
 		return this;
 	}
-	
-	public TriggerableData setEnableReleaseDeployable(EnableReleaseDeployable value) {
-		enableReleaseDeployable = value;
-		return this;
-	}
-	
+
 	public TriggerableData setApplicationId(String value) {
 		applicationId = value;
 		return this;
@@ -87,8 +72,8 @@ public class TriggerableData implements ICreatePackage {
 		return this;
 	}
 	
-	public TriggerableData setPackageNumber(String value) {
-		packageNumber = value;
+	public TriggerableData setBuildNumber(String value) {
+		buildNumber = value;
 		return this;
 	}
 

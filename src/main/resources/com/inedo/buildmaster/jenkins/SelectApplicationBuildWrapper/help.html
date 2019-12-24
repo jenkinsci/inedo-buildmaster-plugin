@@ -1,17 +1,28 @@
 <div>
-  <p>Requests the Release Number for the selected BuildMaster application from BuildMaster and injects these environment 
-  variables into the build job:
-	<ul>
-	  <li>BUILDMASTER_APPLICATION_ID</li>
-	  <li>BUILDMASTER_RELEASE_NUMBER</li>
-	  <li>BUILDMASTER_PACKAGE_NUMBER</li>
-	  <li>BUILDMASTER_DEPLOYABLE_ID</li>
-  	</ul>
-  </p>
-  
-  <p>Because the Release Number and build numbers could be required by several build and post-build actions selecting the application and setting up 
-  the environment variable has been separated from the trigger build action.</p>
-  
-  <p><i>If you have multiple jobs all triggering builds on the same BuildMaster application this build step will queue those jobs so that you cannot get two jobs
-  trigger a build at the same time.</i></p>
+    <p>Obtains the Release and Build numbers for the selected BuildMaster application from BuildMaster and injects the following environment
+        variables into the build job:</p>
+    <ul>
+        <li>BUILDMASTER_APPLICATION_ID</li>
+        <li>BUILDMASTER_APPLICATION_NAME</li>
+        <li>BUILDMASTER_RELEASE_NUMBER</li>
+        <li>BUILDMASTER_LATEST_BUILD_NUMBER</li>
+        <li>BUILDMASTER_NEXT_BUILD_NUMBER</li>
+    </ul>
+
+    <p>If you do not use these values in your build steps there is no requirement to use this task.</p>
+
+    <p><i>Note: If you have multiple jobs all triggering builds on the same BuildMaster application this task will queue those jobs so that you cannot get two jobs
+        triggering a build at the same time.</i></p>
+
+    <p>When used within pipeline script this wraps a block and injects the above variables. Note that the applicationId parameter can contain either the id or name of a
+        BuildMaster application.</p>
+ <pre>
+buildMasterWithApplicationRelease('TestApplication') {
+  echo """
+    Application id = $BUILDMASTER_APPLICATION_ID
+    Release Number = $BUILDMASTER_RELEASE_NUMBER
+    Build Number = $BUILDMASTER_BUILD_NUMBER
+  """
+}
+</pre>
 </div>

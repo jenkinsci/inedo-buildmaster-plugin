@@ -5,7 +5,7 @@ package com.inedo.utils;
  */
 public class JsonCompareResult {
     private boolean success = true;
-    private StringBuilder sb;
+    private final StringBuilder sb;
 
     public JsonCompareResult(String prefix) {
         sb = new StringBuilder(prefix);
