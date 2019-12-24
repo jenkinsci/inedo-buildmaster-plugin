@@ -4,9 +4,7 @@ import java.lang.reflect.Field;
 import java.util.EnumSet;
 import java.util.Set;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.inedo.buildmaster.domain.Optional;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
@@ -53,7 +51,7 @@ public class JsonCompare {
         JsonObject expectedJson = getJsonObject(expected);
         JsonObject actualJson = getJsonObject(actual);
 
-        checkFields(expectedJson, actualJson, actual, clazz, result);
+        checkFields(expectedJson, actualJson, clazz, result);
     }
 
     /**
@@ -75,10 +73,10 @@ public class JsonCompare {
         JsonObject expectedJson = getJsonArrayItem(expected, filter, result);
         JsonObject actualJson = getJsonArrayItem(actual, filter, result);
 
-        checkFields(expectedJson, actualJson, actual, clazz, result);
+        checkFields(expectedJson, actualJson, clazz, result);
     }
 
-    private static void checkFields(JsonObject expectedJson, JsonObject actualJson, String actual, Class<?> clazz, JsonCompareResult result) {
+    private static void checkFields(JsonObject expectedJson, JsonObject actualJson, Class<?> clazz, JsonCompareResult result) {
         if (result.passed()) {
             checkJsonObjectKeysExpectedInActual(expectedJson, actualJson, result);
             checkJsonObjectKeysActualInExpected(expectedJson, actualJson, result);
@@ -89,7 +87,17 @@ public class JsonCompare {
         }
 
         if (result.failed()) {
-            throw new AssertionError(result.getMessage() + "\n\n" + actual);
+            throw new AssertionError(String.format("%s\r\n\r\nExpected:\r\n%s\r\n\r\nActual:\r\n%s", result.getMessage(), asPrettyString(expectedJson), asPrettyString(actualJson)));
+        }
+    }
+
+    private static String asPrettyString(JsonObject json) {
+        try {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            return gson.toJson(json);
+        }
+        catch (Exception ex) {
+            return json.toString();
         }
     }
 

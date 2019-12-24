@@ -4,9 +4,9 @@ public enum ReleaseStatus {
 
     ACTIVE("active"), DEPLOYED("deployed"), CANCELED("canceled");
 
-    private String text;
+    private final String text;
 
-    private ReleaseStatus(String text) {
+    ReleaseStatus(String text) {
         this.text = text;
     }
 

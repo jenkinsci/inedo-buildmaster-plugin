@@ -17,7 +17,7 @@
       "ApplicationGroup_Description": "",
       "Active_Releases_Count": 1,
       "VariableSupport_Code": "N",
-      "ShowDeployables_Indicator": true,
+      "ShowDeployables_Indicator": false,
       "Active_Indicator": true
     }
   ],

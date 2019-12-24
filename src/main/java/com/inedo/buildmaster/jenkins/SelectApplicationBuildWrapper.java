@@ -2,23 +2,16 @@ package com.inedo.buildmaster.jenkins;
 
 import java.io.IOException;
 
+import com.inedo.buildmaster.api.BuildMasterApi;
+import com.inedo.buildmaster.api.BuildMasterApi.BuildNumber;
+import com.inedo.buildmaster.domain.Application;
+import com.inedo.buildmaster.jenkins.utils.*;
+import hudson.*;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.api.BuildMasterApi;
-import com.inedo.buildmaster.domain.ApiRelease;
-import com.inedo.buildmaster.domain.Application;
-import com.inedo.buildmaster.domain.Deployable;
-import com.inedo.buildmaster.domain.ReleaseStatus;
-import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
-import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
-
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Resource;
 import hudson.model.ResourceActivity;
@@ -30,12 +23,10 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.tasks.SimpleBuildWrapper;
 
-public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements ResourceActivity, BuildMasterSelectApplication
+public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements ResourceActivity
 {
-    private String applicationId;
-    private String releaseNumber = SelectApplicationHelper.LATEST_RELEASE;
-    private String packageNumberSource = SelectApplicationHelper.NOT_REQUIRED;
-    private String deployableId = SelectApplicationHelper.NOT_REQUIRED;
+    private final String applicationId;
+    private String releaseNumber = BuildMasterApi.LATEST_RELEASE;
 
     @DataBoundConstructor
     public SelectApplicationBuildWrapper(String applicationId) {
@@ -47,16 +38,6 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         this.releaseNumber = releaseNumber;
     }
 
-    @DataBoundSetter
-    public final void setPackageNumberSource(String packageNumberSource) {
-        this.packageNumberSource = packageNumberSource;
-    }
-
-    @DataBoundSetter
-    public final void setDeployableId(String deployableId) {
-        this.deployableId = deployableId;
-    }
-
     public String getApplicationId() {
         return applicationId;
     }
@@ -65,54 +46,48 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         return releaseNumber;
     }
 
-    public String getPackageNumberSource() {
-        return packageNumberSource;
-    }
-
-    public String getDeployableId() {
-        return deployableId;
-    }
-
     @Override
-    public void setUp(Context context, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars initialEnvironment) throws IOException, InterruptedException {
-        SelectApplicationHelper execute = new SelectApplicationHelper(build, listener);
+    public void setUp(Context context, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars initialEnvironment) throws IOException {
+        JenkinsHelper helper = new JenkinsHelper(build, listener);
+        BuildMasterApi buildmaster = new BuildMasterApi(helper.getLogWriter());
 
-        BuildMasterApplication application = execute.selectApplication(this);
+        // Application Id
+        Application application = buildmaster.getApplication(applicationId);
 
-        JenkinsHelper helper = execute.getJenkinsHelper();
-
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID=" + application.applicationId);
-        context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(application.applicationId));
-
-        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER=" + application.releaseNumber);
-        context.env("BUILDMASTER_RELEASE_NUMBER", application.releaseNumber);
-
-        if (application.packageNumber != null) {
-            helper.getLogWriter()
-                    .info(String.format("Inject environment variable BUILDMASTER_PACKAGE_NUMBER=%s, sourced from %s", application.packageNumber, application.packageNumberSource));
-            context.env("BUILDMASTER_PACKAGE_NUMBER", application.packageNumber);
+        if (application == null) {
+            throw new AbortException(String.format("Application not found for identifier '%s'", applicationId));
         }
 
-        if (application.deployableId != null) {
-            helper.getLogWriter().info("Inject environment variable BUILDMASTER_DEPLOYABLE_ID=" + application.deployableId);
-            context.env("BUILDMASTER_DEPLOYABLE_ID", String.valueOf(application.deployableId));
-        }
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_ID={0}", application.Application_Id);
+        context.env("BUILDMASTER_APPLICATION_ID", String.valueOf(application.Application_Id));
+
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_APPLICATION_NAME={0}", application.Application_Name);
+        context.env("BUILDMASTER_APPLICATION_NAME", application.Application_Name);
+
+        // Release Number
+        String actualReleaseNumber = buildmaster.getReleaseNumber(application, releaseNumber);
+
+        helper.getLogWriter().info("Inject environment variable BUILDMASTER_RELEASE_NUMBER={0}", actualReleaseNumber);
+        context.env("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
+
+        // Build Number
+        BuildNumber buildNumber = buildmaster.getReleaseBuildNumber(application.Application_Id, actualReleaseNumber);
+
+        helper.getLogWriter().info(String.format("Inject environment variable BUILDMASTER_LATEST_BUILD_NUMBER=%s", buildNumber.latest));
+        context.env("BUILDMASTER_LATEST_BUILD_NUMBER", buildNumber.latest);
+
+        helper.getLogWriter().info(String.format("Inject environment variable BUILDMASTER_NEXT_BUILD_NUMBER=%s", buildNumber.next));
+        context.env("BUILDMASTER_NEXT_BUILD_NUMBER", buildNumber.next);
     }
-
 
     @Extension
     @Symbol("buildMasterWithApplicationRelease")
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
-        private BuildMasterApi buildmaster = null;
-        private Boolean isBuildMasterAvailable = null;
-        private String connectionError = "";
-
-        public DescriptorImpl() {
-        }
+        private final ConfigHelper configHelper = new ConfigHelper();
 
         @Override
         public String getDisplayName() {
-            return "Select BuildMaster Application";
+            return "Inject BuildMaster release details as environment variables";
         }
 
         @Override
@@ -120,161 +95,24 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
             return true;
         }
 
-        /**
-         * Check if can connect to BuildMaster - if not prevent any more calls
-         */
-        public boolean getIsBuildMasterAvailable() {
-            if (isBuildMasterAvailable == null) {
-                isBuildMasterAvailable = true;
-
-                try {
-                    buildmaster = new BuildMasterApi(new JenkinsConsoleLogWriter());
-                    buildmaster.checkConnection();
-                } catch (Exception ex) {
-                    isBuildMasterAvailable = false;
-                    connectionError = ex.getClass().getName() + ": " + ex.getMessage();
-
-                    System.err.println(connectionError);
-                }
-            }
-
-            return isBuildMasterAvailable;
-        }
-
-        public String getConnectionError() {
-            return connectionError;
+        public ConfigHelper getConfigHelper() {
+            return configHelper;
         }
 
         public ListBoxModel doFillApplicationIdItems() throws IOException {
-            ListBoxModel items = new ListBoxModel();
-
-            items.add("", "");
-
-            if (!getIsBuildMasterAvailable()) {
-                return items;
-            }
-
-            Application[] applications = buildmaster.getApplications();
-
-            for (Application application : applications) {
-                items.add((application.ApplicationGroup_Name != null ? application.ApplicationGroup_Name + " > " : "") + application.Application_Name,
-                        String.valueOf(application.Application_Id));
-            }
-
-            return items;
+            return configHelper.doFillApplicationIdItems(null);
         }
 
         public FormValidation doCheckApplicationId(@QueryParameter String value) {
-            if (value.length() == 0)
-                return FormValidation.error("Please set an application id");
-
-            return FormValidation.ok();
-        }
-
-        public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
-            if (value.length() == 0)
-                return FormValidation.error("Please set a release");
-
-            if (!getIsBuildMasterAvailable()) {
-                return FormValidation.ok();
-            }
-
-            // Validate release is still active
-            if (!SelectApplicationHelper.LATEST_RELEASE.equals(value) && applicationId != null && !applicationId.isEmpty()) {
-                try {
-                    ApiRelease releaseDetails = buildmaster.getRelease(Integer.valueOf(applicationId), value);
-
-                    if (releaseDetails == null) {
-                        return FormValidation.error("The release " + value + " does not exist for this application");
-                    }
-
-                    String status = releaseDetails.status;
-
-                    if (!ReleaseStatus.ACTIVE.getText().equalsIgnoreCase(status)) {
-                        return FormValidation.error(String.format("The release status for release %s must be Active, the actual status is %s", value, status));
-                    }
-                } catch (Exception ex) {
-                    return FormValidation.error(ex.getClass().getName() + ": " + ex.getMessage());
-                }
-            }
-
-            return FormValidation.ok();
+            return configHelper.doCheckApplicationId(value);
         }
 
         public ListBoxModel doFillReleaseNumberItems(@QueryParameter String applicationId) throws IOException {
-            ListBoxModel items = new ListBoxModel();
-
-            // items.add("", "");
-            items.add("Latest Active Release", SelectApplicationHelper.LATEST_RELEASE);
-
-            if (!getIsBuildMasterAvailable()) {
-                return items;
-            }
-
-            if (applicationId != null && !applicationId.isEmpty()) {
-                ApiRelease[] releases = buildmaster.getActiveReleases(Integer.valueOf(applicationId));
-
-                for (ApiRelease release : releases) {
-                    items.add(release.number);
-                }
-            }
-
-            return items;
+            return configHelper.doFillReleaseNumberItems(applicationId, null, true);
         }
 
-        public ListBoxModel doFillDeployableIdItems(@QueryParameter String applicationId) throws IOException {
-            ListBoxModel items = new ListBoxModel();
-
-            // items.add("", "");
-            items.add("Not Required", SelectApplicationHelper.NOT_REQUIRED);
-
-            if (!getIsBuildMasterAvailable()) {
-                return items;
-            }
-
-            if (applicationId != null && !applicationId.isEmpty()) {
-                Deployable[] deployables = buildmaster.getApplicationDeployables(Integer.valueOf(applicationId));
-
-                for (Deployable deployable : deployables) {
-                    items.add(deployable.Deployable_Name, String.valueOf(deployable.Deployable_Id));
-                }
-            }
-
-            return items;
-        }
-
-        public FormValidation doCheckDeployableId(@QueryParameter String value) {
-            if (value.length() == 0)
-                return FormValidation.error("Please set a deployable");
-
-            if (!getIsBuildMasterAvailable()) {
-                return FormValidation.ok();
-            }
-
-            // Validate release is still active
-            if (!SelectApplicationHelper.NOT_REQUIRED.equals(value)) {
-                try {
-                    Deployable deployable = buildmaster.getDeployable(Integer.valueOf(value));
-
-                    if (deployable == null) {
-                        return FormValidation.error("The deployable " + value + " does not exist for this application");
-                    }
-                } catch (Exception ex) {
-                    return FormValidation.error(ex.getClass().getName() + ": " + ex.getMessage());
-                }
-            }
-
-            return FormValidation.ok();
-        }
-
-        public ListBoxModel doFillPackageNumberSourceItems() {
-            ListBoxModel items = new ListBoxModel();
-
-            items.add("BuildMaster", "BUILDMASTER");
-            items.add("Jenkins", "JENKINS");
-            items.add("Not Required", "NOT_REQUIRED");
-
-            return items;
+        public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
+            return configHelper.doCheckReleaseNumber(value, applicationId);
         }
     }
 

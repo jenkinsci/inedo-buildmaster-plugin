@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import com.inedo.buildmaster.jenkins.utils.BuildHelper;
+import com.inedo.buildmaster.jenkins.utils.GlobalConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,8 +29,6 @@ import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
 import com.inedo.buildmaster.domain.ApiReleaseBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
-import com.inedo.buildmaster.jenkins.buildOption.EnableReleaseDeployable;
-import com.inedo.buildmaster.jenkins.buildOption.PackageVariables;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
 import com.inedo.utils.TestConfig;
@@ -53,12 +53,11 @@ public class PluginTests {
 	//public Launcher launcher;
 	public BuildListener listener;
 	public EnvVars env;
-	public ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-	public PrintStream logger = new PrintStream(outContent);
+	public final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+	public final PrintStream logger = new PrintStream(outContent);
 	
 	public String releaseNumber;
-	public String packageNumber;
-    public int deployableId;
+	public String buildNumber;
     public DeployToFirstStage deployToFirstStage = null;
 			
 	@Before
@@ -89,14 +88,13 @@ public class PluginTests {
 		
         BuildMasterApi buildmaster = new BuildMasterApi(config, new JenkinsConsoleLogWriter());
 		
-		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationid());
-		this.packageNumber = buildmaster.getReleaseNextBuildNumber(TestConfig.getApplicationid(), releaseNumber);
+		this.releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
+		this.buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).next;
         this.deployToFirstStage = new DeployToFirstStage(true);
-        this.deployableId = buildmaster.getReleaseDeployables(TestConfig.getApplicationid(), releaseNumber)[0].Deployable_Id;
 	}
 	
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown(){
 		if (mockServer != null) {
 			mockServer.stop();
 		}
@@ -104,66 +102,52 @@ public class PluginTests {
 	
 	@Test
 	public void perform() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, buildNumber, deployToFirstStage);
 	
 		restLog();
 		
-        ApiReleaseBuild releasePackage = BuildHelper.createPackage(build, listener, data);
+        ApiReleaseBuild releaseBuild = BuildHelper.createBuild(build, listener, data);
 
-        assertThat("Result should be successful", releasePackage, is(notNullValue()));
+        assertThat("Result should be successful", releaseBuild, is(notNullValue()));
 
-		String log[] = extractLogLinesRemovingApiCall();
+		String[] log = extractLogLinesRemovingApiCall();
 		//assertThat("Only one action should be performed", log.length, is(1));
-        assertThat("Waiting for deployemnt to stage should be the last actioned performed.", log[log.length - 1], containsString("Waiting for deployment to"));
+        assertThat("Waiting for deployment to stage should be the last actioned performed.", log[log.length - 1], containsString("Waiting for deployment to"));
 	}
 
 	@Test
 	public void performWaitTillCompleted() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage);
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, buildNumber, deployToFirstStage);
 		
 		restLog();
-        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
+        assertThat("Result should be successful", BuildHelper.createBuild(build, listener, data), is(notNullValue()));
 		
-        String log[] = extractLogLinesRemovingApiCall();
+        String[] log = extractLogLinesRemovingApiCall();
         assertThat("Wait step should be the last actioned performed for successful build.", log[log.length - 1], containsString("Waiting for deployment to"));
 	}
 	
 	@Test
 	public void performSetVariables() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, new DeployToFirstStage(true))
-                .setSetBuildVariables(new PackageVariables("hello=performSetVariables"));
+        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationId()), releaseNumber, buildNumber, new DeployToFirstStage(true))
+                .setSetBuildVariables("hello=performSetVariables");
 		
 		restLog();
-        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
+        assertThat("Result should be successful", BuildHelper.createBuild(build, listener, data), is(notNullValue()));
 		
 		String log = extractLog();
 		assertThat("Variable passed", log, containsString("performSetVariables"));
 		assertThat("Variable passed", log, not(containsString("trying")));
 		
-		
-        PackageVariables vars = new PackageVariables("trying=again");
-        vars.setPreserveVariables(true);
 
-        data.setSetBuildVariables(vars);
+
+        data.setSetBuildVariables("trying=again");
 
 		restLog();
-        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
+        assertThat("Result should be successful", BuildHelper.createBuild(build, listener, data), is(notNullValue()));
 		
 		log = extractLog();		
 		assertThat("Variable passed", log, containsString("hello"));
 		assertThat("Variable passed", log, containsString("trying"));
-	}
-	
-	@Test
-	public void performEnableReleaseDeployable() throws IOException, InterruptedException {
-        TriggerableData data = new TriggerableData(String.valueOf(TestConfig.getApplicationid()), releaseNumber, packageNumber, deployToFirstStage)
-                .setEnableReleaseDeployable(new EnableReleaseDeployable(String.valueOf(this.deployableId)));
-		
-		restLog();
-        assertThat("Result should be successful", BuildHelper.createPackage(build, listener, data), is(notNullValue()));
-		
-		String log = extractLog();
-        assertThat("Has passed deployable id", log, containsString("Enable release deployable with id=" + String.valueOf(this.deployableId)));
 	}
 	
 	// Mocking of Server
@@ -181,7 +165,7 @@ public class PluginTests {
 	}
 	
 	private String[] extractLogLinesRemovingApiCall() {
-		ArrayList<String> out = new ArrayList<String>(Arrays.asList(extractLogLines()));
+		ArrayList<String> out = new ArrayList<>(Arrays.asList(extractLogLines()));
         String[] methods = new String[] { "GET", "SET", "PUT", "POST" };
 		
 		for (Iterator<String> iterator = out.iterator(); iterator.hasNext();) {

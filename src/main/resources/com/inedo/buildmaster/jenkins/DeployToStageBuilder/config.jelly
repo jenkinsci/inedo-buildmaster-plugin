@@ -5,33 +5,48 @@
     See global.jelly for a general discussion about jelly script.
   -->
 
-  <!--
-    Creates a text field that shows the value of the "key" and "value" property.
-    When submitted, it will be passed to the corresponding constructor parameter.
-  -->
-  <f:entry title="Stage Name" field="stage" >
-    <f:textbox />
-  </f:entry>
+  <j:if test="${!descriptor.configHelper.available}">
+  	<f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${descriptor.configHelper.connectionError}</span><br /><br /></f:block>
+  </j:if>
 
-    <f:entry title="Wait until deployment completed" field="waitUntilDeploymentCompleted" >
+  <f:block>
+    <f:entry title="Application" field="applicationId">
+   	  <j:choose>
+        <j:when test="${descriptor.configHelper.available}"><f:select default="$BUILDMASTER_APPLICATION_ID"/></j:when>
+        <j:otherwise><f:textbox default="$BUILDMASTER_APPLICATION_ID"/></j:otherwise>
+      </j:choose>
+    </f:entry>
+
+    <f:entry title="Release Number" field="releaseNumber">
+      <j:choose>
+        <j:when test="${descriptor.configHelper.available}"><f:select default="$BUILDMASTER_RELEASE_NUMBER"/></j:when>
+        <j:otherwise><f:textbox default="$BUILDMASTER_RELEASE_NUMBER" /></j:otherwise>
+      </j:choose>
+    </f:entry>
+
+    <f:entry title="Build Number" field="buildNumber" >
+      <f:textbox default="$BUILDMASTER_BUILD_NUMBER" />
+    </f:entry>
+
+    <f:entry title="Stage Name" field="stage" >
+      <f:textbox />
+    </f:entry>
+
+    <f:entry title="Variables" field="variables" >
+      <f:expandableTextbox />
+    </f:entry>
+
+    <f:entry title="Force deployment" field="force" >
+      <f:checkbox default="false" />
+    </f:entry>
+
+    <f:entry title="Wait until deployment completed" field="waitUntilCompleted" >
       <f:checkbox default="true" />
     </f:entry>
-    
+
     <f:entry title="Show deployment log on failure" field="printLogOnFailure" >
       <f:checkbox default="true" />
     </f:entry>
-    
-  <f:optionalProperty title="Set deployment variables" field="deployVariables" />
-  
-  <f:advanced title="Advanced Settings">
-    <f:entry title="Application" field="applicationId" >
-      <f:textbox default="${descriptor.defaultApplicationId}" />
-    </f:entry>
-    <f:entry title="Release" field="releaseNumber" >
-      <f:textbox default="${descriptor.defaultReleaseNumber}" />
-    </f:entry>
-    <f:entry title="Build Number" field="packageNumber" >
-      <f:textbox default="${descriptor.defaultPackageNumber}" />
-    </f:entry>
-  </f:advanced>
+  </f:block>
+
 </j:jelly>

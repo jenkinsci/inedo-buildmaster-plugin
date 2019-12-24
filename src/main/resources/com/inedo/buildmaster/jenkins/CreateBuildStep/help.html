@@ -1,0 +1,21 @@
+<div>
+    <p>Creates a new build for the selected BuildMaster application and sets the BUILDMASTER_BUILD_NUMBER environment variable with the value returned from BuildMaster for the new build.</p>
+
+    <p>If your Jenkins job has produced artifacts to be loaded into BuildMaster, you have the following options to import the artifacts into BuildMaster:</p>
+    <ol type="a">
+        <li>Use BuildMasters Jenkins Extensions 'Jenkins::Import-Artifact' statement to import artifacts directly from Jenkins</li>
+
+        <li>Use BuildMasters 'Create-Artifact' statement to import files from a folder that you've placed the artifacts into from the Jenkins build
+            (eg using <a href="https://wiki.jenkins-ci.org/display/JENKINS/ArtifactDeployer+Plugin">ArtifactDeployer Plugin</a>)</li>
+
+        <li>Use an external artifact repository such as Nexus, Artifactory or ProGet</li>
+    </ol>
+
+<p><b>Note:</b> Jenkins declarative pipeline script has a somewhat restricted syntax, so to return the build number you need to wrap this in a script block. You only need to do this
+    if you wish to use the build number in a later step. For more information see: <a href="https://jenkins.io/doc/book/pipeline/syntax/#script">https://jenkins.io/doc/book/pipeline/syntax/#script</a></p>
+  <div style="margin-left:40px;"><pre>
+script {
+    BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID', releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildVariables: 'hello=world', deployToFirstStage: [waitUntilCompleted: true])
+}
+</pre></div>
+</div>

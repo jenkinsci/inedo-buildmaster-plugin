@@ -1,8 +1,10 @@
 package com.inedo.buildmaster.jenkins.utils;
 
 import hudson.EnvVars;
-import hudson.model.AbstractBuild;
 import hudson.model.EnvironmentContributingAction;
+import hudson.model.Run;
+
+import javax.annotation.Nonnull;
 
 /**
  * Allow plugin to update environment variables
@@ -12,8 +14,8 @@ import hudson.model.EnvironmentContributingAction;
  */
 public class VariableInjectionAction implements EnvironmentContributingAction {
 
-    private String key;
-    private String value;
+    private final String key;
+    private final String value;
 
     public VariableInjectionAction(String key, String value) {
         this.key = key;
@@ -21,9 +23,9 @@ public class VariableInjectionAction implements EnvironmentContributingAction {
     }
 
     @Override
-    public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars envVars) {
-        if (envVars != null && key != null && value != null) {
-            envVars.put(key, value);
+    public void buildEnvironment(@Nonnull Run<?, ?> run, @Nonnull EnvVars env) {
+        if (env != null && key != null && value != null) {
+            env.put(key, value);
         }
     }
 

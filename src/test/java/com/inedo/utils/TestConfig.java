@@ -14,6 +14,7 @@ import com.inedo.buildmaster.api.BuildMasterConfig;
  *
  * @author Andrew Sumner
  */
+@SuppressWarnings("UnnecessaryBoxing")
 public class TestConfig {
     /** Name of the property file */
     protected static final String CONFIG_FILE = "test.properties";
@@ -23,6 +24,7 @@ public class TestConfig {
     private static String apiKey;
     private static String username;
     private static String password;
+    private static boolean logApiRequests;
     private static boolean trustAllCertificates;
     private static int applicationId;
 
@@ -45,6 +47,7 @@ public class TestConfig {
         apiKey = getOptionalProperty(prop, "apiKey");
         username = getOptionalProperty(prop, "username");
         password = getOptionalProperty(prop, "password");
+        logApiRequests = Boolean.parseBoolean(getOptionalProperty(prop, "logApiRequests"));
         trustAllCertificates = Boolean.parseBoolean(getOptionalProperty(prop, "trustAllCertificates"));
         applicationId = Integer.parseInt(getOptionalProperty(prop, "applicationId"));
     }
@@ -62,7 +65,7 @@ public class TestConfig {
             return prop;
         }
 
-        try (InputStream input = new FileInputStream(filename);) {
+        try (InputStream input = new FileInputStream(filename)) {
             prop.load(input);
         } catch (Exception e) {
             throw new RuntimeException("Unable to read properties file.", e);
@@ -153,12 +156,13 @@ public class TestConfig {
         config.apiKey = apiKey;
         config.user = username;
         config.password = password;
+        config.logApiRequests = logApiRequests;
         config.trustAllCertificates = trustAllCertificates;
         
         return config;
     }
     
-    public static int getApplicationid() {
+    public static int getApplicationId() {
     	return applicationId;
     }
 }

@@ -47,7 +47,6 @@ To login the username will be admin and the password can be found in <project ro
     * Installed and configured with an API key
     * Add an Application called TestApplication with the default pipleline stages
     * Create an Application Group called TestAutomation and assign TestApplication to it, while not overly important this allows the plugins select application dropdown to display the group and the automated tests to not fail because get applications api has not returned the group fields.
-    * Create a Deployable call ExampleDeployable for the application TestApplication
     * Create a new Plan step called Build, with auto promote set to true, and add a log task 
     * Create an active release
 * Jenkins System Configuration page updated with BuildMaster server details and the Test Connection button returning success
@@ -65,36 +64,30 @@ See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster
 // Declarative pipeline example
 pipeline {
   agent any
-  environment {
-	// Prevents echo statement from breaking if packageNumberSource not supplied in 
-	// buildMasterWithApplicationRelease step below leaving BUILDMASTER_PACKAGE_NUMBER 
-	// variable undefined
-    BUILDMASTER_PACKAGE_NUMBER = null
-  }
   
   stages {
     stage('Main') {
       steps {
-        buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
+        buildMasterWithApplicationRelease(applicationId: '1') {
             echo """
     			Application id = $BUILDMASTER_APPLICATION_ID
     			Release Number = $BUILDMASTER_RELEASE_NUMBER
-    			Package Number = $BUILDMASTER_PACKAGE_NUMBER
+    			Build Number = $BUILDMASTER_BUILD_NUMBER
             """
 
-            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return package 
+            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return build 
             // number you need to wrap this in a script block
             // See: https://jenkins.io/doc/book/pipeline/syntax/#script
             script {
-                BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])
+                BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])
             }
             
-            echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
+            echo "BUILDMASTER_BUILD_NUMBER = $BUILDMASTER_BUILD_NUMBER"
 
-            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+            buildMasterDeployBuildToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
             
             echo "Redeploy to Integration"
-            buildMasterDeployPackageToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+            buildMasterDeployBuildToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
         }
       }
     }
@@ -104,18 +97,18 @@ pipeline {
 /*
 // Scripted pipeline example
 node {
-    buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
+    buildMasterWithApplicationRelease(applicationId: '1') {
 		echo """
 		Application id = $BUILDMASTER_APPLICATION_ID
 		Release Number = $BUILDMASTER_RELEASE_NUMBER
-		Package Number = $BUILDMASTER_PACKAGE_NUMBER
+		Build Number = $BUILDMASTER_BUILD_NUMBER
 		"""
 		
-		BUILDMASTER_PACKAGE_NUMBER = buildMasterCreatePackage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER)
+		BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER)
 		
-		echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
+		echo "BUILDMASTER_BUILD_NUMBER = $BUILDMASTER_BUILD_NUMBER"
 		
-		buildMasterDeployPackageToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, packageNumber: BUILDMASTER_PACKAGE_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+		buildMasterDeployBuildToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
 		
     }
 }

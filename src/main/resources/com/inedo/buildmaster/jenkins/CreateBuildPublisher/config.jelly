@@ -1,0 +1,39 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!--
+    This jelly script is used for per-project configuration.
+    See global.jelly for a general discussion about jelly script.
+  -->
+
+  <j:if test="${!descriptor.configHelper.available}">
+  	<f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${descriptor.configHelper.connectionError}</span><br /><br /></f:block>
+  </j:if>
+
+  <f:block>
+    <f:entry title="Application" field="applicationId">
+   	  <j:choose>
+        <j:when test="${descriptor.configHelper.available}"><f:select /></j:when>
+        <j:otherwise><f:textbox default="$BUILDMASTER_APPLICATION_ID"/></j:otherwise>
+      </j:choose>
+    </f:entry>
+
+    <f:entry title="Release Number" field="releaseNumber">
+      <j:choose>
+        <j:when test="${descriptor.configHelper.available}"><f:select default="$BUILDMASTER_RELEASE_NUMBER"/></j:when>
+        <j:otherwise><f:textbox default="$BUILDMASTER_RELEASE_NUMBER" /></j:otherwise>
+      </j:choose>
+    </f:entry>
+
+    <!-- f:optionalProperty title="Automatically advance to first stage" field="deployToFirstStage" / -->
+    <!-- Duplicating optionalBlock so can default to checked when first created -->
+    <f:optionalBlock title="Automatically deploy to first stage" field="deployToFirstStage" checked="${instance==null ? true : instance.deployToFirstStage!=null}" >
+      <j:set var="descriptor" value="${app.getDescriptorOrDie(descriptor.getPropertyTypeOrDie(instance,field).clazz)}" />
+      <j:set var="instance" value="${instance[field]}"/>
+      <st:include from="${descriptor}" page="${descriptor.configPage}" />
+    </f:optionalBlock>
+
+    <f:entry title="Build variables" field="variables" >
+      <f:expandableTextbox />
+    </f:entry>
+  </f:block>
+</j:jelly>

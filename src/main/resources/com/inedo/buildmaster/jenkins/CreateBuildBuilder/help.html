@@ -1,0 +1,14 @@
+<div>
+    <p>Creates a new build for the selected BuildMaster application and sets the BUILDMASTER_BUILD_NUMBER environment variable with the value returned from BuildMaster for the new build.</p>
+
+    <p>If your Jenkins job has produced artifacts to be loaded into BuildMaster, you have the following options. The
+        choice is largely dependent on how you import the build artifacts into BuildMaster:</p>
+    <ol type="a">
+        <li>Use BuildMasters Jenkins Extensions 'Jenkins::Import-Artifact' statement to import artifacts directly from Jenkins: <i>the post build action is required</i></li>
+
+        <li>Use BuildMasters 'Create-Artifact' statement to import files from a folder that you've placed the artifacts into from the Jenkins build
+            (eg using <a href="https://wiki.jenkins-ci.org/display/JENKINS/ArtifactDeployer+Plugin">ArtifactDeployer Plugin</a>): <i>either the post build or build step actions will be fine</i></li>
+
+        <li>Use an external artifact repository such as Nexus, Artifactory or ProGet: <i>either the post build or build step actions will be fine</i></li>
+    </ol>
+</div>
