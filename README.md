@@ -134,7 +134,7 @@ pipeline {
 ```
 
 ## Reporting an Issue
-Select Create Issue on the [JIRA home page](https://issues.jenkins-ci.org/secure/Dashboard.jspa") and ensure that the component is set to inedo-buildmaster-plugin.
+Select Create Issue on the [JIRA home page](https://issues.jenkins-ci.org/secure/Dashboard.jspa) and ensure that the component is set to inedo-buildmaster-plugin.
 
 For more information see the Jenkins guide on [how to report an issue](https://wiki.jenkins.io/display/JENKINS/How+to+report+an+issue).
 
