@@ -1,122 +1,141 @@
-[![Build Status](https://jenkins.ci.cloudbees.com/job/plugins/job/inedo-buildmaster-plugin/badge/icon)](https://jenkins.ci.cloudbees.com/job/plugins/job/inedo-buildmaster-plugin/)
+Inedo BuildMaster Plugin
+========================
 
-This plugin allows Jenkins to request version information and trigger a build on an application in [Inedo BuildMaster](http://inedo.com/buildmaster) as part of a Jenkins build process.
+[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/inedo-buildmaster.svg)](https://plugins.jenkins.io/inedo-buildmaster)
+[![GitHub release](https://img.shields.io/github/release/jenkinsci/inedo-buildmaster-plugin.svg?label=changelog)](https://github.com/jenkinsci/inedo-buildmaster-plugin/releases/latest)
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/inedo-buildmaster.svg?color=blue)](https://plugins.jenkins.io/inedo-buildmaster)
 
-See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin) for more details.
+## About this plugin
+This plugin allows Jenkins jobs to request version information and trigger builds on a [Inedo BuildMaster](http://inedo.com/buildmaster) application as part of a Jenkins build process. Supported features:
 
-https://jenkins.io/doc/developer/plugin-development/pipeline-integration/
-https://jenkins.io/doc/book/pipeline/syntax/
-
-
-# Building The Plugin
-
-The plugin is built using <a href="http://www.gradle.org/">Gradle</a> and the <a href="https://wiki.jenkins-ci.org/display/JENKINS/Gradle+JPI+Plugin">Gradle Jenkins JPI Plugin</a>.  The code base includes the Gradle Wrapper, which will automatically download the correct version of Gradle. 
-
-Gradle can be run from the command line or from your IDE:
-
-## Command line
-
-From the command line, `cd` to the folder containing a copy of this project, and run 
-
-  `./gradlew clean jpi` on Unix-based systems, or 
-  
-  `gradlew clean jpi` on Windows.
-  
-  `gradlew -Dhttp.proxyHost=yourProxy -Dhttp.proxyPort=yourPort -Dhttp.proxyUser=yourUsername -Dhttp.proxyPassword=yourPassword -Dhttps.proxyHost=yourProxy -Dhttps.proxyPort=yourPort -Dhttps.proxyUser=yourUsername -Dhttps.proxyPassword=yourPassword clean jpi` from behind a proxy. It is vital that any tasks come after the proxy configuration. 
-
-This will download the required dependencies, clean the existing project, recompile all source code and build the jpi file required by jenkins.
- 
-
-## IDE
-
-For Eclipse and NetBeans, you will need to install a Gradle plugin to your IDE before importing the project. See [Gradle tooling](https://www.gradle.org/tooling) for details.
-
-On importing the project to your IDE, the required dependencies will be downloaded.
+* Release Parameter: select a release at build time and inject environment variables into the job for the create build step
+* Build Environment: inject environment variables into the job for the create build step
+* Create Build: trigger a build in BuildMaster
+* Deploy To Stage: deploy a build to a specific stage in BuildMaster
 
 
-# Testing The Plugin
+## Usage
+Note: A minimum BuildMaster version of 6.1.0 is required for this plugin
 
-## Manual
+### Installing and configuring the plugin
 
-To spin up a Jenkins instance with this plugin installed for manual testing, run `gradlew clean server` (see "building the plugin" above). The Jenkins instance will be available at http://localhost:8080. You may need to specify a path to your JDK, if so use `gradlew clean server -Dorg.gradle.java.home=/JDK_PATH`
+This plugin can be installed from any Jenkins installation connected to the Internet using the **Plugin Manager** screen.
 
-To login the username will be admin and the password can be found in <project root>/work/secrets/initialAdminPassword
+First, you need to ensure that an api key as been configured in BuildMaster at BuildMaster > Administration > Api Keys & Access Logs.  Without this the plugin won't be able access BuildMaster.  Ensure that the following items are checked:
+Native API
+Variables management
+Release & package deployment:
 
-### Prerequisites
-* BuildMaster:
-    * Installed and configured with an API key
-    * Add an Application called TestApplication with the default pipleline stages
-    * Create an Application Group called TestAutomation and assign TestApplication to it, while not overly important this allows the plugins select application dropdown to display the group and the automated tests to not fail because get applications api has not returned the group fields.
-    * Create a new Plan step called Build, with auto promote set to true, and add a log task 
-    * Create an active release
-* Jenkins System Configuration page updated with BuildMaster server details and the Test Connection button returning success
+![BuildMaster Admin](/docs/images/buildmaster_admin.png)
 
-See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin) for more details.
+Next, you need to go to Jenkins' system config screen to tell Jenkins where's your BuildMaster resides.  I have found that I need to configure it for NTLM authentication on our network otherwise my account gets locked out.  Clicking the "Test Connection" button a few times will confirm whether this is required or not.
 
-### Job Configuration
+![Global Configuration](/docs/images/global_configuration.png)
 
-1. In Jenkins create a FreeStyle job called test-freestyle
-    1.	Add build step "BuildMaster: Select Application"
-    1.	Add build step "BuildMaster: Trigger Build"
-    1.	Add build step "BuildMaster: Deploy To Stage"
-1. In Jenkins create a Pipeline job called test-pipleline and configure as for the free style job
+### Obtaining Information from BuildMaster
+
+If you require the release or next build numbers from BuildMaster to use withing your build, e.g. to version your application, you have two options as outlined below. These will inject the following environment variables into your build:
+
+* BUILDMASTER_APPLICATION_ID
+* BUILDMASTER_APPLICATION_NAME
+* BUILDMASTER_RELEASE_NUMBER
+* BUILDMASTER_LATEST_BUILD_NUMBER
+* BUILDMASTER_NEXT_BUILD_NUMBER
+
+#### Release Parameter  
+
+The "BuildMaster Release Parameter" allows you to select a release at build time.  This would only be useful if you have multiple active releases on the go at any one time.
+
+![Build Environment](/docs/images/build_parameter.png)
+
+#### Build Environment
+
+The "Inject BuildMaster release details as environment variables" build environment setting allows you to select the the BuildMaster application you are dealing with and the settings will be used to inject these environment variables into the job at build time.
+
+![Build Environment](/docs/images/build_envrionment.png)
+
+### Triggering a Build
+
+#### Create Build
+The "Create BuildMaster Build" action can be added as either a build step or post build action.  The choice of which to use will be largely dependent on how you import the build artifacts into BuildMaster and your personal preference:
+
+1. You are using the BuildMaster Jenkins Build Importer Build Step which imports build artifacts from Jenkins: the post build action is required
+2. You are using a standard BuildMaster build step and importing files from a folder that you've placed the artifacts into from the Jenkins build (eg using ArtifactDeployer Plugin): either the post build or build step actions will be fine
+3. You use an external artifact repository such as Nexus or Artifactory: either the post build or build step actions will be fine
+
+If you haven't used the "Select BuildMaster Application" action then you will need to select an application and release, otherwise you can leave the default settings which will picked up the injected environment variables.
+
+To deploy the build to the first environment ensure that you have the post-build step action "Auto-Promote Build to the Next Environment" set in BuildMaster.
+
+![Create Build](/docs/images/create_build.png)
+
+#### Deploy to Stage
+The "Deploy BuildMaster Build To Stage" action can be used to deploy (or re-deploy) a package to a specified stage by specifying a Stage Name, or deploy to the next stage in the pipeline by leaving Stage Name empty.
+
+![Deploy to Stage](/docs/images/deploy_to_stage.png)
+
+
+### Pipeline Script Support
+
+All the above tasks can also be performed with Jenkins Script. While the basic syntax can be generated using the pipeline syntax snippet generator the resulting code will have to be tweaked.
+
+#### Scripted Pipeline Example 
 ```
-// Declarative pipeline example
+node {
+  buildMasterWithApplicationRelease(applicationId: 'Demo') {
+    echo """
+      Application id = $BUILDMASTER_APPLICATION_ID
+      Application Name = $BUILDMASTER_APPLICATION_NAME
+      Release Number = $BUILDMASTER_RELEASE_NUMBER
+      Next Build Number = $BUILDMASTER_NEXT_BUILD_NUMBER
+    """
+  
+    BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, variables: "JenkinsJobName=$JOB_NAME\nJenkinsBuildNumber=$BUILD_NUMBER", deployToFirstStage: [waitUntilCompleted: true])
+  
+    echo "BUILDMASTER_BUILD_NUMBER = BUILDMASTER_BUILD_NUMBER"
+    buildMasterDeployBuildToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, stage: 'Integration')
+  }
+}
+```
+
+#### Declarative Pipeline Example
+```
 pipeline {
   agent any
   
   stages {
     stage('Main') {
       steps {
-        buildMasterWithApplicationRelease(applicationId: '1') {
-            echo """
-    			Application id = $BUILDMASTER_APPLICATION_ID
-    			Release Number = $BUILDMASTER_RELEASE_NUMBER
-    			Build Number = $BUILDMASTER_BUILD_NUMBER
-            """
+        buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
+          echo """
+            Application id = $BUILDMASTER_APPLICATION_ID
+            Application Name = $BUILDMASTER_APPLICATION_NAME
+            Release Number = $BUILDMASTER_RELEASE_NUMBER
+            Next Build Number = $BUILDMASTER_NEXT_BUILD_NUMBER
+          """
 
-            // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return build 
-            // number you need to wrap this in a script block
-            // See: https://jenkins.io/doc/book/pipeline/syntax/#script
-            script {
-                BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, deployToFirstStage: true, waitTillBuildCompleted: [printLogOnFailure: true])
-            }
+          // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return package 
+          // number you need to wrap this in a script block
+          // See: https://jenkins.io/doc/book/pipeline/syntax/#script
+          script {
+            BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, variables: "JenkinsJobName=$JOB_NAME\nJenkinsBuildNumber=$BUILD_NUMBER", deployToFirstStage: [waitUntilCompleted: true])
+          }
             
-            echo "BUILDMASTER_BUILD_NUMBER = $BUILDMASTER_BUILD_NUMBER"
-
-            buildMasterDeployBuildToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
-            
-            echo "Redeploy to Integration"
-            buildMasterDeployBuildToStage(stage: 'Integration', applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
+          echo "BUILDMASTER_PACKAGE_NUMBER = $BUILDMASTER_PACKAGE_NUMBER"
+          buildMasterDeployBuildToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, stage: 'Integration')
         }
       }
     }
   }
 }
-
-/*
-// Scripted pipeline example
-node {
-    buildMasterWithApplicationRelease(applicationId: '1') {
-		echo """
-		Application id = $BUILDMASTER_APPLICATION_ID
-		Release Number = $BUILDMASTER_RELEASE_NUMBER
-		Build Number = $BUILDMASTER_BUILD_NUMBER
-		"""
-		
-		BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER)
-		
-		echo "BUILDMASTER_BUILD_NUMBER = $BUILDMASTER_BUILD_NUMBER"
-		
-		buildMasterDeployBuildToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, waitTillBuildCompleted: [printLogOnFailure: true])
-		
-    }
-}
-*/
 ```
 
-## Automated
+## Reporting an Issue
+Select Create Issue on the [JIRA home page](https://issues.jenkins-ci.org/secure/Dashboard.jspa") and ensure that the component is set to inedo-buildmaster-plugin.
 
-Update <project root>/test.properties with the required details and run the tests.  If useMockServer is false then the tests will be run against the installed application, if true it will run against a mock server.  While the mock server is useful for unit testing, the real service is required to test the plugin against application upgrades.
+For more information see the Jenkins guide on [how to report an issue](https://wiki.jenkins.io/display/JENKINS/How+to+report+an+issue).
 
-The tests mainly verify the BuildMaster APIs are still functioning as expected, although there are a couple of tests that attempt to use the plugin from a mocked Jenkins job.  
+## More information
+
+* [Changelog](https://github.com/jenkinsci/inedo-buildmaster-plugin/releases)
+* [Developer documentation](./docs/DEVELOPER.md)

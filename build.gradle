@@ -31,7 +31,7 @@ ext {
 jenkinsPlugin {
     coreVersion = "$jenkinsVersion"
     displayName = 'Inedo BuildMaster Plugin.'
-    url = 'http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin'
+    url = 'https://github.com/jenkinsci/inedo-buildmaster-plugin'
     gitHubUrl = 'https://github.com/jenkinsci/inedo-buildmaster-plugin'
     compatibleSinceVersion = '2.3.0'
     developers {
