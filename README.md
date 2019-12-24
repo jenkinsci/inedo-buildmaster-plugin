@@ -8,8 +8,8 @@ Inedo BuildMaster Plugin
 ## About this plugin
 This plugin allows Jenkins jobs to request version information and trigger builds on a [Inedo BuildMaster](http://inedo.com/buildmaster) application as part of a Jenkins build process. Supported features:
 
-* Release Parameter: select a release at build time and inject environment variables into the job for the create build step
-* Build Environment: inject environment variables into the job for the create build step
+* Release Parameter: select a release at build time and inject environment variables into the job
+* Build Environment: inject environment variables into the job
 * Create Build: trigger a build in BuildMaster
 * Deploy To Stage: deploy a build to a specific stage in BuildMaster
 
@@ -21,14 +21,17 @@ Note: A minimum BuildMaster version of 6.1.0 is required for this plugin
 
 This plugin can be installed from any Jenkins installation connected to the Internet using the **Plugin Manager** screen.
 
-First, you need to ensure that an api key as been configured in BuildMaster at BuildMaster > Administration > Api Keys & Access Logs.  Without this the plugin won't be able access BuildMaster.  Ensure that the following items are checked:
-Native API
-Variables management
-Release & package deployment:
+To configure the pluging, first you need an api key as from BuildMaster > Administration > Api Keys & Access Logs.  Without this the plugin won't be able access BuildMaster.  
+
+Ensure that the following items are checked:
+
+* Native API
+* Variables management
+* Release & package deployment:
 
 ![BuildMaster Admin](/docs/images/buildmaster_admin.png)
 
-Next, you need to go to Jenkins' system config screen to tell Jenkins where's your BuildMaster resides.  I have found that I need to configure it for NTLM authentication on our network otherwise my account gets locked out.  Clicking the "Test Connection" button a few times will confirm whether this is required or not.
+Next, you need to go to Jenkins' system config screen to tell Jenkins where's your BuildMaster resides. 
 
 ![Global Configuration](/docs/images/global_configuration.png)
 
@@ -63,9 +66,7 @@ The "Create BuildMaster Build" action can be added as either a build step or pos
 2. You are using a standard BuildMaster build step and importing files from a folder that you've placed the artifacts into from the Jenkins build (eg using ArtifactDeployer Plugin): either the post build or build step actions will be fine
 3. You use an external artifact repository such as Nexus or Artifactory: either the post build or build step actions will be fine
 
-If you haven't used the "Select BuildMaster Application" action then you will need to select an application and release, otherwise you can leave the default settings which will picked up the injected environment variables.
-
-To deploy the build to the first environment ensure that you have the post-build step action "Auto-Promote Build to the Next Environment" set in BuildMaster.
+If you haven't used either the release parameter or build environment action to inject the BuildMaster variables, then you will need to select an application and release, otherwise you can leave the default settings which will picked up the injected environment variables.
 
 ![Create Build](/docs/images/create_build.png)
 
@@ -80,25 +81,19 @@ The "Deploy BuildMaster Build To Stage" action can be used to deploy (or re-depl
 All the above tasks can also be performed with Jenkins Script. While the basic syntax can be generated using the pipeline syntax snippet generator the resulting code will have to be tweaked.
 
 #### Scripted Pipeline Example 
+This example demonstrates the most basic possible script.
+ 
 ```
 node {
-  buildMasterWithApplicationRelease(applicationId: 'Demo') {
-    echo """
-      Application id = $BUILDMASTER_APPLICATION_ID
-      Application Name = $BUILDMASTER_APPLICATION_NAME
-      Release Number = $BUILDMASTER_RELEASE_NUMBER
-      Next Build Number = $BUILDMASTER_NEXT_BUILD_NUMBER
-    """
+  BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: 'Demo', releaseNumber: 'LATEST', variables: "JenkinsJobName=$JOB_NAME\nJenkinsBuildNumber=$BUILD_NUMBER", deployToFirstStage: [waitUntilCompleted: true])
   
-    BUILDMASTER_BUILD_NUMBER = buildMasterCreateBuild(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, variables: "JenkinsJobName=$JOB_NAME\nJenkinsBuildNumber=$BUILD_NUMBER", deployToFirstStage: [waitUntilCompleted: true])
-  
-    echo "BUILDMASTER_BUILD_NUMBER = BUILDMASTER_BUILD_NUMBER"
-    buildMasterDeployBuildToStage(applicationId: BUILDMASTER_APPLICATION_ID, releaseNumber: BUILDMASTER_RELEASE_NUMBER, buildNumber: BUILDMASTER_BUILD_NUMBER, stage: 'Integration')
-  }
+  echo "BUILDMASTER_BUILD_NUMBER = BUILDMASTER_BUILD_NUMBER"
 }
 ```
 
 #### Declarative Pipeline Example
+This example demonstrates a more complex pipeline.
+ 
 ```
 pipeline {
   agent any
@@ -106,13 +101,10 @@ pipeline {
   stages {
     stage('Main') {
       steps {
-        buildMasterWithApplicationRelease(applicationId: '1', packageNumberSource: 'BUILDMASTER') {
-          echo """
-            Application id = $BUILDMASTER_APPLICATION_ID
-            Application Name = $BUILDMASTER_APPLICATION_NAME
-            Release Number = $BUILDMASTER_RELEASE_NUMBER
-            Next Build Number = $BUILDMASTER_NEXT_BUILD_NUMBER
-          """
+        buildMasterWithApplicationRelease(applicationId: 'Demo') {
+          bat label: 'Build artifact', script: 'echo "This is Jenkins build %BUILD_NUMBER% for BuildMaster Application \'%BUILDMASTER_APPLICATION_NAME%\' (#%BUILDMASTER_APPLICATION_ID%) Release %BUILDMASTER_RELEASE_NUMBER% - Build %BUILDMASTER_NEXT_BUILD_NUMBER%" > Example.txt'
+            
+		  archiveArtifacts 'Example.txt'
 
           // Jenkins declarative pipeline script has a somewhat restricted syntax.  Unfortunately to return package 
           // number you need to wrap this in a script block
