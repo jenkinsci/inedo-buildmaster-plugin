@@ -15,7 +15,18 @@ This plugin allows Jenkins jobs to request version information and trigger build
 
 
 ## Usage
-Note: A minimum BuildMaster version of 6.1.0 is required for this plugin
+Note:
+1. A minimum BuildMaster version of 6.1.0 is required for this plugin
+2. Version (3.0.0) is incompatible with previous versions:
+
+    The intent is to more closely align with BuildMasters [release and build api](https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build).
+        
+    Changes:
+    * Removed option to enable deployables (this is being deprecated in BuildMaster)
+    * Removed option to copy variables from previous build (can add this back in if requested)
+    * **Changed syntax** this was a hard call because this will cause problems for existing users migrating to this version of the plugin, 
+    however it proved to difficult to make this fully backwards compatible. My apologies in advance for any issues this decision may cause.
+    I will endeavor to avoid any breaking changes to this plugin in the future. 
 
 ### Installing and configuring the plugin
 

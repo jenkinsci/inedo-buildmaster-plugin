@@ -3,7 +3,7 @@ package com.inedo.buildmaster.domain;
 /**
  * Package Object
  * 
- * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#data-specification">Data Specification</a>
+ * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#data-specification">Data Specification</a>
  */
 public class ApiReleaseBuild {
     /** An integer representing the system-unique identifier of the build. */

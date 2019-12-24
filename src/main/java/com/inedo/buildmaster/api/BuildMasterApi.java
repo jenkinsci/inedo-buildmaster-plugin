@@ -222,7 +222,7 @@ public class BuildMasterApi {
      * 
      * @throws IOException Http request exception
      * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-releases">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-releases">Endpoint Specification</a>
      */
     public ApiRelease getRelease(int applicationId, String releaseNumber) throws IOException {
         JsonReader reader = HttpEasy.request()
@@ -251,7 +251,7 @@ public class BuildMasterApi {
      * 
      * @throws IOException Http request exception
      * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-releases">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-releases">Endpoint Specification</a>
      */
     public ApiRelease[] getActiveReleases(int applicationId) throws IOException {
         JsonReader reader = HttpEasy.request()
@@ -332,7 +332,7 @@ public class BuildMasterApi {
      * 
      * @throws IOException Http request exception
      * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-packages">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-packages">Endpoint Specification</a>
      */
     public ApiReleaseBuild getBuild(int applicationId, String releaseNumber, String buildNumber) throws IOException {
         JsonReader reader = HttpEasy.request()
@@ -364,7 +364,7 @@ public class BuildMasterApi {
      * 
      * @throws IOException Http request exception
      * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#create-package">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#create-package">Endpoint Specification</a>
      */
     public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, Map<String, String> variablesList)
             throws IOException {
@@ -399,7 +399,7 @@ public class BuildMasterApi {
      * @throws IOException Http request exception
      * @throws InterruptedException Failed while waiting for action
      * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#deploy-package">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#deploy-package">Endpoint Specification</a>
      */
     public ApiDeployment[] deployBuildToStage(int applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList, String stage, boolean forceDeployment)
             throws IOException, InterruptedException {
@@ -432,9 +432,7 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        ApiDeployment[] deployments = reader.fromJson(ApiDeployment[].class);
-
-        return deployments;
+        return reader.fromJson(ApiDeployment[].class);
     }
     
     /**
@@ -442,7 +440,7 @@ public class BuildMasterApi {
      * 
      * @throws IOException Http request exception
      * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-deployments">Endpoint Specification</a>
      */
     private ApiDeployment[] getDeployments(int applicationId, String releaseNumber, String buildNumber, Integer deploymentId, DeploymentStatus status) throws IOException {
         JsonReader reader = HttpEasy.request()
@@ -470,7 +468,7 @@ public class BuildMasterApi {
      * 
      * @throws IOException Http request exception
      * 
-     * @see <a href="https://inedo.com/support/documentation/buildmaster/reference/api/release-and-package#get-deployments">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-deployments">Endpoint Specification</a>
      */
     public ApiDeployment getLatestDeployment(int applicationId, String releaseNumber, String buildNumber) throws IOException {
         ApiDeployment[] deployments = getDeployments(applicationId, releaseNumber, buildNumber, null, null);
@@ -522,9 +520,9 @@ public class BuildMasterApi {
     /**
      * Wait for the build deployment, and any automatic promotions, to complete.
      * 
-     * @param deployments
-     * @param printLogOnFailure
-     * @return
+     * @param deployments Previously requested deployment
+     * @param printLogOnFailure Retrieve and output log from BuildMaster on failure
+     * @return Deployment completed successfully or not
      */
     public boolean waitForDeploymentToComplete(ApiDeployment[] deployments, boolean printLogOnFailure) throws IOException, InterruptedException {
         for (ApiDeployment deployment : deployments) {
@@ -618,14 +616,12 @@ public class BuildMasterApi {
         }
 
         // TODO This is the only API that requires username / password - would be good to get this changed at some stage
-        String log = HttpEasy.request()
+        return HttpEasy.request()
                 .path("/executions/logs?executionId={}&level=0")
                 .urlParameters(deploymentId)
                 .authorization(config.user, config.password)
                 .get()
                 .asString();
-
-        return log;
     }
 
     /**
