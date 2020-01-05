@@ -53,14 +53,14 @@ public class ConfigHelper {
         return connectionError;
     }
 
+    public ListBoxModel doFillApplicationIdItems() throws IOException {
+        return doFillApplicationIdItems(null);
+    }
+
     public ListBoxModel doFillApplicationIdItems(String firstItem) throws IOException {
         ListBoxModel items = new ListBoxModel();
 
-        if (firstItem == null) {
-            items.add("", "");
-        }
-        else
-        {
+        if (firstItem != null) {
             items.add(firstItem);
         }
 

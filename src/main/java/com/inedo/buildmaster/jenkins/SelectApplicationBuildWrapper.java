@@ -100,7 +100,7 @@ public class SelectApplicationBuildWrapper extends SimpleBuildWrapper implements
         }
 
         public ListBoxModel doFillApplicationIdItems() throws IOException {
-            return configHelper.doFillApplicationIdItems(null);
+            return configHelper.doFillApplicationIdItems();
         }
 
         public FormValidation doCheckApplicationId(@QueryParameter String value) {
