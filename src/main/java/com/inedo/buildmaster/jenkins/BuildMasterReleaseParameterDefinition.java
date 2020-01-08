@@ -1,5 +1,6 @@
 package com.inedo.buildmaster.jenkins;
 
+import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.jenkins.utils.ConfigHelper;
 import hudson.Extension;
 import hudson.model.ParameterDefinition;
@@ -12,9 +13,11 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.IOException;
+import java.util.*;
 
 public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefinition {
     private static final long serialVersionUID = 1L;
@@ -22,23 +25,31 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     private ConfigHelper configHelper = null;
     private final String applicationId;
     private final String releaseNumber;
+    private final boolean showApplicationId;
 
     @DataBoundConstructor
-    public BuildMasterReleaseParameterDefinition(String name, String applicationId, String description) {
+    public BuildMasterReleaseParameterDefinition(String name, String applicationId, boolean showApplicationId, String description) {
         super(name, description);
         this.applicationId = applicationId;
         this.releaseNumber = null;
+        this.showApplicationId = showApplicationId;
     }
 
-    public BuildMasterReleaseParameterDefinition(String name, String applicationId, String releaseNumber, String description) {
+    public BuildMasterReleaseParameterDefinition(String name, String applicationId, boolean showApplicationId, String releaseNumber, String description) {
         super(name, description);
         this.applicationId = applicationId;
         this.releaseNumber = releaseNumber;
+        this.showApplicationId = showApplicationId;
     }
 
     @Exported
     public String getApplicationId() {
         return applicationId;
+    }
+
+    @Exported
+    public boolean isShowApplicationId() {
+        return showApplicationId;
     }
 
     private ConfigHelper getConfigHelper() {
@@ -49,15 +60,32 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         return configHelper;
     }
 
+    public ListBoxModel getApplications() throws IOException {
+        return getConfigHelper().doFillApplicationIdItems();
+    }
+
     public ListBoxModel getReleases() throws IOException {
         return getConfigHelper().doFillReleaseNumberItems(getApplicationId());
+    }
+
+    @JavaScriptMethod
+    public String[] getReleases(String applicationId) throws IOException {
+        List<String> items = new ArrayList<>();
+
+        ApiRelease[] releases = getConfigHelper().getBuildMasterApi().getActiveReleases(Integer.parseInt(applicationId));
+
+        for (ApiRelease release : releases) {
+            items.add(release.number);
+        }
+
+        return items.toArray(new String[0]);
     }
 
     @Override
     public ParameterDefinition copyWithDefaultValue(ParameterValue defaultValue) {
         if (defaultValue instanceof BuildMasterReleaseParameterValue) {
             BuildMasterReleaseParameterValue value = (BuildMasterReleaseParameterValue) defaultValue;
-            return new BuildMasterReleaseParameterDefinition(getName(), getApplicationId(), value.getReleaseNumber(), getDescription());
+            return new BuildMasterReleaseParameterDefinition(getName(), getApplicationId(), isShowApplicationId(), value.getReleaseNumber(), getDescription());
         } else {
             return this;
         }

@@ -26,28 +26,75 @@ THE SOFTWARE.
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
 	xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
 
-        <j:if test="${!it.descriptor.buildmaster.available}">
-       	  <f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${it.descriptor.buildmaster.connectionError}</span><br /><br /></f:block>
-        </j:if>
+    <j:if test="${!it.descriptor.buildmaster.available}">
+      <f:block><br /><span style="color:red; font-weight: bold">Error: Unable to connect to BuildMaster. ${it.descriptor.buildmaster.connectionError}</span><br /><br /></f:block>
+    </j:if>
 
-        <j:set var="escapeEntryTitleAndDescription" value="false"/>
-        <f:entry title="${h.escape(it.name)}" description="${it.formattedDescription}">
-        <!-- f:entry title="${h.escape(it.applicationName)}" description="${it.formattedDescription}" -->
+    <j:set var="escapeEntryTitleAndDescription" value="false"/>
+    <f:entry title="${h.escape(it.name)}" description="${it.formattedDescription}">
+    <!-- f:entry title="${h.escape(it.applicationName)}" description="${it.formattedDescription}" -->
 		<div name="parameter">
 			<input type="hidden" name="name" value="${it.name}" />
-			<input type="hidden" name="applicationId" value="${it.applicationId}" />
+
             <j:choose>
-              <j:when test="${it.descriptor.buildmaster.available}">
-                <select name="releaseNumber">
-                  <j:forEach var="release" items="${it.releases}">
-                    <option value="${release.value}">${release.name}</option>
-                  </j:forEach>
-                </select>
-              </j:when>
-              <j:otherwise>
-                <f:textbox name="releaseNumber"/>
-              </j:otherwise>
+                <j:when test="${it.showApplicationId}">
+                    <select name="applicationId" onchange="refreshReleases(this);">
+                        <j:forEach var="item" items="${it.applications}">
+                            <j:choose>
+                                <j:when test="${item.value == it.applicationId}">
+                                    <option value="${item.value}" selected="selected">${item.name}</option>
+                                </j:when>
+                                <j:otherwise>
+                                    <option value="${item.value}">${item.name}</option>
+                                </j:otherwise>
+                            </j:choose>
+                        </j:forEach>
+                    </select>
+                    Release
+                </j:when>
+                <j:otherwise>
+                    <input type="hidden" name="applicationId" value="${it.applicationId}" />
+                </j:otherwise>
             </j:choose>
-		</div>
+
+            <select name="releaseNumber">
+                <j:forEach var="item" items="${it.releases}">
+                    <option value="${item.value}">${item.name}</option>
+                </j:forEach>
+            </select>
+   	    </div>
 	</f:entry>
+
+	<script type="text/javascript">
+        var jenkinsProxy = <st:bind value="${it}"/>;
+
+	    function refreshReleases(el) {
+	        var applicationId = el.value;
+
+            console.log('Calling getReleases for applicationId %s...', applicationId);
+
+            this.jenkinsProxy.getReleases(applicationId, function (t) {
+                var releases = t.responseText;
+                var releaseEl = el.parentElement.querySelector("select[name='releaseNumber']");
+
+                console.log('returned %s', releases);
+                var data = JSON.parse(releases);
+
+                while (releaseEl.options.length > 0) {
+                    releaseEl.remove(releaseEl.options.length - 1);
+                }
+
+                for (i = 0; i &lt; data.length; i++)
+                {
+                    var opt = document.createElement('option');
+
+                    opt.text = data[i];
+                    opt.value = data[i];
+
+                    releaseEl.add(opt, null);
+                }
+            });
+        }
+	</script>
+
 </j:jelly>

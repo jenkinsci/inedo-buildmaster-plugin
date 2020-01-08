@@ -43,4 +43,8 @@ THE SOFTWARE.
       <j:otherwise><f:textbox /></j:otherwise>
     </j:choose>
   </f:entry>
+
+  <f:entry title="Show Application" field="showApplicationId" >
+    <f:checkbox default="false" />
+  </f:entry>
 </j:jelly>
