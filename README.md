@@ -26,13 +26,13 @@ Note:
     * Removed option to copy variables from previous build (can add this back in if requested)
     * **Changed syntax** this was a hard call because this will cause problems for existing users migrating to this version of the plugin, 
     however it proved to difficult to make this fully backwards compatible. My apologies in advance for any issues this decision may cause.
-    I will endeavor to avoid any breaking changes to this plugin in the future. 
+    I will endeavour to avoid any breaking changes to this plugin in the future. 
 
 ### Installing and configuring the plugin
 
 This plugin can be installed from any Jenkins installation connected to the Internet using the **Plugin Manager** screen.
 
-To configure the pluging, first you need an api key as from BuildMaster > Administration > Api Keys & Access Logs.  Without this the plugin won't be able access BuildMaster.  
+To configure the plugin, first you need an API key as from BuildMaster > Administration > Api Keys & Access Logs.  Without this the plugin won't be able access BuildMaster.  
 
 Ensure that the following items are checked:
 
@@ -48,7 +48,7 @@ Next, you need to go to Jenkins' system config screen to tell Jenkins where's yo
 
 ### Obtaining Information from BuildMaster
 
-If you require the release or next build numbers from BuildMaster to use withing your build, e.g. to version your application, you have two options as outlined below. These will inject the following environment variables into your build:
+If you require the release or next build numbers from BuildMaster to use within your build, e.g. to version your application, you have two options as outlined below. These will inject the following environment variables into your build:
 
 * BUILDMASTER_APPLICATION_ID
 * BUILDMASTER_APPLICATION_NAME
@@ -58,13 +58,14 @@ If you require the release or next build numbers from BuildMaster to use withing
 
 #### Release Parameter  
 
-The "BuildMaster Release Parameter" allows you to select a release at build time.  This would only be useful if you have multiple active releases on the go at any one time.
+The "BuildMaster Release Parameter" allows you to select a release at build time.  This would be useful if you have multiple active releases on the go at any one time.
+The "Show Application" option allows a user to select both the Application and Release at build time in the event you require event greater flexibility.
 
 ![Build Environment](/docs/images/build_parameter.png)
 
 #### Build Environment
 
-The "Inject BuildMaster release details as environment variables" build environment setting allows you to select the the BuildMaster application you are dealing with and the settings will be used to inject these environment variables into the job at build time.
+The "Inject BuildMaster release details as environment variables" build environment setting allows you to select the BuildMaster application you are dealing with and the settings will be used to inject these environment variables into the job at build time.
 
 ![Build Environment](/docs/images/build_envrionment.png)
 

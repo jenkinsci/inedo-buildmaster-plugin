@@ -1,0 +1,16 @@
+<div>
+  Allows a user to select both the Application and Release at build time.
+
+  <p><b>Triggering a build from an external source</b><br>
+  As the two fields are still presented to Jenkins as a single parameter, a slightly different approach is required to to pass in both the application id
+  and release number from other jobs or via a build api request. This is supported by separating the two values using the pipe character '|'.
+  The applicationId is optional, can contain either an Id or applicaton name, and is only supported if this field is checked.</p>
+  </p>
+
+  <b>Examples</b>
+  <ul>
+    <li><b>ReleaseNumber:</b> 0.0.0</li>
+    <li><b>ApplicationId and ReleaseNumber:</b> 1|0.0.0</li>
+    <li><b>ApplicationName and ReleaseNumber:</b> BuildMaster%20Application|0.0.0</li>
+  </ul>
+</div>

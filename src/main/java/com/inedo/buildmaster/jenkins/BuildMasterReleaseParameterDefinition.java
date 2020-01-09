@@ -107,7 +107,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     }
 
     public BuildMasterReleaseParameterValue createValue(String value) {
-        return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), value, getDescription());
+        return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), value, isShowApplicationId(), getDescription());
     }
 
     @Extension

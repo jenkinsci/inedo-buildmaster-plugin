@@ -282,7 +282,7 @@ public class BuildMasterApi {
             releaseNumber = getLatestActiveReleaseNumber(application.Application_Id);
 
             if (releaseNumber == null || releaseNumber.isEmpty()) {
-                throw new IOException("No active releases found in BuildMaster for " + application.Application_Name);
+                throw new IllegalArgumentException("No active releases found in BuildMaster for " + application.Application_Name);
             }
         }
 
@@ -313,11 +313,16 @@ public class BuildMasterApi {
      * @throws IOException Http request exception
      */
     public BuildNumber getReleaseBuildNumber(int applicationId, String releaseNumber) throws IOException {
-        BuildNumber buildNumber = new BuildNumber();
         ApiRelease release = getRelease(applicationId, releaseNumber);
 
-        if (release == null || release.latestBuildNumber == null || release.latestBuildNumber.isEmpty()) {
-            buildNumber.latest = "null";
+        if (release == null) {
+            return null;
+        }
+
+        BuildNumber buildNumber = new BuildNumber();
+
+        if (release.latestBuildNumber == null || release.latestBuildNumber.isEmpty()) {
+            buildNumber.latest = null;
             buildNumber.next = "1";
         } else {
             buildNumber.latest = release.latestBuildNumber;

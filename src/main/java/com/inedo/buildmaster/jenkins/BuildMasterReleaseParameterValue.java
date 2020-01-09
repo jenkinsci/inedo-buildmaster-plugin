@@ -14,13 +14,15 @@ import java.io.IOException;
 public class BuildMasterReleaseParameterValue extends ParameterValue {
     private final String applicationId;
     private final String releaseNumber;
+    private final boolean showApplicationId;
     private final BuildMasterApi buildmaster = new BuildMasterApi(null);
 
     @DataBoundConstructor
-    public BuildMasterReleaseParameterValue(String name, String applicationId, String releaseNumber, String description) {
+    public BuildMasterReleaseParameterValue(String name, String applicationId, String releaseNumber, boolean showApplicationId, String description) {
         super(name, description);
         this.applicationId = applicationId;
         this.releaseNumber = releaseNumber;
+        this.showApplicationId = showApplicationId;
     }
 
     @Exported
@@ -36,14 +38,29 @@ public class BuildMasterReleaseParameterValue extends ParameterValue {
     @Override
     public void buildEnvironment(Run<?, ?> build, EnvVars env) {
         Application application;
-        String actualReleaseNumber;
         BuildNumber buildNumber;
+        String actualApplicationId = applicationId;
+        String actualReleaseNumber = releaseNumber;
+
+        if (showApplicationId && actualReleaseNumber.contains("|")) {
+            String[] parts = actualReleaseNumber.split("\\|");
+            actualApplicationId = parts[0];
+            actualReleaseNumber = parts[1];
+        }
 
         try {
-            application = buildmaster.getApplication(applicationId);
-            actualReleaseNumber = buildmaster.getReleaseNumber(application, releaseNumber);
+            application = buildmaster.getApplication(actualApplicationId);
+
+            if (application == null) {
+                throw new IllegalArgumentException("Application " + actualApplicationId + " was not found.");
+            }
+
+            actualReleaseNumber = buildmaster.getReleaseNumber(application, actualReleaseNumber);
             buildNumber = buildmaster.getReleaseBuildNumber(application.Application_Id, actualReleaseNumber);
 
+            if (buildNumber == null) {
+                throw new IllegalArgumentException("No active release found in BuildMaster for " + application.Application_Name + ", release " + actualReleaseNumber);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
