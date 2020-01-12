@@ -104,7 +104,14 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        return reader.fromJson(Application[].class);
+        List<Application> applications =  Arrays.asList(reader.fromJson(Application[].class));
+
+        Comparator<Application> byAGName = (a, b) -> a.ApplicationGroup_Name == null || b.ApplicationGroup_Name == null ? 1 : a.ApplicationGroup_Name.compareTo(b.ApplicationGroup_Name);
+        Comparator<Application> byName = (a, b) -> a.Application_Name == null || b.Application_Name == null ? 1 : a.Application_Name.compareTo(b.Application_Name);
+
+        applications.sort(byAGName.thenComparing(byName));
+
+        return (Application[]) applications.toArray();
     }
 
     private boolean isApplicationId(String identifier) {
