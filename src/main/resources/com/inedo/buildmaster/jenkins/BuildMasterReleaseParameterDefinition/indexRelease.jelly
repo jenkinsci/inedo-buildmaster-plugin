@@ -1,0 +1,67 @@
+
+
+
+<?jelly escape-by-default='true' ?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+  xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+  xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+
+    <input type="hidden" id="bmReleaseApplicationId" name="applicationId" value="${it.applicationId}" />
+
+    <select id="bmRelease" onchange="doRefreshBuilds();">
+      <j:forEach var="item" items="${it.releases}">
+          <option value="${item.value}">${item.name}</option>
+      </j:forEach>
+    </select>
+
+    <script type="text/javascript">
+        var jenkinsProxy = <st:bind value="${it}"/>;
+        var bmRelease = document.getElementById("bmRelease");
+        var bmReleaseApplication = document.getElementById("bmReleaseApplicationId");
+
+        function doRefreshBuilds() {
+            if (typeof refreshBuilds === "function") {
+                refreshBuilds()
+            }
+        }
+
+	    function refreshReleases() {
+	        var applicationId = bmApplication.value;
+	        bmReleaseApplication.value = applicationId;
+
+            console.log('Calling getReleases for applicationId %s...', applicationId);
+
+            this.jenkinsProxy.getReleases(applicationId, function (t) {
+                var releases = t.responseText;
+
+                console.log('returned %s', releases);
+                var data = JSON.parse(releases);
+
+                while (bmRelease.options.length > 0) {
+                    bmRelease.remove(bmRelease.options.length - 1);
+                }
+
+                for (i = 0; i &lt; data.length; i++)
+                {
+                    var opt = document.createElement('option');
+
+                    opt.text = data[i];
+                    opt.value = data[i];
+
+                    bmRelease.add(opt, null);
+                }
+
+                doRefreshBuilds();
+            });
+        }
+
+        //document.addEventListener('DOMContentLoaded', function() {
+        //    doRefreshBuilds();
+        //}, false);
+
+        if (window.attachEvent) {window.attachEvent('onload', doRefreshBuilds);}
+        else if (window.addEventListener) {window.addEventListener('load', doRefreshBuilds, false);}
+        else {document.addEventListener('load', doRefreshBuilds, false);}
+
+	</script>
+</j:jelly>

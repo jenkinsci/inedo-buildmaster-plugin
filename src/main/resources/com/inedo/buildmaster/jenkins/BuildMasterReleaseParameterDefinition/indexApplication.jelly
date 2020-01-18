@@ -1,0 +1,39 @@
+
+
+
+<?jelly escape-by-default='true' ?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+  xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+  xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+
+    <select id="bmApplication" onchange="doRefreshReleases();">
+      <j:forEach var="item" items="${it.applications}">
+          <j:choose>
+              <j:when test="${item.value == it.applicationId}">
+                  <option value="${item.value}" selected="selected">${item.name}</option>
+              </j:when>
+              <j:otherwise>
+                  <option value="${item.value}">${item.name}</option>
+              </j:otherwise>
+          </j:choose>
+      </j:forEach>
+    </select>
+
+    <script type="text/javascript">
+        var bmApplication = document.getElementById("bmApplication");
+
+        function doRefreshReleases() {
+            if (typeof refreshReleases === "function") {
+                refreshReleases()
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            doRefreshReleases();
+        }, false);
+
+        //if (window.attachEvent) {window.attachEvent('onload', doRefreshReleases);}
+        //else if (window.addEventListener) {window.addEventListener('load', doRefreshReleases, false);}
+        //else {document.addEventListener('load', doRefreshReleases, false);}
+	</script>
+</j:jelly>

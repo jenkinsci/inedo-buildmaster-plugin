@@ -1,0 +1,44 @@
+
+
+
+<?jelly escape-by-default='true' ?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+  xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+  xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+
+    <select id="bmBuild">
+    </select>
+
+    <script type="text/javascript">
+        var jenkinsProxy = <st:bind value="${it}"/>;
+        var bmBuild = document.getElementById("bmBuild");
+
+	    function refreshBuilds() {
+	        var applicationId = bmReleaseApplication.value;
+	        var releaseNumber = bmRelease.value;
+
+            console.log('Calling getBuilds for applicationId %s, releaseNumber %s...', applicationId, releaseNumber);
+
+            this.jenkinsProxy.getBuilds(applicationId, releaseNumber, function (t) {
+                var builds = t.responseText;
+
+                console.log('returned %s', builds);
+                var data = JSON.parse(builds);
+
+                while (bmBuild.options.length > 0) {
+                    bmBuild.remove(bmBuild.options.length - 1);
+                }
+
+                for (i = 0; i &lt; data.length; i++)
+                {
+                    var opt = document.createElement('option');
+
+                    opt.text = data[i];
+                    opt.value = data[i];
+
+                    bmBuild.add(opt, null);
+                }
+            });
+        }
+	</script>
+</j:jelly>

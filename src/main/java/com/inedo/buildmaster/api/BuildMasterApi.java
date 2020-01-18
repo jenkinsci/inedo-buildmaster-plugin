@@ -337,7 +337,7 @@ public class BuildMasterApi {
      * 
      * @throws IOException Http request exception
      * 
-     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-packages">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-builds">Endpoint Specification</a>
      */
     public ApiReleaseBuild getBuild(int applicationId, String releaseNumber, String buildNumber) throws IOException {
         JsonReader reader = HttpEasy.request()
@@ -360,6 +360,37 @@ public class BuildMasterApi {
         }
 
         return null;
+    }
+
+    /**
+     * Gets a list of builds for a release.
+     *
+     * @throws IOException Http request exception
+     *
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-builds">Endpoint Specification</a>
+     */
+    public List<String> getActiveBuilds(int applicationId, String releaseNumber) throws IOException {
+        JsonReader reader = HttpEasy.request()
+                .path("/api/releases/builds")
+                .field("key", config.apiKey)
+                .field("applicationId", applicationId)
+                .field("releaseNumber", releaseNumber)
+                .field("status", "active")
+                .post()
+                .getJsonReader();
+
+        if (recordJson) {
+            jsonString = reader.asPrettyString();
+        }
+
+        List<String> buildlist = new ArrayList<>();
+        ApiReleaseBuild[] builds = reader.fromJson(ApiReleaseBuild[].class);
+
+        for (ApiReleaseBuild build: builds) {
+            buildlist.add(build.number);
+        }
+
+        return buildlist;
     }
 
     /**

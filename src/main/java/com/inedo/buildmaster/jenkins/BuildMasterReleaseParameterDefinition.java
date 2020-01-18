@@ -26,20 +26,23 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     private final String applicationId;
     private final String releaseNumber;
     private final boolean showApplicationId;
+    private final String parameterType;
 
     @DataBoundConstructor
-    public BuildMasterReleaseParameterDefinition(String name, String applicationId, boolean showApplicationId, String description) {
+    public BuildMasterReleaseParameterDefinition(String name, String applicationId, boolean showApplicationId, String parameterType, String description) {
         super(name, description);
         this.applicationId = applicationId;
         this.releaseNumber = null;
         this.showApplicationId = showApplicationId;
+        this.parameterType = parameterType;
     }
 
-    public BuildMasterReleaseParameterDefinition(String name, String applicationId, boolean showApplicationId, String releaseNumber, String description) {
+    public BuildMasterReleaseParameterDefinition(String name, String applicationId, boolean showApplicationId, String parameterType, String releaseNumber, String description) {
         super(name, description);
         this.applicationId = applicationId;
         this.releaseNumber = releaseNumber;
         this.showApplicationId = showApplicationId;
+        this.parameterType = null;
     }
 
     @Exported
@@ -50,6 +53,11 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     @Exported
     public boolean isShowApplicationId() {
         return showApplicationId;
+    }
+
+    @Exported
+    public String getParameterType() {
+        return parameterType;
     }
 
     private ConfigHelper getConfigHelper() {
@@ -81,11 +89,18 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
         return items.toArray(new String[0]);
     }
 
+    @JavaScriptMethod
+    public String[] getBuilds(String applicationId, String releaseNumber) throws IOException {
+        List<String> builds = getConfigHelper().getBuildMasterApi().getActiveBuilds(Integer.parseInt(applicationId), releaseNumber);
+
+        return builds.toArray(new String[0]);
+    }
+
     @Override
     public ParameterDefinition copyWithDefaultValue(ParameterValue defaultValue) {
         if (defaultValue instanceof BuildMasterReleaseParameterValue) {
             BuildMasterReleaseParameterValue value = (BuildMasterReleaseParameterValue) defaultValue;
-            return new BuildMasterReleaseParameterDefinition(getName(), getApplicationId(), isShowApplicationId(), value.getReleaseNumber(), getDescription());
+            return new BuildMasterReleaseParameterDefinition(getName(), getApplicationId(), isShowApplicationId(), getParameterType(), value.getReleaseNumber(), getDescription());
         } else {
             return this;
         }
