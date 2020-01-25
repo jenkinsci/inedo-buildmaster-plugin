@@ -45,7 +45,7 @@ To login the username will be admin and the password can be found in <project ro
     * Create an active release
 * Jenkins System Configuration page updated with BuildMaster server details and the Test Connection button returning success
 
-See the [Wiki page](http://wiki.jenkins-ci.org/display/JENKINS/Inedo+BuildMaster+Plugin) for more details.
+See the [Wiki page](https://github.com/jenkinsci/inedo-buildmaster-plugin) for more details.
 
 #### Job Configuration
 
