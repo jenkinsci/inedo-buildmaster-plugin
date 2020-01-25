@@ -2,11 +2,12 @@
     <p>Defines a parameter where users can pick an active release from a BuildMaster application. The following environment variables will be injected
         into the build job:</p>
     <ul>
-        <li>BUILDMASTER_APPLICATION_ID</li>
-        <li>BUILDMASTER_APPLICATION_NAME</li>
-        <li>BUILDMASTER_RELEASE_NUMBER</li>
-        <li>BUILDMASTER_LATEST_BUILD_NUMBER</li>
-        <li>BUILDMASTER_NEXT_BUILD_NUMBER</li>
+        <li>BUILDMASTER_APPLICATION_ID: if parameter type is 'Application' or 'Release'</li>
+        <li>BUILDMASTER_APPLICATION_NAME: if parameter type is 'Application' or 'Release'</li>
+        <li>BUILDMASTER_RELEASE_NUMBER: if parameter type is 'Release'</li>
+        <li>BUILDMASTER_LATEST_BUILD_NUMBER: if parameter type is 'Release'</li>
+        <li>BUILDMASTER_NEXT_BUILD_NUMBER: if parameter type is 'Release'</li>
+        <li>BUILDMASTER_BUILD_NUMBER: if parameter type is 'Build'</li>
     </ul>
 
     <p>When used within pipeline script the applicationId parameter can contain either the id or name of a

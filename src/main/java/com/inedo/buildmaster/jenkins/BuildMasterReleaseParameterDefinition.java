@@ -1,5 +1,6 @@
 package com.inedo.buildmaster.jenkins;
 
+import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiRelease;
 import com.inedo.buildmaster.jenkins.utils.ConfigHelper;
 import hudson.Extension;
@@ -20,39 +21,32 @@ import java.io.IOException;
 import java.util.*;
 
 public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefinition {
+
     private static final long serialVersionUID = 1L;
 
     private ConfigHelper configHelper = null;
     private final String applicationId;
     private final String releaseNumber;
-    private final boolean showApplicationId;
     private final String parameterType;
 
     @DataBoundConstructor
-    public BuildMasterReleaseParameterDefinition(String name, String applicationId, boolean showApplicationId, String parameterType, String description) {
+    public BuildMasterReleaseParameterDefinition(String name, String applicationId, String parameterType, String description) {
         super(name, description);
         this.applicationId = applicationId;
         this.releaseNumber = null;
-        this.showApplicationId = showApplicationId;
         this.parameterType = parameterType;
     }
 
-    public BuildMasterReleaseParameterDefinition(String name, String applicationId, boolean showApplicationId, String parameterType, String releaseNumber, String description) {
+    public BuildMasterReleaseParameterDefinition(String name, String applicationId, String parameterType, String releaseNumber, String description) {
         super(name, description);
         this.applicationId = applicationId;
         this.releaseNumber = releaseNumber;
-        this.showApplicationId = showApplicationId;
         this.parameterType = null;
     }
 
     @Exported
     public String getApplicationId() {
         return applicationId;
-    }
-
-    @Exported
-    public boolean isShowApplicationId() {
-        return showApplicationId;
     }
 
     @Exported
@@ -100,7 +94,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     public ParameterDefinition copyWithDefaultValue(ParameterValue defaultValue) {
         if (defaultValue instanceof BuildMasterReleaseParameterValue) {
             BuildMasterReleaseParameterValue value = (BuildMasterReleaseParameterValue) defaultValue;
-            return new BuildMasterReleaseParameterDefinition(getName(), getApplicationId(), isShowApplicationId(), getParameterType(), value.getReleaseNumber(), getDescription());
+            return new BuildMasterReleaseParameterDefinition(getName(), getApplicationId(), getParameterType(), value.getReleaseNumber(), getDescription());
         } else {
             return this;
         }
@@ -117,12 +111,25 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
 
     @Override
     public ParameterValue createValue(StaplerRequest req, JSONObject jo) {
-        BuildMasterReleaseParameterValue value = req.bindJSON(BuildMasterReleaseParameterValue.class, jo);
-        return value;
+        switch (BuildMasterParameterType.fromValue(getParameterType())) {
+            case Application:
+                return req.bindJSON(BuildMasterApplicationParameterValue.class, jo);
+            case Build:
+                return req.bindJSON(BuildMasterBuildParameterValue.class, jo);
+            default:
+                return req.bindJSON(BuildMasterReleaseParameterValue.class, jo);
+        }
     }
 
-    public BuildMasterReleaseParameterValue createValue(String value) {
-        return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), value, isShowApplicationId(), getDescription());
+    public ParameterValue createValue(String value) {
+        switch (BuildMasterParameterType.fromValue(getParameterType())) {
+            case Application:
+                return new BuildMasterApplicationParameterValue(getName(), value, getDescription());
+            case Build:
+                return new BuildMasterBuildParameterValue(getName(), value, getDescription());
+            default:
+                return new BuildMasterReleaseParameterValue(getName(), getApplicationId(), value, getDescription());
+        }
     }
 
     @Extension
@@ -132,7 +139,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
 
         @Override
         public String getDisplayName() {
-            return "BuildMaster Release Parameter";
+            return "BuildMaster Parameter";
         }
 
         @Override
@@ -158,6 +165,16 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
 
         public FormValidation doCheckReleaseNumber(@QueryParameter String value, @QueryParameter String applicationId) {
             return configHelper.doCheckReleaseNumber(value, applicationId);
+        }
+
+        public ListBoxModel doFillParameterTypeItems(@QueryParameter String applicationId) throws IOException {
+            ListBoxModel items = new ListBoxModel();
+
+            for (BuildMasterParameterType ptype: BuildMasterParameterType.values()) {
+                items.add(ptype.GetLabel(), ptype.GetValue());
+            }
+
+            return items;
         }
     }
 }

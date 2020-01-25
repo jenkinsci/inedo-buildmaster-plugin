@@ -6,7 +6,7 @@
   xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
   xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
 
-    <select id="bmApplication" onchange="doRefreshReleases();">
+    <select id="bmApplication" name="applicationId" onchange="doRefreshReleases();">
       <j:forEach var="item" items="${it.applications}">
           <j:choose>
               <j:when test="${item.value == it.applicationId}">

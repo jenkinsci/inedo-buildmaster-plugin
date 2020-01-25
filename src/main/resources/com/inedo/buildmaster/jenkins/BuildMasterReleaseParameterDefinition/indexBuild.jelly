@@ -6,7 +6,7 @@
   xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
   xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
 
-    <select id="bmBuild">
+    <select id="bmBuild" name="buildNumber">
     </select>
 
     <script type="text/javascript">

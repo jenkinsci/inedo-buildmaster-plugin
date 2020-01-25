@@ -37,13 +37,13 @@ THE SOFTWARE.
 			<input type="hidden" name="name" value="${it.name}" />
 
 			<j:choose>
-                <j:when test="${parameterType eq 'CASCADE_APPLICATION'}">
+                <j:when test="${parameterType eq 'APPLICATION'}">
                     <st:include page="/com/inedo/buildmaster/jenkins/BuildMasterReleaseParameterDefinition/indexApplication.jelly"/>
                 </j:when>
-                <j:when test="${parameterType eq 'CASCADE_RELEASE'}">
+                <j:when test="${parameterType eq 'RELEASE'}">
                     <st:include page="/com/inedo/buildmaster/jenkins/BuildMasterReleaseParameterDefinition/indexRelease.jelly"/>
                 </j:when>
-                <j:when test="${parameterType eq 'CASCADE_BUILD'}">
+                <j:when test="${parameterType eq 'BUILD'}">
                     <st:include page="/com/inedo/buildmaster/jenkins/BuildMasterReleaseParameterDefinition/indexBuild.jelly"/>
                 </j:when>
                 <j:otherwise>

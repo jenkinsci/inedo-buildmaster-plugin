@@ -14,15 +14,13 @@ import java.io.IOException;
 public class BuildMasterReleaseParameterValue extends ParameterValue {
     private final String applicationId;
     private final String releaseNumber;
-    private final boolean showApplicationId;
     private final BuildMasterApi buildmaster = new BuildMasterApi(null);
 
     @DataBoundConstructor
-    public BuildMasterReleaseParameterValue(String name, String applicationId, String releaseNumber, boolean showApplicationId, String description) {
+    public BuildMasterReleaseParameterValue(String name, String applicationId, String releaseNumber, String description) {
         super(name, description);
         this.applicationId = applicationId;
         this.releaseNumber = releaseNumber;
-        this.showApplicationId = showApplicationId;
     }
 
     @Exported
@@ -42,10 +40,9 @@ public class BuildMasterReleaseParameterValue extends ParameterValue {
         String actualApplicationId = applicationId;
         String actualReleaseNumber = releaseNumber;
 
-        if (showApplicationId && actualReleaseNumber.contains("|")) {
-            String[] parts = actualReleaseNumber.split("\\|");
-            actualApplicationId = parts[0];
-            actualReleaseNumber = parts[1];
+        boolean applicationPopulated = env.containsKey("BUILDMASTER_APPLICATION_ID");
+        if (applicationPopulated) {
+            actualApplicationId = env.get("BUILDMASTER_APPLICATION_ID");
         }
 
         try {
@@ -65,8 +62,11 @@ public class BuildMasterReleaseParameterValue extends ParameterValue {
             throw new RuntimeException(e);
         }
 
-        env.put("BUILDMASTER_APPLICATION_ID", String.valueOf(application.Application_Id));
-        env.put("BUILDMASTER_APPLICATION_NAME", application.Application_Name);
+        if (!applicationPopulated) {
+            env.put("BUILDMASTER_APPLICATION_ID", String.valueOf(application.Application_Id));
+            env.put("BUILDMASTER_APPLICATION_NAME", application.Application_Name);
+        }
+
         env.put("BUILDMASTER_RELEASE_NUMBER", actualReleaseNumber);
         env.put("BUILDMASTER_LATEST_BUILD_NUMBER", buildNumber.latest);
         env.put("BUILDMASTER_NEXT_BUILD_NUMBER", buildNumber.next);

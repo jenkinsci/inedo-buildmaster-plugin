@@ -8,7 +8,7 @@
 
     <input type="hidden" id="bmReleaseApplicationId" name="applicationId" value="${it.applicationId}" />
 
-    <select id="bmRelease" onchange="doRefreshBuilds();">
+    <select id="bmRelease" name="releaseNumber" onchange="doRefreshBuilds();">
       <j:forEach var="item" items="${it.releases}">
           <option value="${item.value}">${item.name}</option>
       </j:forEach>
@@ -55,13 +55,13 @@
             });
         }
 
-        //document.addEventListener('DOMContentLoaded', function() {
-        //    doRefreshBuilds();
-        //}, false);
+        document.addEventListener('DOMContentLoaded', function() {
+            doRefreshBuilds();
+        }, false);
 
-        if (window.attachEvent) {window.attachEvent('onload', doRefreshBuilds);}
-        else if (window.addEventListener) {window.addEventListener('load', doRefreshBuilds, false);}
-        else {document.addEventListener('load', doRefreshBuilds, false);}
+        //if (window.attachEvent) {window.attachEvent('onload', doRefreshBuilds);}
+        //else if (window.addEventListener) {window.addEventListener('load', doRefreshBuilds, false);}
+        //else {document.addEventListener('load', doRefreshBuilds, false);}
 
 	</script>
 </j:jelly>
