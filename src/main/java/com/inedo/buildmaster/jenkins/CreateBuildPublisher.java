@@ -10,7 +10,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.domain.ApiReleaseBuild;
+import com.inedo.buildmaster.domain.ApiBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
@@ -77,7 +77,7 @@ public class CreateBuildPublisher extends Recorder implements ICreateBuild {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        ApiReleaseBuild releaseBuild = BuildHelper.createBuild(build, listener, this);
+        ApiBuild releaseBuild = BuildHelper.createBuild(build, listener, this);
 
         if (releaseBuild == null) {
             throw new AbortException("Deployment failed");

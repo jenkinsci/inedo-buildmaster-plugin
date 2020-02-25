@@ -36,8 +36,6 @@ public class ApiRelease {
     public Integer applicationId;
     /** A string representing the system-unique name of the application for the release. */
     public String applicationName;
-    /** An integer representing the system-unique identifier of the pipeline used by the release. */
-    public Integer pipelineId;
     /** A string representing the name of the pipeline used by the release. */
     public String pipelineName;
     /** An integer representing the system-unique identifier of the active or deployed build that has made it furthest in the pipeline for the release. */

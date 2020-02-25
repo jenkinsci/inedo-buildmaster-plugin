@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.api.BuildMasterConfig;
-import com.inedo.buildmaster.domain.ApiReleaseBuild;
+import com.inedo.buildmaster.domain.ApiBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
 import com.inedo.utils.MockServer;
@@ -106,7 +106,7 @@ public class PluginTests {
 	
 		restLog();
 		
-        ApiReleaseBuild releaseBuild = BuildHelper.createBuild(build, listener, data);
+        ApiBuild releaseBuild = BuildHelper.createBuild(build, listener, data);
 
         assertThat("Result should be successful", releaseBuild, is(notNullValue()));
 

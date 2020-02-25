@@ -7,7 +7,7 @@ import java.util.Map;
 import com.google.common.base.Strings;
 import com.inedo.buildmaster.api.BuildMasterApi;
 import com.inedo.buildmaster.domain.ApiDeployment;
-import com.inedo.buildmaster.domain.ApiReleaseBuild;
+import com.inedo.buildmaster.domain.ApiBuild;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.DeployToStageBuilder;
 
@@ -23,7 +23,7 @@ import hudson.model.TaskListener;
  */
 public class BuildHelper {
 
-    public static ApiReleaseBuild createBuild(Run<?, ?> run, TaskListener listener, ICreateBuild trigger) throws IOException, InterruptedException {
+    public static ApiBuild createBuild(Run<?, ?> run, TaskListener listener, ICreateBuild trigger) throws IOException, InterruptedException {
         JenkinsHelper helper = new JenkinsHelper(run, listener);
 
         if (!GlobalConfig.isRequiredFieldsConfigured()) {
@@ -43,7 +43,7 @@ public class BuildHelper {
         Map<String, String> variablesList = getVariablesListExpanded(run, listener, trigger.getVariables());
 
         helper.getLogWriter().info("Create build for {0}, release {1}", application.Application_Name, releaseNumber);
-        ApiReleaseBuild releaseBuild = buildmaster.createBuild(application.Application_Id, releaseNumber, variablesList);
+        ApiBuild releaseBuild = buildmaster.createBuild(application.Application_Id, releaseNumber, variablesList);
         helper.getLogWriter().info("Build {0} has been created", releaseBuild.number);
 
         if (trigger.isDeployToFirstStage()) {
