@@ -33,15 +33,15 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
     public BuildMasterReleaseParameterDefinition(String name, String applicationId, String parameterType, String description) {
         super(name, description);
         this.applicationId = applicationId;
-        this.releaseNumber = null;
         this.parameterType = parameterType;
+        this.releaseNumber = null;
     }
 
     public BuildMasterReleaseParameterDefinition(String name, String applicationId, String parameterType, String releaseNumber, String description) {
         super(name, description);
         this.applicationId = applicationId;
+        this.parameterType = parameterType;
         this.releaseNumber = releaseNumber;
-        this.parameterType = null;
     }
 
     @Exported
@@ -51,7 +51,7 @@ public class BuildMasterReleaseParameterDefinition extends SimpleParameterDefini
 
     @Exported
     public String getParameterType() {
-        return parameterType;
+        return (parameterType == null || parameterType.isEmpty()) ? BuildMasterParameterType.Release.GetValue() : parameterType;
     }
 
     private ConfigHelper getConfigHelper() {

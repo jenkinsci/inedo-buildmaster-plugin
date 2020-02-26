@@ -350,9 +350,9 @@ public class BuildMasterApi {
         }
 
         List<String> buildlist = new ArrayList<>();
-        ApiReleaseBuild[] builds = reader.fromJson(ApiReleaseBuild[].class);
+        ApiBuild[] builds = reader.fromJson(ApiBuild[].class);
 
-        for (ApiReleaseBuild build: builds) {
+        for (ApiBuild build: builds) {
             buildlist.add(build.number);
         }
 

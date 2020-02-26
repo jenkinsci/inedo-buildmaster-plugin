@@ -51,7 +51,7 @@ public class BuildMasterApiTest {
 			config = mockServer.getBuildMasterConfig();
 		} else {
 			config = TestConfig.getProGetConfig();
-            // TODO uncomment: compareJson = true;
+            compareJson = true;
 		}
 
 		GlobalConfig.injectConfiguration(config);
