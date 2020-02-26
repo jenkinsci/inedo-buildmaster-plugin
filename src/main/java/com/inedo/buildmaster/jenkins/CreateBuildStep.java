@@ -19,7 +19,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.domain.ApiReleaseBuild;
+import com.inedo.buildmaster.domain.ApiBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 
 import hudson.AbortException;
@@ -146,7 +146,7 @@ public class CreateBuildStep extends Step implements ICreateBuild, Serializable 
 
         @Override
         protected String run() throws Exception {
-            ApiReleaseBuild releaseBuild = BuildHelper.createBuild(this.getContext().get(Run.class), this.getContext().get(TaskListener.class), buildConfig);
+            ApiBuild releaseBuild = BuildHelper.createBuild(this.getContext().get(Run.class), this.getContext().get(TaskListener.class), buildConfig);
 
             if (releaseBuild == null) {
                 throw new AbortException("Deployment failed");

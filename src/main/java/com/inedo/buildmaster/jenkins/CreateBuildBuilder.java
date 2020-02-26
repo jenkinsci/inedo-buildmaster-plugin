@@ -10,7 +10,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.inedo.buildmaster.domain.ApiReleaseBuild;
+import com.inedo.buildmaster.domain.ApiBuild;
 import com.inedo.buildmaster.jenkins.buildOption.DeployToFirstStage;
 import com.inedo.buildmaster.jenkins.utils.JenkinsHelper;
 
@@ -81,7 +81,7 @@ public class CreateBuildBuilder extends Builder implements SimpleBuildStep, ICre
 
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
-        ApiReleaseBuild releaseBuild = BuildHelper.createBuild(run, listener, this);
+        ApiBuild releaseBuild = BuildHelper.createBuild(run, listener, this);
 
         if (releaseBuild == null) {
             throw new AbortException("Deployment failed");

@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
-import com.inedo.buildmaster.domain.ApiReleaseBuild;
+import com.inedo.buildmaster.domain.ApiBuild;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.jenkins.utils.GlobalConfig;
 import com.inedo.buildmaster.jenkins.utils.JenkinsConsoleLogWriter;
@@ -51,7 +51,7 @@ public class BuildMasterApiTest {
 			config = mockServer.getBuildMasterConfig();
 		} else {
 			config = TestConfig.getProGetConfig();
-            compareJson = true;
+            // TODO uncomment: compareJson = true;
 		}
 
 		GlobalConfig.injectConfiguration(config);
@@ -113,15 +113,6 @@ public class BuildMasterApiTest {
         }
 	}
 
-    @Test
-    public void getPipelineStages() throws IOException {
-        ApiRelease[] releases = buildmaster.getActiveReleases(TestConfig.getApplicationId());
-
-        List<String> stages = buildmaster.getPipelinesStages(releases[0].pipelineId);
-
-        assertThat("Expect pipeline stages", stages.size(), is(greaterThan(0)));
-    }
-
 	@Test
 	public void getLatestActiveReleaseNumber() throws IOException {
 		String release = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
@@ -181,72 +172,87 @@ public class BuildMasterApiTest {
 	}
 
 	@Test
-    public void createBuild() throws IOException, InterruptedException {
+	public void deployBuildToStage() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).next;
-		Map<String, String> variablesList = new HashMap<>();
-		variablesList.put("hello", "world");
-        //variablesList.put("cause", "unit test");
-		//variablesList.put("cause","$BUILD_NUMBER");
-		variablesList.put("cause","http://inedo:8080/");
-		
-        ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationId(), releaseNumber, variablesList);
-        if (compareJson) {
-            JsonCompare.assertFieldsIdentical("API Structure has not changed",
-                    MockData.API_RELEASE_BUILD.getAsString(), buildmaster.getJsonString(), ApiReleaseBuild.class);
-        }
-
-        assertThat("Expect returned buildNumber to be the same as requested", buildNumber, is(releaseBuild.number));
-		
-        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, releaseBuild.number, null, null,false);
-
-        if (compareJson) {
-            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.API_DEPLOYMENT.getAsString(), buildmaster.getJsonString(), "[0]", ApiDeployment.class);
-        }
-
-        boolean result = buildmaster.waitForDeploymentToComplete(deployments, true);
-
-        assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
-	}
-	
-    @Test
-    public void deployBuildToStage() throws IOException, InterruptedException {
-        String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
-        String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
+		String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
 		Map<String, String> variablesList = new HashMap<>();
 		variablesList.put("hello", "world");
 		variablesList.put("cause","$BUILD_NUMBER");
 
-        ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, buildNumber, variablesList, "Integration", false);
+		ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, buildNumber, variablesList, "Integration", false);
 
-        assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
-        assertThat("Environment is what was asked for", deployments[0].environmentName, is("Integration"));
+		assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
+		assertThat("Environment is what was asked for", deployments[0].pipelineStageName, is("Integration"));
 
-        if (compareJson) {
-            JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.API_DEPLOYMENT_WITH_ENV.getAsString(), buildmaster.getJsonString(), "[0]", ApiDeployment.class);
-        }
-    }
+		if (compareJson) {
+			JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+					MockData.API_DEPLOYMENT_WITH_ENV.getAsString(), buildmaster.getJsonString(), "[0]", ApiDeployment.class);
+		}
+	}
+
+	@Test
+	public void waitForDeploymentToComplete() throws IOException, InterruptedException {
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
+		String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
+
+		ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, buildNumber, null, "Integration", false);
+
+		assertThat("Have a deployment", deployments.length, is(greaterThan(0)));
+		assertThat("Environment is what was asked for", deployments[0].pipelineStageName, is("Integration"));
+
+		boolean result = buildmaster.waitForDeploymentToComplete(deployments, true);
+
+		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
+	}
+
+	@Test
+	public void createBuildAndWait() throws IOException, InterruptedException {
+		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
+		String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).next;
+		Map<String, String> variablesList = new HashMap<>();
+		variablesList.put("hello", "world");
+		//variablesList.put("cause", "unit test");
+		//variablesList.put("cause","$BUILD_NUMBER");
+		variablesList.put("cause","http://inedo:8080/");
+
+		ApiBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationId(), releaseNumber, variablesList);
+		if (compareJson) {
+			JsonCompare.assertFieldsIdentical("API Structure has not changed",
+					MockData.API_RELEASE_BUILD.getAsString(), buildmaster.getJsonString(), ApiBuild.class);
+		}
+
+		assertThat("Expect returned buildNumber to be the same as requested", buildNumber, is(releaseBuild.number));
+
+		ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, releaseBuild.number, null, null,false);
+
+		if (compareJson) {
+			JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
+					MockData.API_DEPLOYMENT.getAsString(), buildmaster.getJsonString(), "[0]", ApiDeployment.class);
+		}
+
+		boolean result = buildmaster.waitForDeploymentToComplete(deployments, true);
+
+		assertThat("Expect Test build " + buildNumber + " to have built and deployed successfully", result);
+	}
 
 	@Test
     public void getBuild() throws IOException {
         String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
         String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
 		
-        ApiReleaseBuild releaseBuild = buildmaster.getBuild(TestConfig.getApplicationId(), releaseNumber, buildNumber);
+        ApiBuild releaseBuild = buildmaster.getBuild(TestConfig.getApplicationId(), releaseNumber, buildNumber);
 		
         assertThat("Expect Test Application to have build number " + buildNumber, releaseBuild.number.length(), is(greaterThan(0)));
 
         if (compareJson) {
             // NOTE: returns array even though should only be a single value
             JsonCompare.assertArrayFieldsIdentical("API Structure has not changed",
-                    MockData.API_RELEASE_BUILDS.getAsString(), buildmaster.getJsonString(), "[0]", ApiReleaseBuild.class);
+                    MockData.API_RELEASE_BUILDS.getAsString(), buildmaster.getJsonString(), "[0]", ApiBuild.class);
         }
 	}
 	
 	@Test
-	public void getWaitForBuildCompletion() throws IOException, InterruptedException {
+	public void waitForActiveDeploymentsToComplete() throws IOException, InterruptedException {
 		String releaseNumber = buildmaster.getLatestActiveReleaseNumber(TestConfig.getApplicationId());
         String buildNumber = buildmaster.getReleaseBuildNumber(TestConfig.getApplicationId(), releaseNumber).latest;
 		
@@ -293,7 +299,7 @@ public class BuildMasterApiTest {
 			System.out.println("Test Run: " + testRun);
 						
 			variablesList.put("hello", "world" + testRun);
-            ApiReleaseBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationId(), releaseNumber, variablesList);
+            ApiBuild releaseBuild = buildmaster.createBuild(TestConfig.getApplicationId(), releaseNumber, variablesList);
             System.out.println("BuildNumber=" + releaseBuild.number);
 
             ApiDeployment[] deployments = buildmaster.deployBuildToStage(TestConfig.getApplicationId(), releaseNumber, releaseBuild.number, null, null, false);

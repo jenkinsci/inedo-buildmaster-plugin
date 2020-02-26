@@ -19,7 +19,7 @@ import org.xml.sax.SAXException;
 import com.google.common.base.Strings;
 import com.inedo.buildmaster.domain.ApiDeployment;
 import com.inedo.buildmaster.domain.ApiRelease;
-import com.inedo.buildmaster.domain.ApiReleaseBuild;
+import com.inedo.buildmaster.domain.ApiBuild;
 import com.inedo.buildmaster.domain.Application;
 import com.inedo.buildmaster.domain.ApplicationDetail;
 import com.inedo.buildmaster.domain.DeploymentStatus;
@@ -104,7 +104,14 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        return reader.fromJson(Application[].class);
+        List<Application> applications =  Arrays.asList(reader.fromJson(Application[].class));
+
+        Comparator<Application> byAGName = (a, b) -> a.ApplicationGroup_Name == null || b.ApplicationGroup_Name == null ? 1 : a.ApplicationGroup_Name.compareTo(b.ApplicationGroup_Name);
+        Comparator<Application> byName = (a, b) -> a.Application_Name == null || b.Application_Name == null ? 1 : a.Application_Name.compareTo(b.Application_Name);
+
+        applications.sort(byAGName.thenComparing(byName));
+
+        return (Application[]) applications.toArray();
     }
 
     private boolean isApplicationId(String identifier) {
@@ -174,47 +181,6 @@ public class BuildMasterApi {
         }
 
         return null;
-    }
-
-    /**
-     * Gets the applications pipelines
-     *
-     * @throws IOException Http request exception
-     */
-    public List<String> getPipelinesStages(int pipelineId) throws IOException {
-        JsonReader reader = HttpEasy.request()
-                .path("/api/json/Pipelines_GetPipeline")
-                .queryParam("API_Key", config.apiKey)
-                .queryParam("Pipeline_Id", pipelineId)
-                .get()
-                .getJsonReader();
-
-        if (recordJson) {
-            jsonString = reader.asPrettyString();
-        }
-
-        String xml = reader.getAsString("Pipeline_Configuration");
-        xml = URLDecoder.decode(xml, "UTF-8");
-
-        List<String> stages = new ArrayList<>();
-
-        try {
-            XmlReader xmlReader = new XmlReader(xml);
-            Object evaluate = xmlReader.evaluate("//*/Stages/*/Properties/@Name", XPathConstants.NODESET);
-            if (evaluate != null) {
-                NodeList nodes = (NodeList) evaluate;
-
-                int length = nodes.getLength();
-                for (int i = 0; i < length; i++) {
-                    Attr attr = (Attr) nodes.item(i);
-                    stages.add(attr.getValue());
-                }
-            }
-        } catch (ParserConfigurationException | SAXException | XPathExpressionException e) {
-            logWriter.error("Unable to parse XML for pipleline stages", e);
-        }
-
-        return stages;
     }
 
     /**
@@ -339,7 +305,7 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#get-builds">Endpoint Specification</a>
      */
-    public ApiReleaseBuild getBuild(int applicationId, String releaseNumber, String buildNumber) throws IOException {
+    public ApiBuild getBuild(int applicationId, String releaseNumber, String buildNumber) throws IOException {
         JsonReader reader = HttpEasy.request()
                 .path("/api/releases/builds")
                 .field("key", config.apiKey)
@@ -353,7 +319,7 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        ApiReleaseBuild[] builds = reader.fromJson(ApiReleaseBuild[].class);
+        ApiBuild[] builds = reader.fromJson(ApiBuild[].class);
 
         if (builds.length > 0) {
             return builds[0];
@@ -402,7 +368,7 @@ public class BuildMasterApi {
      * 
      * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#create-package">Endpoint Specification</a>
      */
-    public ApiReleaseBuild createBuild(int applicationId, String releaseNumber, Map<String, String> variablesList)
+    public ApiBuild createBuild(int applicationId, String releaseNumber, Map<String, String> variablesList)
             throws IOException {
         HttpEasy request = HttpEasy.request()
                 .path("/api/releases/builds/create")
@@ -421,7 +387,7 @@ public class BuildMasterApi {
             jsonString = reader.asPrettyString();
         }
 
-        return reader.fromJson(ApiReleaseBuild.class);
+        return reader.fromJson(ApiBuild.class);
     }
     
     /**
@@ -435,7 +401,7 @@ public class BuildMasterApi {
      * @throws IOException Http request exception
      * @throws InterruptedException Failed while waiting for action
      * 
-     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#deploy-package">Endpoint Specification</a>
+     * @see <a href="https://docs.inedo.com/docs/buildmaster/reference/api/release-and-build#deploy-build">Endpoint Specification</a>
      */
     public ApiDeployment[] deployBuildToStage(int applicationId, String releaseNumber, String buildNumber, Map<String, String> variablesList, String stage, boolean forceDeployment)
             throws IOException, InterruptedException {
@@ -603,17 +569,17 @@ public class BuildMasterApi {
             HttpEasy.withDefaults().logRequest(false);
 
             long startTime = new Date().getTime();
-            Integer environmentId = deployment.environmentId;
+            String pipelineStageName = deployment.pipelineStageName;
 
             // Wait till build step and any automatic promotions have completed
-            while (executing.contains(deployment.status)) { // && deployment.environmentId == null
+            while (executing.contains(deployment.status)) {
                 Thread.sleep(7000);
 
                 deployment = getDeployment(applicationId, releaseNumber, buildNumber, deploymentId);
 
                 // Restart counter if now deploying to new environment
-                if (!Objects.equals(environmentId, deployment.environmentId)) {
-                    environmentId = deployment.environmentId;
+                if (!Objects.equals(pipelineStageName, deployment.pipelineStageName)) {
+                    pipelineStageName = deployment.pipelineStageName;
                     startTime = new Date().getTime();
                 }
 
